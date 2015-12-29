@@ -1,11 +1,4 @@
-var socket = new WebSocket('ws://localhost:3000');
-socket.binaryType = 'arraybuffer';
-
-socket.onopen = function (event) {
-    console.log('socket is open');
-    socket.send("woow");
-}
-var canvas;
+var WS = new WSController();
 var graph;
 var animLoopHandle;
 
@@ -51,10 +44,10 @@ var player = {
     target: {x: screenWidth / 2, y: screenHeight / 2}
 };
 
-var foods = [];
+var food = [];
 var viruses = [];
 var fireFood = [];
-var users = [];
+var userList = [];
 var leaderboard = [];
 var target = {x: player.x, y: player.y};
 var reenviar = true;
@@ -65,8 +58,7 @@ var gameLoopInterval = 1000 / 60;
 
 var canvasElements = document.getElementsByClassName('js-canvas');
 if (canvasElements && canvasElements.length > 0) {
-    canvas = canvasElements[0];
-    canvas.width = screenWidth; canvas.height = screenHeight;
+    graph = new Graph(canvasElements[0]);
     // canvas.addEventListener('mousemove', gameInput, false);
     // canvas.addEventListener('mouseout', outOfBounds, false);
     // canvas.addEventListener('keypress', keyInput, false);
@@ -81,12 +73,6 @@ function outOfBounds() {
         target = { x : 0, y: 0 };
     }
 }
-
-function valueInRange(min, max, value) {
-    return Math.min(max, Math.max(min, value));
-}
-
-var graph = canvas.getContext('2d');
 
 window.requestAnimFrame = (function() {
     return  window.requestAnimationFrame       ||
@@ -110,29 +96,29 @@ function animloop() {
 
 function gameLoop() {
     if (!disconnected) {
-        graph.fillStyle = '#ffffff';
-        graph.fillRect(0, 0, screenWidth, screenHeight);
-
-        drawGrid();
-        foods.forEach(drawFood);
-        viruses.forEach(drawVirus);
-        fireFood.forEach(drawFireFood);
-        
+        graph
+            .Clear()
+            .DrawGrid()
+            .DrawFood(food)
+            .DrawViruses(viruses)
+            .DrawFireFood(fireFood);
+            
         var orderMass = [];
-        for(var i=0; i<users.length; i++) {
-            for(var j=0; j<users[i].cells.length; j++) {
+        for(var i=0; i<userList.length; i++) {
+            for(var j=0; j<userList[i].cells.length; j++) {
                 orderMass.push({
                     nCell: i,
                     nDiv: j,
-                    mass: users[i].cells[j].mass
+                    mass: userList[i].cells[j].mass
                 });
             }
         }
         orderMass.sort(function(obj1, obj2) {
             return obj1.mass - obj2.mass;
         });
+        
+        graph.DrawPlayers(userList, orderMass);
 
-        drawPlayers(orderMass);
         // socket.emit('0', target); // playerSendTarget "Heartbeat".
     }
 }
@@ -144,5 +130,5 @@ function gameLoop() {
     if (!animLoopHandle)
         animloop();
         
-    socket.emit('respawn');
+    socket.send('respawn');
 })();

@@ -13,6 +13,9 @@ var Graph = (function () {
         this._foodSides = options.virusSides || 10;
         this._virusSides = options.foodSides || 20;
         
+        canvas.width = this._screenWidth;
+        canvas.height = this._screenHeight;
+        
         this._playerOptions = {
             border: 6,
             textColor: '#FFFFFF',
@@ -29,6 +32,13 @@ var Graph = (function () {
             screenHeight: this._screenHeight,
             target: { x: this._screenWidth / 2, y: this._screenHeight / 2 }
         };
+    }
+    
+    Graph.prototype.Clear = function () {
+        this._graph.fillStyle = 'rgb(255, 255, 255)';
+        this._graph.fillRect(0, 0, this._screenWidth, this._screenHeight);
+        
+        return this;
     }
     
     Graph.prototype.DrawGrid = function () {
@@ -49,6 +59,8 @@ var Graph = (function () {
 
         this._graph.stroke();
         this._graph.globalAlpha = 1;
+        
+        return this;
     }
 
     Graph.prototype.DrawCircle = function (centerX, centerY, radius, sides) {
@@ -68,38 +80,70 @@ var Graph = (function () {
         this._graph.closePath();
         this._graph.stroke();
         this._graph.fill();
+        
+        return this;
     }
 
     Graph.prototype.DrawFood = function (food) {
-        this._graph.strokeStyle = 'hsl(' + food.hue + ', 100%, 45%)';
-        this._graph.fillStyle = 'hsl(' + food.hue + ', 100%, 50%)';
+        if (food) {
+            if (food.constructor !== Array) {
+                food = [ food ];
+            }
+            
+            food.forEach(function (item) {
+                this._graph.strokeStyle = 'hsl(' + food.hue + ', 100%, 45%)';
+                this._graph.fillStyle = 'hsl(' + food.hue + ', 100%, 50%)';
+                
+                var centerX = food.x - this._player.x + this._screenWidth / 2;
+                var centerY = food.y - this._player.y + this._screenHeight / 2;
+                
+                this.DrawCircle(centerX, centerY, food.radius, this._foodSides);
+            });
+        }
         
-        var centerX = food.x - this._player.x + this._screenWidth / 2;
-        var centerY = food.y - this._player.y + this._screenHeight / 2;
-        
-        this.DrawCircle(centerX, centerY, food.radius, this._foodSides);
+        return this;
     }
 
-    Graph.prototype.DrawVirus = function (virus) {
-        this._graph.strokeStyle = virus.stroke;
-        this._graph.fillStyle = virus.fill;
-        this._graph.lineWidth = virus.strokeWidth;
+    Graph.prototype.DrawViruses = function (viruses) {
+        if (viruses) {
+            if (viruses.constructor !== Array) {
+                viruses = [ viruses ];
+            }
+            
+            viruses.forEach(function (virus) {
+                this._graph.strokeStyle = virus.stroke;
+                this._graph.fillStyle = virus.fill;
+                this._graph.lineWidth = virus.strokeWidth;
+                
+                var centerX = virus.x - this._player.x + this._screenWidth / 2;
+                var centerY = virus.y - this._player.y + this._screenHeight / 2;
+                
+                this.DrawCircle(centerX, centerY, virus.radius, this._virusSides);
+            });
+        }
         
-        var centerX = virus.x - this._player.x + this._screenWidth / 2;
-        var centerY = virus.y - this._player.y + this._screenHeight / 2;
-        
-        this.DrawCircle(centerX, centerY, virus.radius, this._virusSides);
+        return this;
     }
 
-    Graph.prototype.DrawFireFood = function (mass) {
-        this._graph.strokeStyle = 'hsl(' + mass.hue + ', 100%, 45%)';
-        this._graph.fillStyle = 'hsl(' + mass.hue + ', 100%, 50%)';
-        this._graph.lineWidth = this._playerOptions.border + 10;
+    Graph.prototype.DrawFireFood = function (masses) {
+        if (masses) {
+            if (masses.constructor !== Array) {
+                masses = [ masses ];
+            }
+            
+            masses.forEach(function (mass) {
+                this._graph.strokeStyle = 'hsl(' + mass.hue + ', 100%, 45%)';
+                this._graph.fillStyle = 'hsl(' + mass.hue + ', 100%, 50%)';
+                this._graph.lineWidth = this._playerOptions.border + 10;
+                
+                var centerX = mass.x - this._player.x + this._screenWidth / 2;
+                var centerY = mass.y - this._player.y + this._screenHeight / 2;
+                
+                this.DrawCircle(centerX, centerY, mass.radius-5, 18 + (~~(mass.masa/5)));
+            });
+        }
         
-        var centerX = mass.x - this._player.x + this._screenWidth / 2;
-        var centerY = mass.y - this._player.y + this._screenHeight / 2;
-        
-        this.DrawCircle(centerX, centerY, mass.radius-5, 18 + (~~(mass.masa/5)));
+        return this;
     }
 
     Graph.prototype.DrawPlayers = function (playerList, order) {
@@ -196,6 +240,8 @@ var Graph = (function () {
                 this._graph.fillText(Math.round(currentCell.mass), circle.x, circle.y+fontSize);
             }
         }
+        
+        return this;
     }
     
     function isValueInRange (min, max, value) {

@@ -11,6 +11,7 @@ let express = require('express');
 let app = express();
 
 let config = require('./config');
+var OPCode = require('./config/opCode');
 
 let args = { x : 0, y : 0, h : config.gameHeight, w : config.gameWidth, maxChildren : 1, maxDepth : 5 };
 let tree = QuadTree.QUAD.init(args);
@@ -32,8 +33,10 @@ wss.on('connection', function connection (socket) {
   socket.on('message', function incoming (message) {
     console.log('received: %s', message);
   });
- 
-  socket.send('something');
+  
+  var welcomeBuffer = new DataView(new ArrayBuffer(2)).setUint16(0, OPCode.WELCOME, true);
+//   console.log(welcomeBuffer);
+  socket.send(welcomeBuffer, { binary: true, mask: false });
 });
 
 app.use(express['static'](__dirname + '/../client'));

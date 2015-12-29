@@ -2,7 +2,11 @@ var gulp = require('gulp');
 var concat = require('gulp-concat');
 
 gulp.task('js', function () {
-   return gulp.src('./src/client/js/*')
+   return gulp.src([
+       './src/client/js/graph.js', 
+       './src/client/js/wsController.js', 
+       './src/client/js/app.js'
+        ])
     .pipe(concat('game.js'))
     .pipe(gulp.dest('./src/client/dist'));
 });
