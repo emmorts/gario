@@ -22,24 +22,26 @@ var WSController = (function () {
 
       this.__socket.onmessage = function (message) {
         if (message.data instanceof ArrayBuffer) {
-          if (message.data.byteLength === 1) {
-            var code = (new Uint8Array(message.data));
+          var data = new DataView(message.data);
+          var code = data.getUint8(0);
 
-            switch (code[0]) {
-              case OPCode.SYN:
-                this.__acknoledged = true;
-                var array = new Uint8Array(1);
-                array[0] = OPCode.ACK;
-                this.__socket.send(array.buffer);
-                fire.call(this, 'acknowledged');
-                break;
-              case OPCode.JOINED:
-                fire.call(this, 'joined');
-                break;
-              default:
-                console.warn("Undefined opcode");
-                break;
-            }
+          switch (code) {
+            case OPCode.SYN:
+              this.__acknoledged = true;
+              var array = new Uint8Array(1);
+              array[0] = OPCode.ACK;
+              this.__socket.send(array.buffer);
+              fire.call(this, 'acknowledged');
+              break;
+            case OPCode.JOINED:
+              fire.call(this, 'joined');
+              break;
+            case OPCode.UPLAYERS:
+              fire.call(this, 'updatePlayers');
+              break;
+            default:
+              console.warn("Undefined opcode");
+              break;
           }
         } else {
           console.warn("Received malformed data");

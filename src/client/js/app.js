@@ -122,4 +122,8 @@ ws.on('open', function startGame () {
     ws.spawn();
   });
   
+  ws.on('updatePlayers', function (players) {
+    userList = players;
+  });
+  
 });

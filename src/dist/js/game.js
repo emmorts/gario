@@ -1,3 +1,18 @@
+var OPCode = {
+  "SYN": 0x0,
+  "ACK": 0x1,  
+  "JOINED": 0x2,
+  "PING": 0x3,
+  "PONG": 0x4,
+  "SPAWN": 0x5,
+  "UPLAYERS": 0x6
+};
+
+if (typeof window === 'undefined') {
+    module.exports = OPCode;
+} else {
+    window.OPCode = OPCode;
+}
 var Graph = (function () {
 
   var spin = 0;
@@ -267,3 +282,208 @@ var Graph = (function () {
   return Graph;
 
 })();
+/* global OPCode */
+
+var WSController = (function () {
+
+  function WSController(options) {
+    options = options || {};
+    
+    this.__uri = options.uri || 'ws://localhost:3000';
+    this.__acknoledged = false;
+    this.__socket = null;
+    this.__eventHandlers = [];
+
+    setupSocket.call(this);
+  }
+
+  function setupSocket() {
+    this.__socket = new WebSocket(this.__uri);
+    this.__socket.binaryType = 'arraybuffer';
+
+    this.__socket.onopen = function (event) {
+      fire.call(this, 'open');
+
+      this.__socket.onmessage = function (message) {
+        if (message.data instanceof ArrayBuffer) {
+          var data = new DataView(message.data);
+          var code = data.getUint8(0);
+
+          switch (code) {
+            case OPCode.SYN:
+              this.__acknoledged = true;
+              var array = new Uint8Array(1);
+              array[0] = OPCode.ACK;
+              this.__socket.send(array.buffer);
+              fire.call(this, 'acknowledged');
+              break;
+            case OPCode.JOINED:
+              fire.call(this, 'joined');
+              break;
+            case OPCode.UPLAYERS:
+              fire.call(this, 'updatePlayers');
+              break;
+            default:
+              console.warn("Undefined opcode");
+              break;
+          }
+        } else {
+          console.warn("Received malformed data");
+        }
+      }.bind(this)
+    }.bind(this)
+  }
+  
+  WSController.prototype.spawn = function () {
+    var array = new Uint8Array(1);
+    array[0] = OPCode.SPAWN;
+    this.__socket.send(array.buffer);
+  }
+  
+  WSController.prototype.on = function (name, listener) {
+    if (!(name in this.__eventHandlers) || !(this.__eventHandlers[name] instanceof Array)) {
+      this.__eventHandlers[name] = [];
+    }
+    this.__eventHandlers[name].push(listener);
+  }
+  
+  function fire(name, options) {
+    if (name in this.__eventHandlers && this.__eventHandlers[name].length > 0) {
+      this.__eventHandlers[name].forEach(function (handler) {
+        handler(options);
+      });
+    }
+  }
+
+  return WSController;
+
+})();
+var graph;
+var animLoopHandle;
+var ws = new WSController();
+
+var screenWidth = window.innerWidth;
+var screenHeight = window.innerHeight;
+var gameWidth = 0;
+var gameHeight = 0;
+
+var gameStart = false;
+var disconnected = false;
+var died = false;
+var kicked = false;
+
+var continuity = false;
+var startPingTime = 0;
+var toggleMassState = 0;
+var spin = -Math.PI;
+var enemySpin = -Math.PI;
+
+var foodSides = 10;
+var virusSides = 20;
+
+var foodConfig = {
+  border: 0,
+};
+
+var playerConfig = {
+  border: 6,
+  textColor: '#FFFFFF',
+  textBorder: '#000000',
+  textBorderSize: 3,
+  defaultSize: 30
+};
+
+var player = {
+  id: -1,
+  x: screenWidth / 2,
+  y: screenHeight / 2,
+  screenWidth: screenWidth,
+  screenHeight: screenHeight,
+  target: { x: screenWidth / 2, y: screenHeight / 2 }
+};
+
+var food = [];
+var viruses = [];
+var fireFood = [];
+var userList = [];
+var leaderboard = [];
+var target = { x: player.x, y: player.y };
+var reenviar = true;
+var directionLock = false;
+var directions = [];
+
+var gameLoopInterval = 1000 / 60;
+
+var canvasElements = document.getElementsByClassName('js-canvas');
+if (canvasElements && canvasElements.length > 0) {
+  graph = new Graph(canvasElements[0]);
+  // canvas.addEventListener('mousemove', gameInput, false);
+  // canvas.addEventListener('mouseout', outOfBounds, false);
+  // canvas.addEventListener('keypress', keyInput, false);
+  // canvas.addEventListener('keyup', function(event) { reenviar = true; directionUp(event); }, false);
+  // canvas.addEventListener('keydown', directionDown, false);
+  // canvas.addEventListener('touchstart', touchInput, false);
+  // canvas.addEventListener('touchmove', touchInput, false);
+}
+
+window.requestAnimFrame = (function () {
+  return window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    window.msRequestAnimationFrame ||
+    function (callback) {
+      window.setTimeout(callback, gameLoopInterval);
+    };
+})();
+
+window.cancelAnimFrame = (function (handle) {
+  return window.cancelAnimationFrame ||
+    window.mozCancelAnimationFrame;
+})();
+
+function animloop() {
+  animLoopHandle = window.requestAnimFrame(animloop);
+  gameLoop();
+}
+
+function gameLoop() {
+  if (!disconnected) {
+    graph
+      .clear()
+      .drawGrid()
+      .drawFood(food)
+      .drawViruses(viruses)
+      .drawFireFood(fireFood);
+
+    var orderMass = [];
+    for (var i = 0; i < userList.length; i++) {
+      for (var j = 0; j < userList[i].cells.length; j++) {
+        orderMass.push({
+          nCell: i,
+          nDiv: j,
+          mass: userList[i].cells[j].mass
+        });
+      }
+    }
+    orderMass.sort(function (obj1, obj2) {
+      return obj1.mass - obj2.mass;
+    });
+
+    graph.drawPlayers(userList, orderMass);
+  }
+}
+
+ws.on('open', function startGame () {
+  if (!animLoopHandle) {
+    animloop();
+  }
+  
+  ws.on('acknowledged', function () {
+    ws.spawn();
+  });
+  
+  ws.on('updatePlayers', function (players) {
+    userList = players;
+  });
+  
+});

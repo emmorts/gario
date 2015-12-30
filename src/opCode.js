@@ -4,7 +4,8 @@ var OPCode = {
   "JOINED": 0x2,
   "PING": 0x3,
   "PONG": 0x4,
-  "SPAWN": 0x5
+  "SPAWN": 0x5,
+  "UPLAYERS": 0x6
 };
 
 if (typeof window === 'undefined') {
