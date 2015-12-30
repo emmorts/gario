@@ -4,31 +4,37 @@ var WSController = (function () {
 
   function WSController(options) {
     options = options || {};
-    this._uri = options.uri || 'ws://localhost:3000';
+    
+    this.__uri = options.uri || 'ws://localhost:3000';
+    this.__acknoledged = false;
+    this.__socket = null;
+    this.__eventHandlers = [];
 
     setupSocket.call(this);
   }
 
   function setupSocket() {
-    this._socket = new WebSocket(this._uri);
-    this._socket.binaryType = 'arraybuffer';
+    this.__socket = new WebSocket(this.__uri);
+    this.__socket.binaryType = 'arraybuffer';
 
-    this._socket.onopen = function (event) {
-      console.log("WebSocket is now open");
+    this.__socket.onopen = function (event) {
+      fire.call(this, 'open');
 
-      this._socket.onmessage = function (message) {
+      this.__socket.onmessage = function (message) {
         if (message.data instanceof ArrayBuffer) {
           if (message.data.byteLength === 1) {
             var code = (new Uint8Array(message.data));
 
             switch (code[0]) {
               case OPCode.SYN:
+                this.__acknoledged = true;
                 var array = new Uint8Array(1);
                 array[0] = OPCode.ACK;
-                this._socket.send(array.buffer);
+                this.__socket.send(array.buffer);
+                fire.call(this, 'acknowledged');
                 break;
               case OPCode.JOINED:
-                console.log("Spawn player");
+                fire.call(this, 'joined');
                 break;
               default:
                 console.warn("Undefined opcode");
@@ -40,6 +46,27 @@ var WSController = (function () {
         }
       }.bind(this)
     }.bind(this)
+  }
+  
+  WSController.prototype.spawn = function () {
+    var array = new Uint8Array(1);
+    array[0] = OPCode.SPAWN;
+    this.__socket.send(array.buffer);
+  }
+  
+  WSController.prototype.on = function (name, listener) {
+    if (!(name in this.__eventHandlers) || !(this.__eventHandlers[name] instanceof Array)) {
+      this.__eventHandlers[name] = [];
+    }
+    this.__eventHandlers[name].push(listener);
+  }
+  
+  function fire(name, options) {
+    if (name in this.__eventHandlers && this.__eventHandlers[name].length > 0) {
+      this.__eventHandlers[name].forEach(function (handler) {
+        handler(options);
+      });
+    }
   }
 
   return WSController;

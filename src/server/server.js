@@ -42,6 +42,8 @@ wss.on('connection', function connection (socket) {
         array[0] = OPCode.JOINED;
         socket.send(array.buffer, { binary: true });
         break;
+      case OPCode.SPAWN:
+        console.log("Spawn player");
       default:
         console.log("Undefined opcode %s", message[0]);
         break;

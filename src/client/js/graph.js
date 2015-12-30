@@ -12,6 +12,10 @@ var Graph = (function () {
         this._screenHeight = options.screenWidth || window.innerWidth;
         this._foodSides = options.virusSides || 10;
         this._virusSides = options.foodSides || 20;
+        this._gameWidth = options.gameWidth || 0;
+        this._gameHeight = options.gameHeight || 0;
+        this._xOffset = -this._gameWidth;
+        this._yOffset = -this._gameHeight;
         
         canvas.width = this._screenWidth;
         canvas.height = this._screenHeight;
@@ -34,25 +38,25 @@ var Graph = (function () {
         };
     }
     
-    Graph.prototype.Clear = function () {
+    Graph.prototype.clear = function () {
         this._graph.fillStyle = 'rgb(255, 255, 255)';
         this._graph.fillRect(0, 0, this._screenWidth, this._screenHeight);
         
         return this;
     }
     
-    Graph.prototype.DrawGrid = function () {
+    Graph.prototype.drawGrid = function () {
         this._graph.lineWidth = 1;
         this._graph.strokeStyle = this._lineColor;
         this._graph.globalAlpha = this._globalAlpha;
         this._graph.beginPath();
 
-        for (var x = xoffset - this._player.x; x < this._screenWidth; x += this._screenHeight / 18) {
+        for (var x = this._xOffset - this._player.x; x < this._screenWidth; x += this._screenHeight / 18) {
             this._graph.moveTo(x, 0);
             this._graph.lineTo(x, this._screenHeight);
         }
 
-        for (var y = yoffset - this._player.y ; y < this._screenHeight; y += this._screenHeight / 18) {
+        for (var y = this._yOffset - this._player.y ; y < this._screenHeight; y += this._screenHeight / 18) {
             this._graph.moveTo(0, y);
             this._graph.lineTo(this._screenWidth, y);
         }
@@ -63,7 +67,7 @@ var Graph = (function () {
         return this;
     }
 
-    Graph.prototype.DrawCircle = function (centerX, centerY, radius, sides) {
+    Graph.prototype.drawCircle = function (centerX, centerY, radius, sides) {
         var theta = 0;
         var x = 0;
         var y = 0;
@@ -84,7 +88,7 @@ var Graph = (function () {
         return this;
     }
 
-    Graph.prototype.DrawFood = function (food) {
+    Graph.prototype.drawFood = function (food) {
         if (food) {
             if (food.constructor !== Array) {
                 food = [ food ];
@@ -97,14 +101,14 @@ var Graph = (function () {
                 var centerX = food.x - this._player.x + this._screenWidth / 2;
                 var centerY = food.y - this._player.y + this._screenHeight / 2;
                 
-                this.DrawCircle(centerX, centerY, food.radius, this._foodSides);
+                this.drawCircle(centerX, centerY, food.radius, this._foodSides);
             });
         }
         
         return this;
     }
 
-    Graph.prototype.DrawViruses = function (viruses) {
+    Graph.prototype.drawViruses = function (viruses) {
         if (viruses) {
             if (viruses.constructor !== Array) {
                 viruses = [ viruses ];
@@ -118,14 +122,14 @@ var Graph = (function () {
                 var centerX = virus.x - this._player.x + this._screenWidth / 2;
                 var centerY = virus.y - this._player.y + this._screenHeight / 2;
                 
-                this.DrawCircle(centerX, centerY, virus.radius, this._virusSides);
+                this.drawCircle(centerX, centerY, virus.radius, this._virusSides);
             });
         }
         
         return this;
     }
 
-    Graph.prototype.DrawFireFood = function (masses) {
+    Graph.prototype.drawFireFood = function (masses) {
         if (masses) {
             if (masses.constructor !== Array) {
                 masses = [ masses ];
@@ -139,14 +143,14 @@ var Graph = (function () {
                 var centerX = mass.x - this._player.x + this._screenWidth / 2;
                 var centerY = mass.y - this._player.y + this._screenHeight / 2;
                 
-                this.DrawCircle(centerX, centerY, mass.radius-5, 18 + (~~(mass.masa/5)));
+                this.drawCircle(centerX, centerY, mass.radius-5, 18 + (~~(mass.masa/5)));
             });
         }
         
         return this;
     }
 
-    Graph.prototype.DrawPlayers = function (playerList, order) {
+    Graph.prototype.drawPlayers = function (playerList, order) {
         var start = {
             x: this._player.x - (this._screenWidth / 2),
             y: this._player.y - (this._screenHeight / 2)
@@ -182,11 +186,11 @@ var Graph = (function () {
                 x = currentCell.radius * Math.cos(spin) + circle.x;
                 y = currentCell.radius * Math.sin(spin) + circle.y;
                 if(typeof(currentPlayer.id) == "undefined") {
-                    x = isValueInRange(-currentPlayer.x + this._screenWidth / 2, gameWidth - currentPlayer.x + this._screenWidth / 2, x);
-                    y = isValueInRange(-currentPlayer.y + this._screenHeight / 2, gameHeight - currentPlayer.y + this._screenHeight / 2, y);
+                    x = isValueInRange(-currentPlayer.x + this._screenWidth / 2, this._gameWidth - currentPlayer.x + this._screenWidth / 2, x);
+                    y = isValueInRange(-currentPlayer.y + this._screenHeight / 2, this._gameHeight - currentPlayer.y + this._screenHeight / 2, y);
                 } else {
-                    x = isValueInRange(-currentCell.x - this._player.x + this._screenWidth/2 + (currentCell.radius/3), gameWidth - currentCell.x + gameWidth - this._player.x + this._screenWidth/2 - (currentCell.radius/3), x);
-                    y = isValueInRange(-currentCell.y - this._player.y + this._screenHeight/2 + (currentCell.radius/3), gameHeight - currentCell.y + gameHeight - this._player.y + this._screenHeight/2 - (currentCell.radius/3) , y);
+                    x = isValueInRange(-currentCell.x - this._player.x + this._screenWidth/2 + (currentCell.radius/3), this._gameWidth - currentCell.x + this._gameWidth - this._player.x + this._screenWidth/2 - (currentCell.radius/3), x);
+                    y = isValueInRange(-currentCell.y - this._player.y + this._screenHeight/2 + (currentCell.radius/3), this._gameHeight - currentCell.y + this._gameHeight - this._player.y + this._screenHeight/2 - (currentCell.radius/3) , y);
                 }
                 spin += increase;
                 xstore[i] = x;
@@ -249,4 +253,5 @@ var Graph = (function () {
     }
     
     return Graph;
+    
 })();
