@@ -11,7 +11,7 @@ let express = require('express');
 let app = express();
 
 let config = require('./config');
-var OPCode = require('./config/opCode');
+var OPCode = require('../opCode');
 
 let args = { x : 0, y : 0, h : config.gameHeight, w : config.gameWidth, maxChildren : 1, maxDepth : 5 };
 let tree = QuadTree.QUAD.init(args);
@@ -30,13 +30,25 @@ let Circle = SAT.Circle;
 
 wss.on('connection', function connection (socket) {
   
+  let array = new Uint8Array(1);
+  array[0] = OPCode.SYN;
+  socket.send(array.buffer, { binary: true });
+  
   socket.on('message', function incoming (message) {
-    console.log('received: %s', message);
+    
+    switch (message[0]) {
+      case OPCode.ACK:
+        array = new Uint8Array(1);
+        array[0] = OPCode.JOINED;
+        socket.send(array.buffer, { binary: true });
+        break;
+      default:
+        console.log("Undefined opcode %s", message[0]);
+        break;
+    }
+    
   });
   
-  var welcomeBuffer = new DataView(new ArrayBuffer(2)).setUint16(0, OPCode.WELCOME, true);
-//   console.log(welcomeBuffer);
-  socket.send(welcomeBuffer, { binary: true, mask: false });
 });
 
 app.use(express['static'](__dirname + '/../client'));

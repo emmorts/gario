@@ -130,5 +130,5 @@ function gameLoop() {
     if (!animLoopHandle)
         animloop();
         
-    socket.send('respawn');
+    // socket.send('respawn');
 })();
