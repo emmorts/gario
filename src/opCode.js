@@ -5,7 +5,8 @@ var OPCode = {
   "PING": 0x3,
   "PONG": 0x4,
   "SPAWN": 0x5,
-  "UPLAYERS": 0x6
+  "UPLAYERS": 0x6,
+  "ADD_NODE": 0x7
 };
 
 if (typeof window === 'undefined') {

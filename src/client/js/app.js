@@ -1,129 +1,86 @@
 var graph;
 var animLoopHandle;
-var ws = new WSController();
+var playerName;
 
-var screenWidth = window.innerWidth;
-var screenHeight = window.innerHeight;
-var gameWidth = 0;
-var gameHeight = 0;
-
-var gameStart = false;
-var disconnected = false;
-var died = false;
-var kicked = false;
-
-var continuity = false;
-var startPingTime = 0;
-var toggleMassState = 0;
-var spin = -Math.PI;
-var enemySpin = -Math.PI;
-
-var foodSides = 10;
-var virusSides = 20;
-
-var foodConfig = {
-  border: 0,
-};
-
-var playerConfig = {
-  border: 6,
-  textColor: '#FFFFFF',
-  textBorder: '#000000',
-  textBorderSize: 3,
-  defaultSize: 30
-};
-
-var player = {
-  id: -1,
-  x: screenWidth / 2,
-  y: screenHeight / 2,
-  screenWidth: screenWidth,
-  screenHeight: screenHeight,
-  target: { x: screenWidth / 2, y: screenHeight / 2 }
-};
-
-var food = [];
-var viruses = [];
-var fireFood = [];
 var userList = [];
-var leaderboard = [];
-var target = { x: player.x, y: player.y };
-var reenviar = true;
-var directionLock = false;
-var directions = [];
-
-var gameLoopInterval = 1000 / 60;
 
 var canvasElements = document.getElementsByClassName('js-canvas');
 if (canvasElements && canvasElements.length > 0) {
+  var canvas = canvasElements[0];
+  canvas.addEventListener('mousemove', handleMouseMove);
   graph = new Graph(canvasElements[0]);
-  // canvas.addEventListener('mousemove', gameInput, false);
-  // canvas.addEventListener('mouseout', outOfBounds, false);
-  // canvas.addEventListener('keypress', keyInput, false);
-  // canvas.addEventListener('keyup', function(event) { reenviar = true; directionUp(event); }, false);
-  // canvas.addEventListener('keydown', directionDown, false);
-  // canvas.addEventListener('touchstart', touchInput, false);
-  // canvas.addEventListener('touchmove', touchInput, false);
 }
 
-window.requestAnimFrame = (function () {
-  return window.requestAnimationFrame ||
-    window.webkitRequestAnimationFrame ||
-    window.mozRequestAnimationFrame ||
-    window.msRequestAnimationFrame ||
-    function (callback) {
-      window.setTimeout(callback, gameLoopInterval);
-    };
-})();
+var playerNameElements = document.getElementsByClassName('js-player-name');
+var playButtonElements = document.getElementsByClassName('js-play-button');
+var errorElements = document.getElementsByClassName('js-error');
+if (playerNameElements && playerNameElements.length > 0 &&
+    playButtonElements && playButtonElements.length > 0 &&
+    errorElements && errorElements.length > 0) {
+    var playerNameElement = playerNameElements[0];
+    var playButtonElement = playButtonElements[0];
+    var errorElement = errorElements[0];
+    playerNameElement.addEventListener('keyup', function validate(event) {
+      if (event && event.target) {
+        var pattern = /^[a-zA-Z0-9 ]{0,25}$/;
+        if (event.target.value.match(pattern)) {
+          errorElement.style.display = 'none';
+          playButtonElement.disabled = false;
+        } else {
+          errorElement.style.display = 'block';
+          playButtonElement.disabled = true;
+        }
+        playerName = playerNameElement.value;
+      }
+    });
+    playButtonElement.addEventListener('mouseup', startGame);
+}
 
-window.cancelAnimFrame = (function (handle) {
-  return window.cancelAnimationFrame ||
-    window.mozCancelAnimationFrame;
-})();
+function handleMouseMove (mouse) {
+  graph.player.target.x = mouse.clientX - graph.screenWidth / 2;
+  graph.player.target.y = mouse.clientY - graph.screenHeight / 2;
+}
 
-function animloop() {
-  animLoopHandle = window.requestAnimFrame(animloop);
+function animationLoop() {
+  animLoopHandle = window.requestAnimationFrame(animationLoop);
+  
   gameLoop();
 }
 
 function gameLoop() {
-  if (!disconnected) {
-    graph
-      .clear()
-      .drawGrid()
-      .drawFood(food)
-      .drawViruses(viruses)
-      .drawFireFood(fireFood);
-
-    var orderMass = [];
-    for (var i = 0; i < userList.length; i++) {
-      for (var j = 0; j < userList[i].cells.length; j++) {
-        orderMass.push({
-          nCell: i,
-          nDiv: j,
-          mass: userList[i].cells[j].mass
-        });
-      }
-    }
-    orderMass.sort(function (obj1, obj2) {
-      return obj1.mass - obj2.mass;
-    });
-
-    graph.drawPlayers(userList, orderMass);
-  }
+  graph
+    .clear()
+    .drawGrid()
+    // .drawFood(food)
+    // .drawViruses(viruses)
+    // .drawFireFood(fireFood)
+    .drawPlayers(userList);
 }
 
-ws.on('open', function startGame () {
-  if (!animLoopHandle) {
-    animloop();
+function startGame () {
+  var playerName = playerNameElement.value;
+  var startMenuElements = document.getElementsByClassName('js-start-menu');
+  if (startMenuElements && startMenuElements.length > 0) {
+    startMenuElements[0].style.display = 'none';
   }
   
-  ws.on('acknowledged', function () {
-    ws.spawn();
+  var ws = new WSController();
+
+  ws.on('open', function startGame() {
+    
+    ws.spawn(playerName);
+    
+    ws.on('joined', function (id) {
+      graph.player.id = id;
+    });
+    
+    ws.on('updatePlayers', function (players) {
+      userList = players;
+    });
+    
   });
   
-  ws.on('updatePlayers', function (players) {
-    userList = players;
-  });
-  
-});
+  if (!animLoopHandle) {
+    animationLoop();
+  }
+}

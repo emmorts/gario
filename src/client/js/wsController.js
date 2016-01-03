@@ -1,3 +1,4 @@
+/* global BufferCodec */
 /* global OPCode */
 
 var WSController = (function () {
@@ -21,39 +22,80 @@ var WSController = (function () {
       fire.call(this, 'open');
 
       this.__socket.onmessage = function (message) {
-        if (message.data instanceof ArrayBuffer) {
-          var data = new DataView(message.data);
-          var code = data.getUint8(0);
-
-          switch (code) {
-            case OPCode.SYN:
-              this.__acknoledged = true;
-              var array = new Uint8Array(1);
-              array[0] = OPCode.ACK;
-              this.__socket.send(array.buffer);
-              fire.call(this, 'acknowledged');
-              break;
-            case OPCode.JOINED:
-              fire.call(this, 'joined');
-              break;
-            case OPCode.UPLAYERS:
-              fire.call(this, 'updatePlayers');
-              break;
-            default:
-              console.warn("Undefined opcode");
-              break;
-          }
-        } else {
-          console.warn("Received malformed data");
+        var codec = BufferCodec(message.data);
+        var code = codec.getOpcode();
+        
+        switch (code) {
+          case OPCode.SYN:
+            this.__acknoledged = true;
+            this.__socket.send(BufferCodec().setOpcode(OPCode.ACK));
+            fire.call(this, 'acknowledged');
+            break;
+          case OPCode.JOINED:
+            fire.call(this, 'joined', codec.parse([{
+              length: 32,
+              type: 'string'
+            }]));
+            break;
+          case OPCode.UPLAYERS:
+            var players = codec.parse([{
+              type: 'array',
+              itemTemplate: [{
+                name: 'id',
+                length: 32,
+                type: 'string'
+              }, {
+                name: 'x',
+                type: 'floatle'
+              }, {
+                name: 'y',
+                type: 'floatle'
+              }, {
+                name: 'hue',
+                type: 'uint16le'
+              }, {
+                name: 'massTotal',
+                type: 'uint16le'
+              }, {
+                name: 'cells',
+                type: 'array',
+                itemTemplate: [{
+                  name: 'mass',
+                  type: 'uint16le'
+                }, {
+                  name: 'x',
+                  type: 'floatle'
+                }, {
+                  name: 'y',
+                  type: 'floatle'
+                }, {
+                  name: 'radius',
+                  type: 'uint16le'
+                }]
+              }]
+            }]);
+            fire.call(this, 'updatePlayers', players);
+            break;
+          default:
+            console.warn("Undefined opcode");
+            break;
         }
       }.bind(this)
     }.bind(this)
   }
   
-  WSController.prototype.spawn = function () {
-    var array = new Uint8Array(1);
-    array[0] = OPCode.SPAWN;
-    this.__socket.send(array.buffer);
+  WSController.prototype.spawn = function (playerName) {
+    var buffer = new ArrayBuffer(2 + playerName.length * 2);
+    var uint8view = new Uint8Array(buffer); 
+    uint8view[0] = OPCode.SPAWN;
+    uint8view[1] = playerName.length;
+    if (playerName.length > 0) {
+      var bufferView = new Uint16Array(buffer, 2);
+      for (var i = 0, strLen = playerName.length; i < strLen; i++) {
+        bufferView[i] = playerName.charCodeAt(i);
+      }
+    }
+    this.__socket.send(buffer);
   }
   
   WSController.prototype.on = function (name, listener) {
