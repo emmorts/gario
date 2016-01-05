@@ -29,6 +29,7 @@ var Graph = (function () {
       textColor: '#FFFFFF',
       textBorder: '#000000',
       textBorderSize: 3,
+      fontSize: 12,
       defaultSize: 30
     };
   }
@@ -145,10 +146,14 @@ var Graph = (function () {
     return this;
   }
   
-  Graph.prototype.drawText = function (text, x, y) {
+  Graph.prototype.drawText = function (text, x, y, fontSize) {
+    if (!fontSize) {
+      fontSize = this._playerOptions.fontSize;
+    }
     this._context.lineWidth = this._playerOptions.textBorderSize;
     this._context.fillStyle = this._playerOptions.textColor;
     this._context.strokeStyle = this._playerOptions.textBorder;
+    this._context.font = 'bold ' + fontSize + 'px sans-serif';
     this._context.miterLimit = 1;
     this._context.lineJoin = 'round';
     this._context.textAlign = 'center';
@@ -163,24 +168,25 @@ var Graph = (function () {
       y: this.player.y - (this.screenHeight / 2)
     };
     
-    if (player && player.cells && player.cells.length > 0) {
-      player.cells.forEach(function (playerCell) {
-        var posX = -start.x + playerCell.x;
-        var posY = -start.y + playerCell.y;
-        
-        this._context.beginPath();
-        this._context.arc(posX, posY, playerCell.radius, 0, 2 * Math.PI);
-        this._context.fillStyle = 'hsl(' + player.hue + ', 100%, 50%)';
-        this._context.fill();
-        this._context.lineWidth = 5;
-        this._context.strokeStyle = 'hsl(' + player.hue + ', 100%, 35%)';
-        this._context.stroke();
-        this._context.closePath();
-        
-        var text = Math.round(playerCell.x) + ' ' + Math.round(playerCell.y);
-        this.drawText(text, posX, posY);
-      }, this);
-    }
+    var posX = -start.x + player.x;
+    var posY = -start.y + player.y;
+    
+    this._context.beginPath();
+    // TODO: REMOVE HARDCODED RADIUS
+    this._context.arc(posX, posY, 50, 0, 2 * Math.PI);
+    this._context.fillStyle = getColorInRGB(player);
+    this._context.fill();
+    this._context.lineWidth = 6;
+    this._context.strokeStyle = getColorInRGB(player, -0.15);
+    this._context.stroke();
+    this._context.lineWidth = 3;
+    this._context.strokeStyle = getColorInRGB(player, 0.15);
+    this._context.stroke();
+    this._context.closePath();
+    
+    this.drawText(player.name, posX, posY, 16);
+    var coordinates = Math.round(player.x) + ' ' + Math.round(player.y);
+    this.drawText(coordinates, posX, posY + 25);
   }
 
   Graph.prototype.drawPlayers = function (playerList) {
@@ -198,6 +204,21 @@ var Graph = (function () {
     }
     
     return this;
+  }
+  
+  function getColorInRGB(color, lightenPct) {
+    if (color) {
+      var r = color.r,
+          g = color.g,
+          b = color.b;
+      if (lightenPct) {
+        r = Math.round(r - r * lightenPct);
+        g = Math.round(g - g * lightenPct);
+        b = Math.round(b - b * lightenPct);
+      }
+      return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+    }
+    return 'rgb(0, 0, 0)';
   }
   
   function isValueInRange(min, max, value) {

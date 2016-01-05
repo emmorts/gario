@@ -1,7 +1,8 @@
 {
     "port": 3000,
-    "gameWidth": 5000,
-    "gameHeight": 5000,
+    "gameWidth": 500,
+    "gameHeight": 500,
     "defaultPlayerMass": 20,
-    "maxConnections": 255
+    "maxConnections": 255,
+    "defaultGameMode": 0
 }

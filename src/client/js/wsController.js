@@ -26,19 +26,28 @@ var WSController = (function () {
         var code = codec.getOpcode();
         
         switch (code) {
-          case OPCode.SYN:
-            this.__acknoledged = true;
-            this.__socket.send(BufferCodec().setOpcode(OPCode.ACK));
-            fire.call(this, 'acknowledged');
-            break;
-          case OPCode.JOINED:
-            fire.call(this, 'joined', codec.parse([{
+          case OPCode.ADD_NODE:
+            var node = codec.parse([{
+              name: 'id',
               length: 32,
               type: 'string'
-            }]));
+            }, {
+              name: 'name',
+              type: 'string'
+            }, {
+              name: 'r',
+              type: 'uint8'
+            }, {
+              name: 'g',
+              type: 'uint8'
+            }, {
+              name: 'b',
+              type: 'uint8'
+            }]);
+            fire.call(this, 'addNode', node);
             break;
-          case OPCode.UPLAYERS:
-            var players = codec.parse([{
+          case OPCode.UPDATE_NODES:
+            var nodes = codec.parse([{
               type: 'array',
               itemTemplate: [{
                 name: 'id',
@@ -50,31 +59,9 @@ var WSController = (function () {
               }, {
                 name: 'y',
                 type: 'floatle'
-              }, {
-                name: 'hue',
-                type: 'uint16le'
-              }, {
-                name: 'massTotal',
-                type: 'uint16le'
-              }, {
-                name: 'cells',
-                type: 'array',
-                itemTemplate: [{
-                  name: 'mass',
-                  type: 'uint16le'
-                }, {
-                  name: 'x',
-                  type: 'floatle'
-                }, {
-                  name: 'y',
-                  type: 'floatle'
-                }, {
-                  name: 'radius',
-                  type: 'uint16le'
-                }]
               }]
             }]);
-            fire.call(this, 'updatePlayers', players);
+            fire.call(this, 'updateNodes', nodes);
             break;
           default:
             console.warn("Undefined opcode");
@@ -96,6 +83,15 @@ var WSController = (function () {
       }
     }
     this.__socket.send(buffer);
+  }
+  
+  WSController.prototype.mouseMove = function (mouse) {
+    var buffer = new ArrayBuffer(9);
+    var view = new DataView(buffer);
+    view.setUint8(0, OPCode.MOUSE_MOVE);
+    view.setFloat32(1, mouse.x, true);
+    view.setFloat32(5, mouse.y, true);
+    this.__socket.send(view.buffer);
   }
   
   WSController.prototype.on = function (name, listener) {

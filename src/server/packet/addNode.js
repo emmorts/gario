@@ -1,17 +1,20 @@
+const concentrate = require('concentrate');
 const OPCode = require('../../opCode');
 
-function AddNode(item) {
-    this.item = item;
+function AddNode(node) {
+  this.node = node;
 }
 
 module.exports = AddNode;
 
-AddNode.prototype.build = function() {
-    var buffer = new ArrayBuffer(5);
-    var view = new DataView(buffer);
-
-    view.setUint8(0, OPCode.ADD_NODE);
-    view.setUint32(1, this.item.nodeId, true);
-
-    return buffer;
+AddNode.prototype.build = function () {
+  return concentrate()
+    .uint8(OPCode.ADD_NODE)
+    .string(this.node.id)
+    .uint8(this.node.owner.name.length)
+    .string(this.node.owner.name)
+    .uint8(this.node.color.r)
+    .uint8(this.node.color.g)
+    .uint8(this.node.color.b)
+    .result();
 };

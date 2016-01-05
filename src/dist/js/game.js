@@ -1,12 +1,10 @@
 var OPCode = {
-  "SYN": 0x0,
-  "ACK": 0x1,  
-  "JOINED": 0x2,
-  "PING": 0x3,
-  "PONG": 0x4,
-  "SPAWN": 0x5,
-  "UPLAYERS": 0x6,
-  "ADD_NODE": 0x7
+  "PING": 0x1,
+  "PONG": 0x2,
+  "SPAWN": 0x3,
+  "ADD_NODE": 0x4,
+  "UPDATE_NODES": 0x5,
+  "MOUSE_MOVE": 0x6
 };
 
 if (typeof window === 'undefined') {
@@ -15,35 +13,45 @@ if (typeof window === 'undefined') {
     window.OPCode = OPCode;
 }
 var BufferCodec = (function () {
-  
+
   function BufferCodec(buffer) {
     if (!(this instanceof BufferCodec)) {
       return new BufferCodec(buffer);
     }
-    
+
     this.offset = 0;
     this.jobs = [];
-    
+
     if (buffer) {
-      if (buffer instanceof ArrayBuffer && buffer.byteLength > 0) {
-        this.buffer = buffer;
-      } else {
+      if (buffer.byteLength > 0) {
+        if (typeof Buffer !== 'undefined' && buffer instanceof Buffer) {
+          var arrayBuffer = new ArrayBuffer(buffer.length);
+          var view = new Uint8Array(arrayBuffer);
+          for (var i = 0; i < buffer.length; ++i) {
+            view[i] = buffer[i];
+          }
+          this.buffer = arrayBuffer;
+        } else {
+          this.buffer = buffer;
+        }
+      }
+      if (!this.buffer) {
         console.warn("Received malformed data");
       }
     }
   }
-  
+
   BufferCodec.prototype.getOpcode = function () {
     this.offset++;
     return new Uint8Array(this.buffer)[0];
   }
-  
+
   BufferCodec.prototype.setOpcode = function (opcode) {
     var array = new Uint8Array(1);
     array[0] = opcode;
     return array.buffer;
   }
-  
+
   BufferCodec.prototype.string = function (value) {
     var buffer = new ArrayBuffer(value.length * 2);
     var bufferView = new Uint16Array(buffer);
@@ -52,36 +60,36 @@ var BufferCodec = (function () {
     }
     return buffer;
   }
-  
-  BufferCodec.prototype.parse = function (template) {    
-    if (this.buffer && template.length > 0) {
+
+  BufferCodec.prototype.parse = function (template) {
+    if (this.buffer && template) {
       var data = new DataView(this.buffer);
       var result = {};
-      
+
       if (template.constructor === Array) {
         template.forEach(function (element) {
-          parseItem(element, result)
+          parseItem.call(this, element, result)
         }, this);
       } else {
-        parseItem(template, result);
+        parseItem.call(this, template, result);
       }
-      
+
       return result;
     }
-    
+
     function parseArray(data, template) {
       var result = [];
-      
+
       var length = data.getUint8(this.offset++);
       if (length > 0) {
         for (var i = 0; i < length; i++) {
           result.push(this.parse(template));
         }
       }
-      
+
       return result;
     }
-    
+
     function parseItem(element) {
       var templateResult;
       switch (element.type) {
@@ -98,18 +106,30 @@ var BufferCodec = (function () {
           this.offset += 4;
           break;
         case 'string':
-          var utf16 = new ArrayBuffer(element.length * 2);
-          var utf16view = new Uint16Array(utf16);
-          for (var i = 0; i < element.length; i++, this.offset += 1) {
-            utf16view[i] = data.getUint8(this.offset);
+          if (!element.length) {
+            element.length = data.getUint8(this.offset++);
           }
-          templateResult = String.fromCharCode.apply(null, utf16view);
+          if (!element.encoding || element.encoding === 'utf16') {
+            var utf16 = new ArrayBuffer(element.length * 2);
+            var utf16view = new Uint16Array(utf16);
+            for (var i = 0; i < element.length; i++ , this.offset += 1) {
+              utf16view[i] = data.getUint8(this.offset);
+            }
+            templateResult = String.fromCharCode.apply(null, utf16view);
+          } else if (element.encoding === 'utf8') {
+            var utf8 = new ArrayBuffer(element.length);
+            var utf8view = new Uint8Array(utf8);
+            for (var i = 0; i < element.length; i++ , this.offset += 2) {
+              utf8view[i] = data.getUint8(this.offset);
+            }
+            templateResult = String.fromCharCode.apply(null, utf8view);
+          }
           break;
         case 'array':
           templateResult = parseArray.call(this, data, element.itemTemplate);
           break;
       }
-      
+
       if (element.name) {
         result[element.name] = templateResult;
       } else {
@@ -117,9 +137,9 @@ var BufferCodec = (function () {
       }
     }
   }
-  
+
   return BufferCodec;
-  
+
 })();
 
 if (typeof window === 'undefined') {
@@ -207,6 +227,7 @@ var Graph = (function () {
       textColor: '#FFFFFF',
       textBorder: '#000000',
       textBorderSize: 3,
+      fontSize: 12,
       defaultSize: 30
     };
   }
@@ -323,10 +344,14 @@ var Graph = (function () {
     return this;
   }
   
-  Graph.prototype.drawText = function (text, x, y) {
+  Graph.prototype.drawText = function (text, x, y, fontSize) {
+    if (!fontSize) {
+      fontSize = this._playerOptions.fontSize;
+    }
     this._context.lineWidth = this._playerOptions.textBorderSize;
     this._context.fillStyle = this._playerOptions.textColor;
     this._context.strokeStyle = this._playerOptions.textBorder;
+    this._context.font = 'bold ' + fontSize + 'px sans-serif';
     this._context.miterLimit = 1;
     this._context.lineJoin = 'round';
     this._context.textAlign = 'center';
@@ -341,24 +366,25 @@ var Graph = (function () {
       y: this.player.y - (this.screenHeight / 2)
     };
     
-    if (player && player.cells && player.cells.length > 0) {
-      player.cells.forEach(function (playerCell) {
-        var posX = -start.x + playerCell.x;
-        var posY = -start.y + playerCell.y;
-        
-        this._context.beginPath();
-        this._context.arc(posX, posY, playerCell.radius, 0, 2 * Math.PI);
-        this._context.fillStyle = 'hsl(' + player.hue + ', 100%, 50%)';
-        this._context.fill();
-        this._context.lineWidth = 5;
-        this._context.strokeStyle = 'hsl(' + player.hue + ', 100%, 35%)';
-        this._context.stroke();
-        this._context.closePath();
-        
-        var text = Math.round(playerCell.x) + ' ' + Math.round(playerCell.y);
-        this.drawText(text, posX, posY);
-      }, this);
-    }
+    var posX = -start.x + player.x;
+    var posY = -start.y + player.y;
+    
+    this._context.beginPath();
+    // TODO: REMOVE HARDCODED RADIUS
+    this._context.arc(posX, posY, 50, 0, 2 * Math.PI);
+    this._context.fillStyle = getColorInRGB(player);
+    this._context.fill();
+    this._context.lineWidth = 6;
+    this._context.strokeStyle = getColorInRGB(player, -0.15);
+    this._context.stroke();
+    this._context.lineWidth = 3;
+    this._context.strokeStyle = getColorInRGB(player, 0.15);
+    this._context.stroke();
+    this._context.closePath();
+    
+    this.drawText(player.name, posX, posY, 16);
+    var coordinates = Math.round(player.x) + ' ' + Math.round(player.y);
+    this.drawText(coordinates, posX, posY + 25);
   }
 
   Graph.prototype.drawPlayers = function (playerList) {
@@ -376,6 +402,21 @@ var Graph = (function () {
     }
     
     return this;
+  }
+  
+  function getColorInRGB(color, lightenPct) {
+    if (color) {
+      var r = color.r,
+          g = color.g,
+          b = color.b;
+      if (lightenPct) {
+        r = Math.round(r - r * lightenPct);
+        g = Math.round(g - g * lightenPct);
+        b = Math.round(b - b * lightenPct);
+      }
+      return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+    }
+    return 'rgb(0, 0, 0)';
   }
   
   function isValueInRange(min, max, value) {
@@ -429,19 +470,28 @@ var WSController = (function () {
         var code = codec.getOpcode();
         
         switch (code) {
-          case OPCode.SYN:
-            this.__acknoledged = true;
-            this.__socket.send(BufferCodec().setOpcode(OPCode.ACK));
-            fire.call(this, 'acknowledged');
-            break;
-          case OPCode.JOINED:
-            fire.call(this, 'joined', codec.parse([{
+          case OPCode.ADD_NODE:
+            var node = codec.parse([{
+              name: 'id',
               length: 32,
               type: 'string'
-            }]));
+            }, {
+              name: 'name',
+              type: 'string'
+            }, {
+              name: 'r',
+              type: 'uint8'
+            }, {
+              name: 'g',
+              type: 'uint8'
+            }, {
+              name: 'b',
+              type: 'uint8'
+            }]);
+            fire.call(this, 'addNode', node);
             break;
-          case OPCode.UPLAYERS:
-            var players = codec.parse([{
+          case OPCode.UPDATE_NODES:
+            var nodes = codec.parse([{
               type: 'array',
               itemTemplate: [{
                 name: 'id',
@@ -453,31 +503,9 @@ var WSController = (function () {
               }, {
                 name: 'y',
                 type: 'floatle'
-              }, {
-                name: 'hue',
-                type: 'uint16le'
-              }, {
-                name: 'massTotal',
-                type: 'uint16le'
-              }, {
-                name: 'cells',
-                type: 'array',
-                itemTemplate: [{
-                  name: 'mass',
-                  type: 'uint16le'
-                }, {
-                  name: 'x',
-                  type: 'floatle'
-                }, {
-                  name: 'y',
-                  type: 'floatle'
-                }, {
-                  name: 'radius',
-                  type: 'uint16le'
-                }]
               }]
             }]);
-            fire.call(this, 'updatePlayers', players);
+            fire.call(this, 'updateNodes', nodes);
             break;
           default:
             console.warn("Undefined opcode");
@@ -501,6 +529,15 @@ var WSController = (function () {
     this.__socket.send(buffer);
   }
   
+  WSController.prototype.mouseMove = function (mouse) {
+    var buffer = new ArrayBuffer(9);
+    var view = new DataView(buffer);
+    view.setUint8(0, OPCode.MOUSE_MOVE);
+    view.setFloat32(1, mouse.x, true);
+    view.setFloat32(5, mouse.y, true);
+    this.__socket.send(view.buffer);
+  }
+  
   WSController.prototype.on = function (name, listener) {
     if (!(name in this.__eventHandlers) || !(this.__eventHandlers[name] instanceof Array)) {
       this.__eventHandlers[name] = [];
@@ -519,16 +556,18 @@ var WSController = (function () {
   return WSController;
 
 })();
+/* global Graph */
 var graph;
 var animLoopHandle;
 var playerName;
+var time = performance.now();
+var mouse = { x: 0, y: 0 };
 
-var userList = [];
+var nodes = [];
 
 var canvasElements = document.getElementsByClassName('js-canvas');
 if (canvasElements && canvasElements.length > 0) {
   var canvas = canvasElements[0];
-  canvas.addEventListener('mousemove', handleMouseMove);
   graph = new Graph(canvasElements[0]);
 }
 
@@ -557,11 +596,6 @@ if (playerNameElements && playerNameElements.length > 0 &&
     playButtonElement.addEventListener('mouseup', startGame);
 }
 
-function handleMouseMove (mouse) {
-  graph.player.target.x = mouse.clientX - graph.screenWidth / 2;
-  graph.player.target.y = mouse.clientY - graph.screenHeight / 2;
-}
-
 function animationLoop() {
   animLoopHandle = window.requestAnimationFrame(animationLoop);
   
@@ -572,10 +606,7 @@ function gameLoop() {
   graph
     .clear()
     .drawGrid()
-    // .drawFood(food)
-    // .drawViruses(viruses)
-    // .drawFireFood(fireFood)
-    .drawPlayers(userList);
+    .drawPlayers(nodes);
 }
 
 function startGame () {
@@ -585,18 +616,46 @@ function startGame () {
     startMenuElements[0].style.display = 'none';
   }
   
+  
   var ws = new WSController();
 
   ws.on('open', function startGame() {
     
-    ws.spawn(playerName);
-    
-    ws.on('joined', function (id) {
-      graph.player.id = id;
+    document.body.addEventListener('mousedown', function (event) {
+      if (event.button === 2 && mouse.x !== event.x || mouse.y !== event.y) {
+        event.preventDefault();
+        event.stopPropagation();
+        var now = performance.now();
+        var diff = now - time;
+        if (diff > 100) {
+          time = now;
+          mouse.x = event.x;
+          mouse.y = event.y;
+          ws.mouseMove(mouse);
+        }
+      }
     });
     
-    ws.on('updatePlayers', function (players) {
-      userList = players;
+    canvas.addEventListener('contextmenu', function (event) {
+      event.preventDefault();
+    });
+    
+    ws.spawn(playerName);
+    
+    ws.on('addNode', function (node) {
+      graph.player.id = node.id;
+      nodes.push(node);
+    });
+    
+    ws.on('updateNodes', function (updatedNodes) {
+      nodes.forEach(function (localNode) {
+        updatedNodes.forEach(function (updatedNode) {
+          if (localNode.id === updatedNode.id) {
+            localNode.x = updatedNode.x;
+            localNode.y = updatedNode.y;
+          }          
+        });
+      });
     });
     
   });

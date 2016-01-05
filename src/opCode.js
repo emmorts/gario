@@ -1,12 +1,10 @@
 var OPCode = {
-  "SYN": 0x0,
-  "ACK": 0x1,  
-  "JOINED": 0x2,
-  "PING": 0x3,
-  "PONG": 0x4,
-  "SPAWN": 0x5,
-  "UPLAYERS": 0x6,
-  "ADD_NODE": 0x7
+  "PING": 0x1,
+  "PONG": 0x2,
+  "SPAWN": 0x3,
+  "ADD_NODE": 0x4,
+  "UPDATE_NODES": 0x5,
+  "MOUSE_MOVE": 0x6
 };
 
 if (typeof window === 'undefined') {

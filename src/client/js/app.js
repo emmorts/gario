@@ -1,13 +1,15 @@
+/* global Graph */
 var graph;
 var animLoopHandle;
 var playerName;
+var time = performance.now();
+var mouse = { x: 0, y: 0 };
 
-var userList = [];
+var nodes = [];
 
 var canvasElements = document.getElementsByClassName('js-canvas');
 if (canvasElements && canvasElements.length > 0) {
   var canvas = canvasElements[0];
-  canvas.addEventListener('mousemove', handleMouseMove);
   graph = new Graph(canvasElements[0]);
 }
 
@@ -36,11 +38,6 @@ if (playerNameElements && playerNameElements.length > 0 &&
     playButtonElement.addEventListener('mouseup', startGame);
 }
 
-function handleMouseMove (mouse) {
-  graph.player.target.x = mouse.clientX - graph.screenWidth / 2;
-  graph.player.target.y = mouse.clientY - graph.screenHeight / 2;
-}
-
 function animationLoop() {
   animLoopHandle = window.requestAnimationFrame(animationLoop);
   
@@ -51,10 +48,7 @@ function gameLoop() {
   graph
     .clear()
     .drawGrid()
-    // .drawFood(food)
-    // .drawViruses(viruses)
-    // .drawFireFood(fireFood)
-    .drawPlayers(userList);
+    .drawPlayers(nodes);
 }
 
 function startGame () {
@@ -64,18 +58,46 @@ function startGame () {
     startMenuElements[0].style.display = 'none';
   }
   
+  
   var ws = new WSController();
 
   ws.on('open', function startGame() {
     
-    ws.spawn(playerName);
-    
-    ws.on('joined', function (id) {
-      graph.player.id = id;
+    document.body.addEventListener('mousedown', function (event) {
+      if (event.button === 2 && mouse.x !== event.x || mouse.y !== event.y) {
+        event.preventDefault();
+        event.stopPropagation();
+        var now = performance.now();
+        var diff = now - time;
+        if (diff > 100) {
+          time = now;
+          mouse.x = event.x;
+          mouse.y = event.y;
+          ws.mouseMove(mouse);
+        }
+      }
     });
     
-    ws.on('updatePlayers', function (players) {
-      userList = players;
+    canvas.addEventListener('contextmenu', function (event) {
+      event.preventDefault();
+    });
+    
+    ws.spawn(playerName);
+    
+    ws.on('addNode', function (node) {
+      graph.player.id = node.id;
+      nodes.push(node);
+    });
+    
+    ws.on('updateNodes', function (updatedNodes) {
+      nodes.forEach(function (localNode) {
+        updatedNodes.forEach(function (updatedNode) {
+          if (localNode.id === updatedNode.id) {
+            localNode.x = updatedNode.x;
+            localNode.y = updatedNode.y;
+          }          
+        });
+      });
     });
     
   });
