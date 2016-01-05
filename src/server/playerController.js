@@ -11,7 +11,7 @@ function PlayerController(gameServer, socket) {
   this.nodeDestroyQueue = [];
   this.visibleNodes = [];
   
-  this.mouse = {x: 0, y: 0};
+  this.target = {x: 0, y: 0};
 
   if (gameServer) {
     this.pId = uuid.v4().replace(/-/g, '');

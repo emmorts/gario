@@ -127,19 +127,19 @@ GameServer.prototype.updateMovementEngine = function () {
   this.movingNodes = [];
   
   this.nodes.forEach(function (node) {
-    const currentPosX = node.x;
-    const currentPosY = node.y;
+    const currentPosX = node.position.x;
+    const currentPosY = node.position.y;
     
     node.calculateNextPosition();
     
-    if (currentPosX !== node.X || currentPosY !== node.Y) {
+    if (currentPosX !== node.position.x || currentPosY !== node.position.y) {
       this.movingNodes.push(node);
     }
   }, this);
   
-  this.movingNodes.forEach(function (movingNode) {
-    
-  });
+  this.clients.forEach(function (client) {
+    client.playerController.nodeAdditionQueue = client.playerController.nodeAdditionQueue.concat(this.movingNodes); 
+  }, this);
 }
 
 GameServer.prototype.spawnPlayer = function (player) {
@@ -147,7 +147,7 @@ GameServer.prototype.spawnPlayer = function (player) {
 
   this.addNode(playerModel);
   
-  player.mouse = {
+  player.target = {
     x: playerModel.x,
     y: playerModel.y
   };

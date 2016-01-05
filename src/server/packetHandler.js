@@ -24,14 +24,14 @@ PacketHandler.prototype.handleMessage = function (message) {
 
       break;
     case OPCode.MOUSE_MOVE:
-      const mouse = codec.parse([{
+      const target = codec.parse([{
         name: 'x',
         type: 'floatle'
       }, {
         name: 'y',
         type: 'floatle'
       }]);
-      this.socket.playerController.mouse = mouse;
+      this.socket.playerController.target = target;
       break;
     default:
       console.log("Undefined opcode %s", opcode);
