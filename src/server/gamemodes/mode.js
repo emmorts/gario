@@ -1,6 +1,7 @@
 function Mode() {
   this.ID = -1;
   this.name = "Blank";
+  this.friction = 0;
 }
 
 module.exports = Mode;

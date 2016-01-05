@@ -132,7 +132,10 @@ GameServer.prototype.updateMovementEngine = function () {
     
     node.calculateNextPosition();
     
-    if (currentPosX !== node.position.x || currentPosY !== node.position.y) {
+    const diffX = Math.abs(currentPosX - node.position.x);
+    const diffY = Math.abs(currentPosY - node.position.y);
+    
+    if (diffX + diffY < 10) {
       this.movingNodes.push(node);
     }
   }, this);
@@ -144,13 +147,13 @@ GameServer.prototype.updateMovementEngine = function () {
 
 GameServer.prototype.spawnPlayer = function (player) {
   var playerModel = new Model.Player(this, player);
-
-  this.addNode(playerModel);
   
   player.target = {
     x: playerModel.x,
     y: playerModel.y
   };
+
+  this.addNode(playerModel);
 }
 
 GameServer.prototype.getRandomColor = function () {

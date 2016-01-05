@@ -5,6 +5,7 @@ function FFA() {
 
   this.ID = 0;
   this.name = "Free For All";
+  this.friction = 0.1;
 }
 
 module.exports = FFA;

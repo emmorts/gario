@@ -12,6 +12,7 @@ body {
   left: 0;
   right: 0;
   background-color: rgba(255, 255, 255, 0.7);
+  z-index: 1;
 }
   .start-menu-content {
     position: absolute;
@@ -90,3 +91,7 @@ body {
 .game {
   font-size: 0;
 }
+  
+  .game .game-canvas {
+    position: relative;
+  } 

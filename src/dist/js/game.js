@@ -208,11 +208,11 @@ var Graph = (function () {
     this._globalAlpha = options.globalAlpha || 0.15;
     this._foodSides = options.virusSides || 10;
     this._virusSides = options.foodSides || 20;
-    this._gameWidth = options.gameWidth || this.screenWidth;
-    this._gameHeight = options.gameHeight || this.screenHeight;
+    this._gameWidth = options.gameWidth || 5000;
+    this._gameHeight = options.gameHeight || 5000;
     this._xOffset = -this._gameWidth;
     this._yOffset = -this._gameHeight;
-    
+
     this.player = {
       id: -1,
       x: this.screenWidth / 2,
@@ -224,6 +224,7 @@ var Graph = (function () {
 
     this._playerOptions = {
       border: 6,
+      borderColor: '#CCCCCC',
       textColor: '#FFFFFF',
       textBorder: '#000000',
       textBorderSize: 3,
@@ -343,7 +344,51 @@ var Graph = (function () {
 
     return this;
   }
-  
+
+  Graph.prototype.drawBorder = function () {
+
+    this._context.lineWidth = 1;
+    this._context.strokeStyle = this._playerOptions.borderColor;
+
+    // Left-vertical.
+    if (this.player.x <= this.screenWidth / 2) {
+      this._context.beginPath();
+      this._context.moveTo(this.screenWidth / 2 - this.player.x, this.screenHeight / 2 - this.player.y);
+      this._context.lineTo(this.screenWidth / 2 - this.player.x, this._gameHeight + this.screenHeight / 2 - this.player.y);
+      this._context.strokeStyle = this._lineColor;
+      this._context.stroke();
+    }
+
+    // Top-horizontal.
+    if (this.player.y <= this.screenHeight / 2) {
+      this._context.beginPath();
+      this._context.moveTo(this.screenWidth / 2 - this.player.x, this.screenHeight / 2 - this.player.y);
+      this._context.lineTo(this._gameWidth + this.screenWidth / 2 - this.player.x, this.screenHeight / 2 - this.player.y);
+      this._context.strokeStyle = this._lineColor;
+      this._context.stroke();
+    }
+
+    // Right-vertical.
+    if (this._gameWidth - this.player.x <= this.screenWidth / 2) {
+      this._context.beginPath();
+      this._context.moveTo(this._gameWidth + this.screenWidth / 2 - this.player.x, this.screenHeight / 2 - this.player.y);
+      this._context.lineTo(this._gameWidth + this.screenWidth / 2 - this.player.x, this._gameHeight + this.screenHeight / 2 - this.player.y);
+      this._context.strokeStyle = this._lineColor;
+      this._context.stroke();
+    }
+
+    // Bottom-horizontal.
+    if (this._gameHeight - this.player.y <= this.screenHeight / 2) {
+      this._context.beginPath();
+      this._context.moveTo(this._gameWidth + this.screenWidth / 2 - this.player.x, this._gameHeight + this.screenHeight / 2 - this.player.y);
+      this._context.lineTo(this.screenWidth / 2 - this.player.x, this._gameHeight + this.screenHeight / 2 - this.player.y);
+      this._context.strokeStyle = this._lineColor;
+      this._context.stroke();
+    }
+    
+    return this;
+  }
+
   Graph.prototype.drawText = function (text, x, y, fontSize) {
     if (!fontSize) {
       fontSize = this._playerOptions.fontSize;
@@ -359,16 +404,16 @@ var Graph = (function () {
     this._context.strokeText(text, x, y);
     this._context.fillText(text, x, y);
   }
-  
+
   Graph.prototype.drawPlayer = function (player) {
     var start = {
       x: this.player.x - (this.screenWidth / 2),
       y: this.player.y - (this.screenHeight / 2)
     };
-    
+
     var posX = -start.x + player.x;
     var posY = -start.y + player.y;
-    
+
     this._context.beginPath();
     // TODO: REMOVE HARDCODED RADIUS
     this._context.arc(posX, posY, 50, 0, 2 * Math.PI);
@@ -381,7 +426,7 @@ var Graph = (function () {
     this._context.strokeStyle = getColorInRGB(player, 0.15);
     this._context.stroke();
     this._context.closePath();
-    
+
     this.drawText(player.name, posX, posY, 16);
     var coordinates = Math.round(player.x) + ' ' + Math.round(player.y);
     this.drawText(coordinates, posX, posY + 25);
@@ -400,15 +445,15 @@ var Graph = (function () {
         this.drawPlayer(player);
       }, this);
     }
-    
+
     return this;
   }
-  
+
   function getColorInRGB(color, lightenPct) {
     if (color) {
       var r = color.r,
-          g = color.g,
-          b = color.b;
+        g = color.g,
+        b = color.b;
       if (lightenPct) {
         r = Math.round(r - r * lightenPct);
         g = Math.round(g - g * lightenPct);
@@ -418,7 +463,7 @@ var Graph = (function () {
     }
     return 'rgb(0, 0, 0)';
   }
-  
+
   function isValueInRange(min, max, value) {
     return Math.min(max, Math.max(min, value));
   }
@@ -427,16 +472,16 @@ var Graph = (function () {
     return window.innerWidth && document.documentElement.clientWidth
       ? Math.min(window.innerWidth, document.documentElement.clientWidth)
       : window.innerWidth ||
-        document.documentElement.clientWidth ||
-        document.getElementsByTagName('body')[0].clientWidth;
+      document.documentElement.clientWidth ||
+      document.getElementsByTagName('body')[0].clientWidth;
   }
 
   function getDefaultHeight() {
     return window.innerHeight && document.documentElement.clientHeight
       ? Math.min(window.innerHeight, document.documentElement.clientHeight)
       : window.innerHeight ||
-        document.documentElement.clientHeight ||
-        document.getElementsByTagName('body')[0].clientHeight;
+      document.documentElement.clientHeight ||
+      document.getElementsByTagName('body')[0].clientHeight;
   }
 
   return Graph;
@@ -606,6 +651,7 @@ function gameLoop() {
   graph
     .clear()
     .drawGrid()
+    .drawBorder()
     .drawPlayers(nodes);
 }
 
@@ -621,17 +667,22 @@ function startGame () {
 
   ws.on('open', function startGame() {
     
-    document.body.addEventListener('mousedown', function (event) {
-      if (event.button === 2 && mouse.x !== event.x || mouse.y !== event.y) {
+    canvas.addEventListener('mousedown', function (event) {
+      if (event.button === 2 && (mouse.x !== event.x || mouse.y !== event.y)) {
         event.preventDefault();
         event.stopPropagation();
         var now = performance.now();
         var diff = now - time;
         if (diff > 100) {
           time = now;
-          mouse.x = event.x;
-          mouse.y = event.y;
-          ws.mouseMove(mouse);
+          var targetX = graph.player.x + event.x - graph.screenWidth / 2;
+          var targetY = graph.player.y + event.y - graph.screenHeight / 2;
+          targetX = targetX < 0 ? 0 : targetX;
+          targetY = targetY < 0 ? 0 : targetY;
+          ws.mouseMove({
+            x: Math.min(targetX, graph._gameWidth),
+            y: Math.min(targetY, graph._gameHeight)
+          });
         }
       }
     });

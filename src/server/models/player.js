@@ -11,7 +11,9 @@ function Player(gameServer, owner, options) {
   this.owner = owner;
   this.position = options.position || getRandomPosition();
   this.gameServer = gameServer;
-  this.speed = 200;
+  this.speed = 5;
+  this.acceleration = 2;
+  this.velocity = 0;
 }
 
 module.exports = Player;
@@ -23,29 +25,30 @@ Player.prototype.setColor = function (color) {
 }
 
 Player.prototype.calculateNextPosition = function () {
-  if (this.position.x !== this.owner.target.x || this.position.y !== this.owner.target.y) {
-    this.position = calculatePosition(this.position, this.owner.target, this.speed);
+  if (typeof this.owner.target.x !== 'undefined' && typeof this.owner.target.y !== 'undefined') {
+    if (this.position.x !== this.owner.target.x || this.position.y !== this.owner.target.y) {
+      this.position = calculatePosition.call(this, this.position, this.owner.target, this.speed);
+    }
   }
 }
 
 function calculatePosition(currentPosition, targetPosition, speed) {
-  // k = (targetPosition.y - currentPosition.y) / (targetPosition.x - currentPosition.x);
-  // b = currentPosition.y - k * currentPosition.x;
   const vX = targetPosition.x - currentPosition.x;
   const vY = targetPosition.y - currentPosition.y;
-  const k  = speed / (Math.abs(vX) + Math.abs(vY));
+  const distance = getHypotenuseLength(vX, vY);
   
-  let targetX = currentPosition.x + k * vX;
-  let targetY = currentPosition.y + k * vY;
-  
-  if (vX < targetX - currentPosition.x) targetX = targetPosition.x;
-  if (vY < targetY - currentPosition.y) targetY = targetPosition.y;
+  const velX = (vX / distance) * this.speed;
+  const velY = (vY / distance) * this.speed;
   
   return {
-    x: targetX,
-    y: targetY
+    x: currentPosition.x + velX,
+    y: currentPosition.y + velY
   }
   
+}
+
+function getHypotenuseLength(x, y) {
+  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 }
 
 function getRandomPosition() {

@@ -48,6 +48,7 @@ function gameLoop() {
   graph
     .clear()
     .drawGrid()
+    .drawBorder()
     .drawPlayers(nodes);
 }
 
@@ -63,17 +64,22 @@ function startGame () {
 
   ws.on('open', function startGame() {
     
-    document.body.addEventListener('mousedown', function (event) {
-      if (event.button === 2 && mouse.x !== event.x || mouse.y !== event.y) {
+    canvas.addEventListener('mousedown', function (event) {
+      if (event.button === 2 && (mouse.x !== event.x || mouse.y !== event.y)) {
         event.preventDefault();
         event.stopPropagation();
         var now = performance.now();
         var diff = now - time;
         if (diff > 100) {
           time = now;
-          mouse.x = event.x;
-          mouse.y = event.y;
-          ws.mouseMove(mouse);
+          var targetX = graph.player.x + event.x - graph.screenWidth / 2;
+          var targetY = graph.player.y + event.y - graph.screenHeight / 2;
+          targetX = targetX < 0 ? 0 : targetX;
+          targetY = targetY < 0 ? 0 : targetY;
+          ws.mouseMove({
+            x: Math.min(targetX, graph._gameWidth),
+            y: Math.min(targetY, graph._gameHeight)
+          });
         }
       }
     });
