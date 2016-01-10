@@ -59,7 +59,6 @@ function startGame () {
     startMenuElements[0].style.display = 'none';
   }
   
-  
   var ws = new WSController();
 
   ws.on('open', function startGame() {

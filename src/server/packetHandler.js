@@ -16,22 +16,20 @@ PacketHandler.prototype.handleMessage = function (message) {
   
   switch (opcode) {
     case OPCode.SPAWN:
-      const length = codec.parse({ type: 'uint8' });
-      const playerName = codec.parse({ type: 'string', length: length, encoding: 'utf8' });
+      const playerName = codec.parse({ type: 'string', encoding: 'utf8' });
       
       this.socket.playerController.setName(playerName);
       this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this.socket.playerController);
 
       break;
     case OPCode.MOUSE_MOVE:
-      const target = codec.parse([{
+      this.socket.playerController.target = codec.parse([{
         name: 'x',
         type: 'floatle'
       }, {
         name: 'y',
         type: 'floatle'
       }]);
-      this.socket.playerController.target = target;
       break;
     default:
       console.log("Undefined opcode %s", opcode);

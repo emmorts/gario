@@ -92,8 +92,11 @@ var BufferCodec = (function () {
           this.offset += 4;
           break;
         case 'string':
-          if (!element.length) {
+          if (typeof element.length === 'undefined') {
             element.length = data.getUint8(this.offset++);
+          } else if (!element.length) {
+              templateResult = '';
+              break;
           }
           if (!element.encoding || element.encoding === 'utf16') {
             var utf16 = new ArrayBuffer(element.length * 2);

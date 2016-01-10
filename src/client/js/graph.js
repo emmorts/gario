@@ -48,12 +48,14 @@ var Graph = (function () {
     this._context.globalAlpha = this._globalAlpha;
     this._context.beginPath();
 
-    for (var x = this._xOffset - this.player.x; x < this.screenWidth; x += this.screenHeight / 18) {
+    for (var x = this._xOffset - this.player.x; x < this.screenWidth; x += this.screenHeight / 16) {
+      x = Math.round(x) + 0.5;
       this._context.moveTo(x, 0);
       this._context.lineTo(x, this.screenHeight);
     }
 
-    for (var y = this._yOffset - this.player.y; y < this.screenHeight; y += this.screenHeight / 18) {
+    for (var y = this._yOffset - this.player.y; y < this.screenHeight; y += this.screenHeight / 16) {
+      x = Math.round(y) + 0.5;
       this._context.moveTo(0, y);
       this._context.lineTo(this.screenWidth, y);
     }

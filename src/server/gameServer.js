@@ -135,7 +135,7 @@ GameServer.prototype.updateMovementEngine = function () {
     const diffX = Math.abs(currentPosX - node.position.x);
     const diffY = Math.abs(currentPosY - node.position.y);
     
-    if (diffX + diffY < 10) {
+    if (diffX + diffY > 1) {
       this.movingNodes.push(node);
     }
   }, this);
