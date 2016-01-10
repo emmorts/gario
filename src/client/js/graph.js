@@ -17,11 +17,13 @@ var Graph = (function () {
 
     this.player = {
       id: -1,
-      x: this.screenWidth / 2,
-      y: this.screenHeight / 2,
-      screenWidth: this.screenWidth,
-      screenHeight: this.screenHeight,
-      target: { x: this.screenWidth / 2, y: this.screenHeight / 2 }
+      position: {
+        x: this.screenWidth / 2,
+        y: this.screenHeight / 2
+      }
+      // screenWidth: this.screenWidth,
+      // screenHeight: this.screenHeight,
+      // target: { x: this.screenWidth / 2, y: this.screenHeight / 2 }
     };
 
     this._playerOptions = {
@@ -48,13 +50,13 @@ var Graph = (function () {
     this._context.globalAlpha = this._globalAlpha;
     this._context.beginPath();
 
-    for (var x = this._xOffset - this.player.x; x < this.screenWidth; x += this.screenHeight / 16) {
+    for (var x = this._xOffset - this.player.position.x; x < this.screenWidth; x += this.screenHeight / 16) {
       x = Math.round(x) + 0.5;
       this._context.moveTo(x, 0);
       this._context.lineTo(x, this.screenHeight);
     }
 
-    for (var y = this._yOffset - this.player.y; y < this.screenHeight; y += this.screenHeight / 16) {
+    for (var y = this._yOffset - this.player.position.y; y < this.screenHeight; y += this.screenHeight / 16) {
       x = Math.round(y) + 0.5;
       this._context.moveTo(0, y);
       this._context.lineTo(this.screenWidth, y);
@@ -87,105 +89,43 @@ var Graph = (function () {
     return this;
   }
 
-  Graph.prototype.drawFood = function (food) {
-    if (food) {
-      if (food.constructor !== Array) {
-        food = [food];
-      }
-
-      food.forEach(function (item) {
-        this._context.strokeStyle = 'hsl(' + food.hue + ', 100%, 45%)';
-        this._context.fillStyle = 'hsl(' + food.hue + ', 100%, 50%)';
-
-        var centerX = food.x - this.player.x + this.screenWidth / 2;
-        var centerY = food.y - this.player.y + this.screenHeight / 2;
-
-        this.drawCircle(centerX, centerY, food.radius, this._foodSides);
-      });
-    }
-
-    return this;
-  }
-
-  Graph.prototype.drawViruses = function (viruses) {
-    if (viruses) {
-      if (viruses.constructor !== Array) {
-        viruses = [viruses];
-      }
-
-      viruses.forEach(function (virus) {
-        this._context.strokeStyle = virus.stroke;
-        this._context.fillStyle = virus.fill;
-        this._context.lineWidth = virus.strokeWidth;
-
-        var centerX = virus.x - this.player.x + this.screenWidth / 2;
-        var centerY = virus.y - this.player.y + this.screenHeight / 2;
-
-        this.drawCircle(centerX, centerY, virus.radius, this._virusSides);
-      });
-    }
-
-    return this;
-  }
-
-  Graph.prototype.drawFireFood = function (masses) {
-    if (masses) {
-      if (masses.constructor !== Array) {
-        masses = [masses];
-      }
-
-      masses.forEach(function (mass) {
-        this._context.strokeStyle = 'hsl(' + mass.hue + ', 100%, 45%)';
-        this._context.fillStyle = 'hsl(' + mass.hue + ', 100%, 50%)';
-        this._context.lineWidth = this._playerOptions.border + 10;
-
-        var centerX = mass.x - this.player.x + this.screenWidth / 2;
-        var centerY = mass.y - this.player.y + this.screenHeight / 2;
-
-        this.drawCircle(centerX, centerY, mass.radius - 5, 18 + (~~(mass.masa / 5)));
-      });
-    }
-
-    return this;
-  }
-
   Graph.prototype.drawBorder = function () {
 
     this._context.lineWidth = 1;
     this._context.strokeStyle = this._playerOptions.borderColor;
 
     // Left-vertical.
-    if (this.player.x <= this.screenWidth / 2) {
+    if (this.player.position.x <= this.screenWidth / 2) {
       this._context.beginPath();
-      this._context.moveTo(this.screenWidth / 2 - this.player.x, this.screenHeight / 2 - this.player.y);
-      this._context.lineTo(this.screenWidth / 2 - this.player.x, this._gameHeight + this.screenHeight / 2 - this.player.y);
+      this._context.moveTo(this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
+      this._context.lineTo(this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
       this._context.strokeStyle = this._lineColor;
       this._context.stroke();
     }
 
     // Top-horizontal.
-    if (this.player.y <= this.screenHeight / 2) {
+    if (this.player.position.y <= this.screenHeight / 2) {
       this._context.beginPath();
-      this._context.moveTo(this.screenWidth / 2 - this.player.x, this.screenHeight / 2 - this.player.y);
-      this._context.lineTo(this._gameWidth + this.screenWidth / 2 - this.player.x, this.screenHeight / 2 - this.player.y);
+      this._context.moveTo(this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
+      this._context.lineTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
       this._context.strokeStyle = this._lineColor;
       this._context.stroke();
     }
 
     // Right-vertical.
-    if (this._gameWidth - this.player.x <= this.screenWidth / 2) {
+    if (this._gameWidth - this.player.position.x <= this.screenWidth / 2) {
       this._context.beginPath();
-      this._context.moveTo(this._gameWidth + this.screenWidth / 2 - this.player.x, this.screenHeight / 2 - this.player.y);
-      this._context.lineTo(this._gameWidth + this.screenWidth / 2 - this.player.x, this._gameHeight + this.screenHeight / 2 - this.player.y);
+      this._context.moveTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
+      this._context.lineTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
       this._context.strokeStyle = this._lineColor;
       this._context.stroke();
     }
 
     // Bottom-horizontal.
-    if (this._gameHeight - this.player.y <= this.screenHeight / 2) {
+    if (this._gameHeight - this.player.position.y <= this.screenHeight / 2) {
       this._context.beginPath();
-      this._context.moveTo(this._gameWidth + this.screenWidth / 2 - this.player.x, this._gameHeight + this.screenHeight / 2 - this.player.y);
-      this._context.lineTo(this.screenWidth / 2 - this.player.x, this._gameHeight + this.screenHeight / 2 - this.player.y);
+      this._context.moveTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
+      this._context.lineTo(this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
       this._context.strokeStyle = this._lineColor;
       this._context.stroke();
     }
@@ -211,28 +151,28 @@ var Graph = (function () {
 
   Graph.prototype.drawPlayer = function (player) {
     var start = {
-      x: this.player.x - (this.screenWidth / 2),
-      y: this.player.y - (this.screenHeight / 2)
+      x: this.player.position.x - (this.screenWidth / 2),
+      y: this.player.position.y - (this.screenHeight / 2)
     };
 
-    var posX = -start.x + player.x;
-    var posY = -start.y + player.y;
+    var posX = -start.x + player.position.x;
+    var posY = -start.y + player.position.y;
 
     this._context.beginPath();
     // TODO: REMOVE HARDCODED RADIUS
-    this._context.arc(posX, posY, 50, 0, 2 * Math.PI);
-    this._context.fillStyle = getColorInRGB(player);
+    this._context.arc(posX, posY, 50, Math.PI / 7 + player.rotation, -Math.PI / 7 + player.rotation);
+    this._context.fillStyle = getColorInRGB(player.color);
     this._context.fill();
     this._context.lineWidth = 6;
-    this._context.strokeStyle = getColorInRGB(player, -0.15);
+    this._context.strokeStyle = getColorInRGB(player.color, -0.15);
     this._context.stroke();
     this._context.lineWidth = 3;
-    this._context.strokeStyle = getColorInRGB(player, 0.15);
+    this._context.strokeStyle = getColorInRGB(player.color, 0.15);
     this._context.stroke();
     this._context.closePath();
 
     this.drawText(player.name, posX, posY, 16);
-    var coordinates = Math.round(player.x) + ' ' + Math.round(player.y);
+    var coordinates = Math.round(player.position.x) + ' ' + Math.round(player.position.y);
     this.drawText(coordinates, posX, posY + 25);
   }
 
@@ -242,8 +182,8 @@ var Graph = (function () {
         return player.id === this.player.id;
       }, this);
       if (currentPlayer) {
-        this.player.x = currentPlayer.x;
-        this.player.y = currentPlayer.y;
+        this.player.position.x = currentPlayer.position.x;
+        this.player.position.y = currentPlayer.position.y;
       }
       playerList.forEach(function (player) {
         this.drawPlayer(player);
