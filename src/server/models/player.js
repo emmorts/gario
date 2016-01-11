@@ -7,7 +7,7 @@ function Player(gameServer, owner, options) {
 
   options = options || {};
 
-  this.id = uuid.v4().replace(/-/g, '');
+  this.id = owner.pId;
   this.owner = owner;
   this.position = options.position || getRandomPosition();
   this.gameServer = gameServer;

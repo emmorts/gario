@@ -35,6 +35,12 @@ var WSController = (function () {
               name: 'name',
               type: 'string'
             }, {
+              name: 'x',
+              type: 'floatle'
+            }, {
+              name: 'y',
+              type: 'floatle'
+            }, {
               name: 'r',
               type: 'uint8'
             }, {
@@ -54,11 +60,29 @@ var WSController = (function () {
                 length: 32,
                 type: 'string'
               }, {
+                name: 'name',
+                type: 'string'
+              }, {
                 name: 'x',
                 type: 'floatle'
               }, {
                 name: 'y',
                 type: 'floatle'
+              }, {
+                name: 'targetX',
+                type: 'floatle'
+              }, {
+                name: 'targetY',
+                type: 'floatle'
+              }, {
+                name: 'r',
+                type: 'uint8'
+              }, {
+                name: 'g',
+                type: 'uint8'
+              }, {
+                name: 'b',
+                type: 'uint8'
               }]
             }]);
             fire.call(this, 'updateNodes', nodes);
@@ -85,12 +109,12 @@ var WSController = (function () {
     this.__socket.send(buffer);
   }
   
-  WSController.prototype.mouseMove = function (mouse) {
+  WSController.prototype.move = function (player) {
     var buffer = new ArrayBuffer(9);
     var view = new DataView(buffer);
-    view.setUint8(0, OPCode.MOUSE_MOVE);
-    view.setFloat32(1, mouse.x, true);
-    view.setFloat32(5, mouse.y, true);
+    view.setUint8(0, OPCode.PLAYER_MOVE);
+    view.setFloat32(1, player.position.x, true);
+    view.setFloat32(5, player.position.y, true);
     this.__socket.send(view.buffer);
   }
   

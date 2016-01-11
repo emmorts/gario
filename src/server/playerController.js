@@ -5,7 +5,6 @@ function PlayerController(gameServer, socket) {
   this.pId = -1;
   this.gameServer = gameServer;
   this.socket = socket;
-  this.cells = [];
   this.name = "";
   this.nodeAdditionQueue = [];
   this.nodeDestroyQueue = [];
@@ -20,6 +19,13 @@ function PlayerController(gameServer, socket) {
 
 PlayerController.prototype.setName = function (value) {
   this.name = value;
+}
+
+PlayerController.prototype.setTarget = function (x, y) {
+  this.target.x = x;
+  this.target.y = y;
+  
+  this.gameServer.onTargetUpdated(this.socket);
 }
 
 PlayerController.prototype.update = function () {

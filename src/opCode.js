@@ -4,7 +4,7 @@ var OPCode = {
   "SPAWN": 0x3,
   "ADD_NODE": 0x4,
   "UPDATE_NODES": 0x5,
-  "MOUSE_MOVE": 0x6
+  "PLAYER_MOVE": 0x6
 };
 
 if (typeof window === 'undefined') {

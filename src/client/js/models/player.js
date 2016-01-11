@@ -5,7 +5,6 @@ var Player = (function () {
     
     this.id = node.id || -1;
     this.name = node.name;
-    this.target = { x: 0, y: 0 };
     this.speed = 6;
     this.acceleration = 0.01;
     this.rotation = 0;
@@ -25,6 +24,11 @@ var Player = (function () {
       x: node.x || 0,
       y: node.y || 0
     };
+    
+    this.target = {
+      x: node.targetX || node.x || 0,
+      y: node.targetY || node.y || 0
+    };
   }
 
   Player.prototype.calculateNextPosition = function () {
@@ -37,9 +41,12 @@ var Player = (function () {
   }
   
   Player.prototype.setTarget = function (x, y) {
-    var vX = x - this.position.x;
-    var vY = y - this.position.y;
-    this.targetRotation = Math.atan2(vY, vX);
+    this.targetRotation = Math.atan2(y - this.position.y, x - this.position.x);
+    var diff = this.targetRotation - this.rotation;
+    
+    if (diff > Math.PI / 2) {
+      this._friction = this.baseFriction;
+    }
     
     this.target.x = x;
     this.target.y = y;

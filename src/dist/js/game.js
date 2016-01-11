@@ -4,7 +4,7 @@ var OPCode = {
   "SPAWN": 0x3,
   "ADD_NODE": 0x4,
   "UPDATE_NODES": 0x5,
-  "MOUSE_MOVE": 0x6
+  "PLAYER_MOVE": 0x6
 };
 
 if (typeof window === 'undefined') {
@@ -155,7 +155,6 @@ var Player = (function () {
     
     this.id = node.id || -1;
     this.name = node.name;
-    this.target = { x: 0, y: 0 };
     this.speed = 6;
     this.acceleration = 0.01;
     this.rotation = 0;
@@ -175,6 +174,11 @@ var Player = (function () {
       x: node.x || 0,
       y: node.y || 0
     };
+    
+    this.target = {
+      x: node.targetX || node.x || 0,
+      y: node.targetY || node.y || 0
+    };
   }
 
   Player.prototype.calculateNextPosition = function () {
@@ -187,9 +191,12 @@ var Player = (function () {
   }
   
   Player.prototype.setTarget = function (x, y) {
-    var vX = x - this.position.x;
-    var vY = y - this.position.y;
-    this.targetRotation = Math.atan2(vY, vX);
+    this.targetRotation = Math.atan2(y - this.position.y, x - this.position.x);
+    var diff = this.targetRotation - this.rotation;
+    
+    if (diff > Math.PI / 2) {
+      this._friction = this.baseFriction;
+    }
     
     this.target.x = x;
     this.target.y = y;
@@ -575,6 +582,12 @@ var WSController = (function () {
               name: 'name',
               type: 'string'
             }, {
+              name: 'x',
+              type: 'floatle'
+            }, {
+              name: 'y',
+              type: 'floatle'
+            }, {
               name: 'r',
               type: 'uint8'
             }, {
@@ -594,11 +607,29 @@ var WSController = (function () {
                 length: 32,
                 type: 'string'
               }, {
+                name: 'name',
+                type: 'string'
+              }, {
                 name: 'x',
                 type: 'floatle'
               }, {
                 name: 'y',
                 type: 'floatle'
+              }, {
+                name: 'targetX',
+                type: 'floatle'
+              }, {
+                name: 'targetY',
+                type: 'floatle'
+              }, {
+                name: 'r',
+                type: 'uint8'
+              }, {
+                name: 'g',
+                type: 'uint8'
+              }, {
+                name: 'b',
+                type: 'uint8'
               }]
             }]);
             fire.call(this, 'updateNodes', nodes);
@@ -625,12 +656,12 @@ var WSController = (function () {
     this.__socket.send(buffer);
   }
   
-  WSController.prototype.mouseMove = function (mouse) {
+  WSController.prototype.move = function (player) {
     var buffer = new ArrayBuffer(9);
     var view = new DataView(buffer);
-    view.setUint8(0, OPCode.MOUSE_MOVE);
-    view.setFloat32(1, mouse.x, true);
-    view.setFloat32(5, mouse.y, true);
+    view.setUint8(0, OPCode.PLAYER_MOVE);
+    view.setFloat32(1, player.position.x, true);
+    view.setFloat32(5, player.position.y, true);
     this.__socket.send(view.buffer);
   }
   
@@ -656,12 +687,14 @@ var WSController = (function () {
 (function () {
   
   var graph;
+  var ws;
   var animLoopHandle;
-  var time = performance.now();
+  var moveTick = performance.now();
+  var targetTick = performance.now();
   var mouse = { x: 0, y: 0 };
 
   var playerList = [];
-  var player = null;
+  var currentPlayer = null;
 
   var canvasElements = document.getElementsByClassName('js-canvas');
   if (canvasElements && canvasElements.length > 0) {
@@ -700,9 +733,36 @@ var WSController = (function () {
   }
 
   function gameLoop() {
-    if (player) {
-      player.calculateNextPosition();  
-    }
+    // if (player) {
+    //   var posX = player.position.x;
+    //   var posY = player.position.y;
+      
+    //   player.calculateNextPosition();
+      
+    //   var now = performance.now();
+    //   var diff = now - moveTick;
+    //   if (diff > 1000 && (player.position.x !== posX || player.position.y !== posY)) {
+    //     ws.move(player);
+    //     moveTick = now;
+    //   }
+    // }
+    
+    playerList.forEach(function (player) {
+      var posX = player.position.x;
+      var posY = player.position.y;
+      
+      player.calculateNextPosition();
+      
+      if (currentPlayer === player) {
+        var now = performance.now();
+        var diff = now - moveTick;
+        if (diff > 100 && (player.position.x !== posX || player.position.y !== posY)) {
+          ws.move(player);
+          moveTick = now;
+        }
+      }
+      
+    });
     
     graph
       .clear()
@@ -718,29 +778,23 @@ var WSController = (function () {
       startMenuElements[0].style.display = 'none';
     }
     
-    var ws = new WSController();
+    ws = new WSController();
 
     ws.on('open', function startGame() {
       
       canvas.addEventListener('mousedown', function (event) {
-        if (player && event.button === 2 && (mouse.x !== event.x || mouse.y !== event.y)) {
+        if (currentPlayer && event.button === 2 && (mouse.x !== event.x || mouse.y !== event.y)) {
           event.preventDefault();
           event.stopPropagation();
           var now = performance.now();
-          var diff = now - time;
+          var diff = now - targetTick;
           if (diff > 100) {
-            var targetX = player.position.x + event.x - graph.screenWidth / 2;
-            var targetY = player.position.y + event.y - graph.screenHeight / 2;
+            var targetX = currentPlayer.position.x + event.x - graph.screenWidth / 2;
+            var targetY = currentPlayer.position.y + event.y - graph.screenHeight / 2;
             targetX = Math.min(Math.max(targetX, 0), graph._gameWidth);
             targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
-            player.setTarget(targetX, targetY);
-            // targetX = targetX < 0 ? 0 : targetX;
-            // targetY = targetY < 0 ? 0 : targetY;
-            // player.target = {
-            //   x: Math.min(targetX, graph._gameWidth),
-            //   y: Math.min(targetY, graph._gameHeight)
-            // };
-            time = now;
+            currentPlayer.setTarget(targetX, targetY);
+            targetTick = now;
             mouse.x = event.x;
             mouse.y = event.y;
             // ws.mouseMove({
@@ -758,20 +812,34 @@ var WSController = (function () {
       ws.spawn(playerName);
       
       ws.on('addNode', function (node) {
-        player = new Player(node);
-        graph.player = player;
-        playerList.push(player);
+        currentPlayer = new Player(node);
+        graph.player = currentPlayer;
+        playerList.push(currentPlayer);
       });
       
       ws.on('updateNodes', function (updatedNodes) {
-        playerList.forEach(function (localNode) {
-          updatedNodes.forEach(function (updatedNode) {
-            if (localNode.id === updatedNode.id) {
-              localNode.x = updatedNode.x;
-              localNode.y = updatedNode.y;
-            }          
+        updatedNodes.forEach(function (updatedNode) {
+          var found = playerList.filter(function (player) {
+            return player.id === updatedNode.id;
           });
+          if (found.length === 0) {
+            var player = new Player(updatedNode);
+            playerList.splice(0, 0, player);
+          } else {
+            // found[0].position.x = updatedNode.x;
+            // found[0].position.y = updatedNode.y;
+            found[0].target.x = updatedNode.targetX;
+            found[0].target.y = updatedNode.targetY;
+          }
         });
+        // playerList.forEach(function (localNode) {
+        //   updatedNodes.forEach(function (updatedNode) {
+        //     if (localNode.id === updatedNode.id) {
+        //       localNode.x = updatedNode.x;
+        //       localNode.y = updatedNode.y;
+        //     }          
+        //   });
+        // });
       });
       
     });

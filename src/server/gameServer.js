@@ -126,31 +126,42 @@ GameServer.prototype.updateClients = function () {
 GameServer.prototype.updateMovementEngine = function () {
   this.movingNodes = [];
   
-  this.nodes.forEach(function (node) {
-    const currentPosX = node.position.x;
-    const currentPosY = node.position.y;
+  // this.nodes.forEach(function (node) {
+  //   const currentPosX = node.position.x;
+  //   const currentPosY = node.position.y;
     
-    node.calculateNextPosition();
+  //   node.calculateNextPosition();
     
-    const diffX = Math.abs(currentPosX - node.position.x);
-    const diffY = Math.abs(currentPosY - node.position.y);
+  //   const diffX = Math.abs(currentPosX - node.position.x);
+  //   const diffY = Math.abs(currentPosY - node.position.y);
     
-    if (diffX + diffY > 1) {
-      this.movingNodes.push(node);
-    }
-  }, this);
+  //   if (diffX + diffY > 1) {
+  //     this.movingNodes.push(node);
+  //   }
+  // }, this);
   
+  // this.clients.forEach(function (client) {
+  //   client.playerController.nodeAdditionQueue = client.playerController.nodeAdditionQueue.concat(this.movingNodes); 
+  // }, this);
+}
+
+GameServer.prototype.onTargetUpdated = function (socket) {
+  const node = this.nodes.find(function (node) {
+    return node.id === socket.playerController.pId;
+  });
   this.clients.forEach(function (client) {
-    client.playerController.nodeAdditionQueue = client.playerController.nodeAdditionQueue.concat(this.movingNodes); 
-  }, this);
+    if (client !== socket) {
+      client.sendPacket(new Packet.UpdateNodes([], [ node ]));
+    }
+  }, this)
 }
 
 GameServer.prototype.spawnPlayer = function (player) {
   var playerModel = new Model.Player(this, player);
   
   player.target = {
-    x: playerModel.x,
-    y: playerModel.y
+    x: playerModel.position.x,
+    y: playerModel.position.y
   };
 
   this.addNode(playerModel);
@@ -161,18 +172,18 @@ GameServer.prototype.getRandomColor = function () {
   if (rand === 0) {
     return {
 	     r: 255,
-	     b: Math.random() * 255,
+	     b: Math.floor(Math.random() * 255),
 	     g: 0
     };
   } else if (rand === 1) {
     return {
 	     r: 0,
 	     b: 255,
-	     g: Math.random() * 255
+	     g: Math.floor(Math.random() * 255)
     };
   } else {
     return {
-	     r: Math.random() * 255,
+	     r: Math.floor(Math.random() * 255),
 	     b: 0,
 	     g: 255
     };
