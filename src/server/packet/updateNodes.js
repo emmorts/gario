@@ -1,4 +1,4 @@
-const concentrate = require('concentrate');
+const BufferCodec = require('buffercodec');
 const OPCode = require('../../opcode');
 
 function UpdateNodes(destroyQueue, nodes, nonVisibleNodes) {
@@ -9,7 +9,7 @@ function UpdateNodes(destroyQueue, nodes, nonVisibleNodes) {
 module.exports = UpdateNodes;
 
 UpdateNodes.prototype.build = function () {
-  let buffer = concentrate()
+  let buffer = BufferCodec()
     .uint8(OPCode.UPDATE_NODES)
     .uint8(this.nodes.length);
     
@@ -18,10 +18,10 @@ UpdateNodes.prototype.build = function () {
       .string(node.id)
       .uint8(node.owner.name.length)
       .string(node.owner.name)
-      .floatle(node.position.x)
-      .floatle(node.position.y)
-      .floatle(node.owner.target.x)
-      .floatle(node.owner.target.y)
+      .float32le(node.position.x)
+      .float32le(node.position.y)
+      .float32le(node.owner.target.x)
+      .float32le(node.owner.target.y)
       .uint8(node.color.r)
       .uint8(node.color.g)
       .uint8(node.color.b);

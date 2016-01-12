@@ -115,7 +115,7 @@ var BufferCodec = (function () {
           if (!element.encoding || element.encoding === 'utf16') {
             var utf16 = new ArrayBuffer(element.length * 2);
             var utf16view = new Uint16Array(utf16);
-            for (var i = 0; i < element.length; i++ , this.offset += 1) {
+            for (var i = 0; i < element.length; i++ , this.offset += 2) {
               utf16view[i] = data.getUint8(this.offset);
             }
             templateResult = String.fromCharCode.apply(null, utf16view);

@@ -1,4 +1,4 @@
-let BufferUtil = require('concentrate');
+let BufferCodec = require('buffercodec');
 let uuid = require('node-uuid');
 let config = require('./config');
 let util = require('./util');
@@ -29,7 +29,7 @@ Player.prototype.reset = function () {
 }
 
 Player.prototype.bufferize = function () {
-  let buffer = BufferUtil()
+  let buffer = BufferCodec()
     .string(this.id)
     .floatle(this.x)
     .floatle(this.y)

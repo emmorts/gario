@@ -1,5 +1,5 @@
 let OPCode = require('../opCode');
-let BufferCodec = require('../bufferCodec');
+let BufferCodec = require('buffercodec');
 
 function PacketHandler (gameServer, socket) {
   this.gameServer = gameServer;
@@ -12,7 +12,7 @@ PacketHandler.prototype.handleMessage = function (message) {
   }
   
   const codec = BufferCodec(message);
-  const opcode = codec.getOpcode();
+  const opcode = codec.parse({ type: 'uint8' });
   
   switch (opcode) {
     case OPCode.SPAWN:
