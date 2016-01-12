@@ -25,10 +25,10 @@ PacketHandler.prototype.handleMessage = function (message) {
     case OPCode.PLAYER_MOVE:
       const target = codec.parse([{
         name: 'x',
-        type: 'floatle'
+        type: 'float32le'
       }, {
         name: 'y',
-        type: 'floatle'
+        type: 'float32le'
       }]);
       this.socket.playerController.setTarget(target.x, target.y);
       break;

@@ -12,6 +12,7 @@ if (typeof window === 'undefined') {
 } else {
     window.OPCode = OPCode;
 }
+/* global Buffer */
 var BufferCodec = (function () {
 
   function BufferCodec(buffer) {
@@ -40,25 +41,203 @@ var BufferCodec = (function () {
       }
     }
   }
-
-  BufferCodec.prototype.getOpcode = function () {
-    this.offset++;
-    return new Uint8Array(this.buffer)[0];
-  }
-
-  BufferCodec.prototype.setOpcode = function (opcode) {
-    var array = new Uint8Array(1);
-    array[0] = opcode;
-    return array.buffer;
-  }
-
-  BufferCodec.prototype.string = function (value) {
-    var buffer = new ArrayBuffer(value.length * 2);
-    var bufferView = new Uint16Array(buffer);
-    for (var i = 0, strLen = value.length; i < strLen; i++) {
-      bufferView[i] = value.charCodeAt(i);
+  
+  BufferCodec.prototype.result = function () {
+    this.offset = 0;
+    
+    var bufferLength = this.jobs.reduce(function(last, current) {
+      return last + current.length;
+    }, 0);
+    var buffer = new ArrayBuffer(bufferLength);
+    var dataView = new DataView(buffer);
+    
+    if (this.jobs.length > 0) {
+      this.jobs.forEach(function (job) {
+        if (job.method !== 'string') {
+          dataView[job.method](this.offset, job.data, job.littleEndian);
+          this.offset += job.length;
+        } else {
+          if (job.encoding === 'utf16') {
+            for (var i = 0; i < job.length / 2; i++, this.offset += 2) {
+              dataView.setUint16(this.offset, job.data.charCodeAt(i), true);
+            }
+          } else if (job.encoding === 'utf8') {
+            for (var i = 0; i < job.length; i++, this.offset++) {
+              dataView.setUint8(this.offset, job.data.charCodeAt(i));
+            }
+          } else {
+            console.warn('Undefined encoding: ' + job.encoding);
+          }
+        }
+      }, this);
     }
-    return buffer;
+    
+    this.jobs = [];
+    
+    return dataView.buffer;
+  }
+
+  BufferCodec.prototype.string = function (value, encoding) {
+    this.jobs.push({
+      method: 'string',
+      data: value,
+      length: (!encoding || encoding === 'utf16') ? value.length * 2 : value.length,
+      encoding: encoding ? encoding : 'utf16'
+    });
+
+    return this;
+  }
+  
+  BufferCodec.prototype.int8 = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setInt8',
+      length: 1
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.uint8 = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setUint8',
+      length: 1
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.int16le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setInt16',
+      length: 2,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.int16be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setInt16',
+      length: 2,
+      littleEndian: false
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.uint16le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setUint16',
+      length: 2,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.uint16be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setUint16',
+      length: 2,
+      littleEndian: false
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.int32le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setInt32',
+      length: 4,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.int32be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setInt32',
+      length: 4,
+      littleEndian: false
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.uint32le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setUint32',
+      length: 4,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.uint32be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setUint32',
+      length: 4,
+      littleEndian: false
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.float32le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setFloat32',
+      length: 4,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.float32be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setFloat32',
+      length: 4,
+      littleEndian: false
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.float64le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setFloat64',
+      length: 8,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.float64be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setFloat64',
+      length: 8,
+      littleEndian: false
+    });
+    
+    return this;
   }
 
   BufferCodec.prototype.parse = function (template) {
@@ -93,24 +272,68 @@ var BufferCodec = (function () {
     function parseItem(element) {
       var templateResult;
       switch (element.type) {
+        case 'int8':
+          templateResult = data.getInt8(this.offset);
+          this.offset += 1;
+          break;
         case 'uint8':
           templateResult = data.getUint8(this.offset);
           this.offset += 1;
+          break;
+        case 'int16le':
+          templateResult = data.getInt16(this.offset, true);
+          this.offset += 2;
           break;
         case 'uint16le':
           templateResult = data.getUint16(this.offset, true);
           this.offset += 2;
           break;
-        case 'floatle':
+        case 'int16be':
+          templateResult = data.getInt16(this.offset, false);
+          this.offset += 2;
+          break;
+        case 'uint16be':
+          templateResult = data.getUint16(this.offset, false);
+          this.offset += 2;
+          break;
+        case 'int32le':
+          templateResult = data.getInt32(this.offset, true);
+          this.offset += 4;
+          break;
+        case 'uint32le':
+          templateResult = data.getUint32(this.offset, true);
+          this.offset += 4;
+          break;
+        case 'int32be':
+          templateResult = data.getInt32(this.offset, false);
+          this.offset += 4;
+          break;
+        case 'uint32be':
+          templateResult = data.getUint32(this.offset, false);
+          this.offset += 4;
+          break;
+        case 'float32le':
           templateResult = data.getFloat32(this.offset, true);
           this.offset += 4;
+          break;
+        case 'float32be':
+          templateResult = data.getFloat32(this.offset, false);
+          this.offset += 4;
+          break;
+        case 'float64le':
+          templateResult = data.getFloat64(this.offset, true);
+          this.offset += 8;
+          break;
+        case 'float64be':
+          templateResult = data.getFloat64(this.offset, false);
+          this.offset += 8;
           break;
         case 'string':
           if (typeof element.length === 'undefined') {
             element.length = data.getUint8(this.offset++);
           } else if (!element.length) {
-              templateResult = '';
-              break;
+            templateResult = '';
+            break;
           }
           if (!element.encoding || element.encoding === 'utf16') {
             var utf16 = new ArrayBuffer(element.length * 2);
@@ -570,7 +793,7 @@ var WSController = (function () {
 
       this.__socket.onmessage = function (message) {
         var codec = BufferCodec(message.data);
-        var code = codec.getOpcode();
+        var code = codec.parse({ type: 'uint8' });
         
         switch (code) {
           case OPCode.ADD_NODE:
@@ -583,10 +806,10 @@ var WSController = (function () {
               type: 'string'
             }, {
               name: 'x',
-              type: 'floatle'
+              type: 'float32le'
             }, {
               name: 'y',
-              type: 'floatle'
+              type: 'float32le'
             }, {
               name: 'r',
               type: 'uint8'
@@ -611,16 +834,16 @@ var WSController = (function () {
                 type: 'string'
               }, {
                 name: 'x',
-                type: 'floatle'
+                type: 'float32le'
               }, {
                 name: 'y',
-                type: 'floatle'
+                type: 'float32le'
               }, {
                 name: 'targetX',
-                type: 'floatle'
+                type: 'float32le'
               }, {
                 name: 'targetY',
-                type: 'floatle'
+                type: 'float32le'
               }, {
                 name: 'r',
                 type: 'uint8'
@@ -657,12 +880,13 @@ var WSController = (function () {
   }
   
   WSController.prototype.move = function (player) {
-    var buffer = new ArrayBuffer(9);
-    var view = new DataView(buffer);
-    view.setUint8(0, OPCode.PLAYER_MOVE);
-    view.setFloat32(1, player.position.x, true);
-    view.setFloat32(5, player.position.y, true);
-    this.__socket.send(view.buffer);
+    var buffer = BufferCodec()
+      .uint8(OPCode.PLAYER_MOVE)
+      .float32le(player.target.x)
+      .float32le(player.target.y)
+      .result();
+      
+    this.__socket.send(buffer);
   }
   
   WSController.prototype.on = function (name, listener) {
@@ -733,19 +957,6 @@ var WSController = (function () {
   }
 
   function gameLoop() {
-    // if (player) {
-    //   var posX = player.position.x;
-    //   var posY = player.position.y;
-      
-    //   player.calculateNextPosition();
-      
-    //   var now = performance.now();
-    //   var diff = now - moveTick;
-    //   if (diff > 1000 && (player.position.x !== posX || player.position.y !== posY)) {
-    //     ws.move(player);
-    //     moveTick = now;
-    //   }
-    // }
     
     playerList.forEach(function (player) {
       var posX = player.position.x;
@@ -753,14 +964,14 @@ var WSController = (function () {
       
       player.calculateNextPosition();
       
-      if (currentPlayer === player) {
-        var now = performance.now();
-        var diff = now - moveTick;
-        if (diff > 100 && (player.position.x !== posX || player.position.y !== posY)) {
-          ws.move(player);
-          moveTick = now;
-        }
-      }
+      // if (currentPlayer === player) {
+      //   var now = performance.now();
+      //   var diff = now - moveTick;
+      //   if (diff > 100 && (player.position.x !== posX || player.position.y !== posY)) {
+      //     ws.move(player);
+      //     moveTick = now;
+      //   }
+      // }
       
     });
     
@@ -797,10 +1008,7 @@ var WSController = (function () {
             targetTick = now;
             mouse.x = event.x;
             mouse.y = event.y;
-            // ws.mouseMove({
-            //   x: Math.min(targetX, graph._gameWidth),
-            //   y: Math.min(targetY, graph._gameHeight)
-            // });
+            ws.move(currentPlayer);
           }
         }
       });
@@ -826,20 +1034,9 @@ var WSController = (function () {
             var player = new Player(updatedNode);
             playerList.splice(0, 0, player);
           } else {
-            // found[0].position.x = updatedNode.x;
-            // found[0].position.y = updatedNode.y;
-            found[0].target.x = updatedNode.targetX;
-            found[0].target.y = updatedNode.targetY;
+            found[0].setTarget(updatedNode.targetX, updatedNode.targetY);
           }
         });
-        // playerList.forEach(function (localNode) {
-        //   updatedNodes.forEach(function (updatedNode) {
-        //     if (localNode.id === updatedNode.id) {
-        //       localNode.x = updatedNode.x;
-        //       localNode.y = updatedNode.y;
-        //     }          
-        //   });
-        // });
       });
       
     });

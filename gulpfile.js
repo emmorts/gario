@@ -3,7 +3,7 @@ var concat = require('gulp-concat');
 
 var src = [
   './src/opCode.js',
-  './src/bufferCodec.js',
+  './node_modules/buffercodec/index.js',
   './src/client/js/models/*.js',
   './src/client/js/polyfills.js',
   './src/client/js/graph.js',

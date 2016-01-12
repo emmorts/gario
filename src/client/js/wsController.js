@@ -23,7 +23,7 @@ var WSController = (function () {
 
       this.__socket.onmessage = function (message) {
         var codec = BufferCodec(message.data);
-        var code = codec.getOpcode();
+        var code = codec.parse({ type: 'uint8' });
         
         switch (code) {
           case OPCode.ADD_NODE:
@@ -36,10 +36,10 @@ var WSController = (function () {
               type: 'string'
             }, {
               name: 'x',
-              type: 'floatle'
+              type: 'float32le'
             }, {
               name: 'y',
-              type: 'floatle'
+              type: 'float32le'
             }, {
               name: 'r',
               type: 'uint8'
@@ -64,16 +64,16 @@ var WSController = (function () {
                 type: 'string'
               }, {
                 name: 'x',
-                type: 'floatle'
+                type: 'float32le'
               }, {
                 name: 'y',
-                type: 'floatle'
+                type: 'float32le'
               }, {
                 name: 'targetX',
-                type: 'floatle'
+                type: 'float32le'
               }, {
                 name: 'targetY',
-                type: 'floatle'
+                type: 'float32le'
               }, {
                 name: 'r',
                 type: 'uint8'
@@ -110,12 +110,13 @@ var WSController = (function () {
   }
   
   WSController.prototype.move = function (player) {
-    var buffer = new ArrayBuffer(9);
-    var view = new DataView(buffer);
-    view.setUint8(0, OPCode.PLAYER_MOVE);
-    view.setFloat32(1, player.position.x, true);
-    view.setFloat32(5, player.position.y, true);
-    this.__socket.send(view.buffer);
+    var buffer = BufferCodec()
+      .uint8(OPCode.PLAYER_MOVE)
+      .float32le(player.target.x)
+      .float32le(player.target.y)
+      .result();
+      
+    this.__socket.send(buffer);
   }
   
   WSController.prototype.on = function (name, listener) {

@@ -48,19 +48,6 @@
   }
 
   function gameLoop() {
-    // if (player) {
-    //   var posX = player.position.x;
-    //   var posY = player.position.y;
-      
-    //   player.calculateNextPosition();
-      
-    //   var now = performance.now();
-    //   var diff = now - moveTick;
-    //   if (diff > 1000 && (player.position.x !== posX || player.position.y !== posY)) {
-    //     ws.move(player);
-    //     moveTick = now;
-    //   }
-    // }
     
     playerList.forEach(function (player) {
       var posX = player.position.x;
@@ -68,14 +55,14 @@
       
       player.calculateNextPosition();
       
-      if (currentPlayer === player) {
-        var now = performance.now();
-        var diff = now - moveTick;
-        if (diff > 100 && (player.position.x !== posX || player.position.y !== posY)) {
-          ws.move(player);
-          moveTick = now;
-        }
-      }
+      // if (currentPlayer === player) {
+      //   var now = performance.now();
+      //   var diff = now - moveTick;
+      //   if (diff > 100 && (player.position.x !== posX || player.position.y !== posY)) {
+      //     ws.move(player);
+      //     moveTick = now;
+      //   }
+      // }
       
     });
     
@@ -112,10 +99,7 @@
             targetTick = now;
             mouse.x = event.x;
             mouse.y = event.y;
-            // ws.mouseMove({
-            //   x: Math.min(targetX, graph._gameWidth),
-            //   y: Math.min(targetY, graph._gameHeight)
-            // });
+            ws.move(currentPlayer);
           }
         }
       });
@@ -141,20 +125,9 @@
             var player = new Player(updatedNode);
             playerList.splice(0, 0, player);
           } else {
-            // found[0].position.x = updatedNode.x;
-            // found[0].position.y = updatedNode.y;
-            found[0].target.x = updatedNode.targetX;
-            found[0].target.y = updatedNode.targetY;
+            found[0].setTarget(updatedNode.targetX, updatedNode.targetY);
           }
         });
-        // playerList.forEach(function (localNode) {
-        //   updatedNodes.forEach(function (updatedNode) {
-        //     if (localNode.id === updatedNode.id) {
-        //       localNode.x = updatedNode.x;
-        //       localNode.y = updatedNode.y;
-        //     }          
-        //   });
-        // });
       });
       
     });
