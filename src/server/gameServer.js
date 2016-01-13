@@ -60,6 +60,18 @@ GameServer.prototype.start = function () {
     this.clients.push(socket);
 
     function closeConnection(error) {
+      const nodes = this.nodes.filter(function (node) {
+        return node.ownerId === socket.playerController.pId;
+      }, this);
+      
+      if (nodes.length > 0) {
+        this.clients.forEach(function (client) {
+          if (client !== socket) {
+            client.sendPacket(new Packet.UpdateNodes(nodes));
+          }
+        }, this);
+      }
+      
       console.log("Connection closed.");
     }
   }
@@ -78,12 +90,10 @@ GameServer.prototype.gameLoop = function () {
   if (this.tick > 50) {
     if (this.run) {
       setTimeout(this.movementTick.bind(this), 0);
-      // setTimeout(this.spawnTick.bind(this), 0);
     }
 
     this.tickMain++;
     if (this.tickMain >= 20) {
-      // setTimeout(this.cellUpdateTick.bind(this), 0);
       this.tickMain = 0;
     }
 
@@ -147,13 +157,15 @@ GameServer.prototype.updateMovementEngine = function () {
 
 GameServer.prototype.onTargetUpdated = function (socket) {
   const node = this.nodes.find(function (node) {
-    return node.id === socket.playerController.pId;
+    return node.ownerId === socket.playerController.pId;
   });
-  this.clients.forEach(function (client) {
-    if (client !== socket) {
-      client.sendPacket(new Packet.UpdateNodes([], [ node ]));
-    }
-  }, this)
+  if (node) {
+    this.clients.forEach(function (client) {
+      if (client !== socket) {
+        client.sendPacket(new Packet.UpdateNodes([], [ node ]));
+      }
+    }, this);
+  }
 }
 
 GameServer.prototype.spawnPlayer = function (player) {

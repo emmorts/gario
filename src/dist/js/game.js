@@ -377,7 +377,10 @@ var Player = (function () {
     node = node || {};
     
     this.id = node.id || -1;
+    this.ownerId = node.ownerId || -1;
     this.name = node.name;
+    this.health = node.health;
+    this.maxHealth = node.maxHealth;
     this.speed = 6;
     this.acceleration = 0.01;
     this.rotation = 0;
@@ -428,9 +431,25 @@ var Player = (function () {
   return Player;
   
   function calculateRotation() {
-    if (this.rotation !== this.targetRotation) {
+    if (Math.abs(this.rotation - this.targetRotation) > 1e-5) {
       if (this._rotationTicks > 0) {
-        this.rotation += (this.targetRotation - this.rotation) / this._rotationTicks;
+        if (this.rotation > Math.PI) {
+          this.rotation = -Math.PI - (Math.PI - Math.abs(this.rotation));
+        } else if (this.rotation < -Math.PI) {
+          this.rotation = Math.PI + (Math.PI - Math.abs(this.rotation));
+        }
+        if (Math.abs(this.targetRotation - this.rotation) > Math.PI) {
+          var diffA = Math.PI - Math.abs(this.rotation);
+          var diffB = Math.PI - Math.abs(this.targetRotation);
+          var diff = diffA + diffB;
+          if (this.rotation > 0) {
+            this.rotation += diff / this._rotationTicks;
+          } else {
+            this.rotation -= diff / this._rotationTicks;
+          }
+        } else {
+          this.rotation += (this.targetRotation - this.rotation) / this._rotationTicks;
+        }
       } else {
         this.rotation = this.targetRotation;
         this._rotationTicks = 10
@@ -538,19 +557,21 @@ if (!Date.now) {
 var Graph = (function () {
 
   function Graph(canvas, options) {
-    this._context = canvas.getContext('2d');
+    this._canvas = canvas;
+    this._context = this._canvas.getContext('2d');
 
     options = options || {};
-    this.screenWidth = canvas.width = options.screenWidth || getDefaultWidth();
-    this.screenHeight = canvas.height = options.screenHeight || getDefaultHeight();
-    this._lineColor = options.lineColor || '#000000';
+    this.screenWidth = this._canvas.width = options.screenWidth || getDefaultWidth();
+    this.screenHeight = this._canvas.height = options.screenHeight || getDefaultHeight();
+    this._borderColor = '#666';
+    this._gridColor = '#ececec';
     this._globalAlpha = options.globalAlpha || 0.15;
-    this._foodSides = options.virusSides || 10;
-    this._virusSides = options.foodSides || 20;
     this._gameWidth = options.gameWidth || 5000;
     this._gameHeight = options.gameHeight || 5000;
     this._xOffset = -this._gameWidth;
     this._yOffset = -this._gameHeight;
+    
+    window.addEventListener('resize', onResize.bind(this));
 
     this.player = {
       id: -1,
@@ -558,9 +579,6 @@ var Graph = (function () {
         x: this.screenWidth / 2,
         y: this.screenHeight / 2
       }
-      // screenWidth: this.screenWidth,
-      // screenHeight: this.screenHeight,
-      // target: { x: this.screenWidth / 2, y: this.screenHeight / 2 }
     };
 
     this._playerOptions = {
@@ -583,24 +601,22 @@ var Graph = (function () {
 
   Graph.prototype.drawGrid = function () {
     this._context.lineWidth = 1;
-    this._context.strokeStyle = this._lineColor;
-    this._context.globalAlpha = this._globalAlpha;
+    this._context.strokeStyle = this._gridColor;
     this._context.beginPath();
 
-    for (var x = this._xOffset - this.player.position.x; x < this.screenWidth; x += this.screenHeight / 16) {
+    for (var x = this._xOffset - this.player.position.x; x < this.screenWidth; x += 40.5) {
       x = Math.round(x) + 0.5;
       this._context.moveTo(x, 0);
       this._context.lineTo(x, this.screenHeight);
     }
 
-    for (var y = this._yOffset - this.player.position.y; y < this.screenHeight; y += this.screenHeight / 16) {
+    for (var y = this._yOffset - this.player.position.y; y < this.screenHeight; y += 40.5) {
       x = Math.round(y) + 0.5;
       this._context.moveTo(0, y);
       this._context.lineTo(this.screenWidth, y);
     }
 
     this._context.stroke();
-    this._context.globalAlpha = 1;
 
     return this;
   }
@@ -636,7 +652,7 @@ var Graph = (function () {
       this._context.beginPath();
       this._context.moveTo(this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
       this._context.lineTo(this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
-      this._context.strokeStyle = this._lineColor;
+      this._context.strokeStyle = this._borderColor;
       this._context.stroke();
     }
 
@@ -645,7 +661,7 @@ var Graph = (function () {
       this._context.beginPath();
       this._context.moveTo(this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
       this._context.lineTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
-      this._context.strokeStyle = this._lineColor;
+      this._context.strokeStyle = this._borderColor;
       this._context.stroke();
     }
 
@@ -654,7 +670,7 @@ var Graph = (function () {
       this._context.beginPath();
       this._context.moveTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
       this._context.lineTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
-      this._context.strokeStyle = this._lineColor;
+      this._context.strokeStyle = this._borderColor;
       this._context.stroke();
     }
 
@@ -663,17 +679,20 @@ var Graph = (function () {
       this._context.beginPath();
       this._context.moveTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
       this._context.lineTo(this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
-      this._context.strokeStyle = this._lineColor;
+      this._context.strokeStyle = this._borderColor;
       this._context.stroke();
     }
     
     return this;
   }
 
-  Graph.prototype.drawText = function (text, x, y, fontSize) {
-    if (!fontSize) {
+  Graph.prototype.drawText = function (text, x, y, fontSize, hasStroke) {
+    if (typeof fontSize === 'undefined') {
       fontSize = this._playerOptions.fontSize;
     }
+    if (typeof hasStroke === 'undefined') {
+      hasStroke = true;
+    } 
     this._context.lineWidth = this._playerOptions.textBorderSize;
     this._context.fillStyle = this._playerOptions.textColor;
     this._context.strokeStyle = this._playerOptions.textBorder;
@@ -682,7 +701,9 @@ var Graph = (function () {
     this._context.lineJoin = 'round';
     this._context.textAlign = 'center';
     this._context.textBaseline = 'middle';
-    this._context.strokeText(text, x, y);
+    if (hasStroke) {
+      this._context.strokeText(text, x, y);
+    }
     this._context.fillText(text, x, y);
   }
 
@@ -697,20 +718,17 @@ var Graph = (function () {
 
     this._context.beginPath();
     // TODO: REMOVE HARDCODED RADIUS
-    this._context.arc(posX, posY, 50, Math.PI / 7 + player.rotation, -Math.PI / 7 + player.rotation);
+    this._context.arc(posX, posY, 30, Math.PI / 7 + player.rotation, -Math.PI / 7 + player.rotation);
     this._context.fillStyle = getColorInRGB(player.color);
     this._context.fill();
     this._context.lineWidth = 6;
-    this._context.strokeStyle = getColorInRGB(player.color, -0.15);
-    this._context.stroke();
-    this._context.lineWidth = 3;
-    this._context.strokeStyle = getColorInRGB(player.color, 0.15);
+    this._context.strokeStyle = getHealthColor(player.health, player.maxHealth);
     this._context.stroke();
     this._context.closePath();
 
     this.drawText(player.name, posX, posY, 16);
     var coordinates = Math.round(player.position.x) + ' ' + Math.round(player.position.y);
-    this.drawText(coordinates, posX, posY + 25);
+    this.drawText(coordinates, posX, posY + 15, 10, false);
   }
 
   Graph.prototype.drawPlayers = function (playerList) {
@@ -743,6 +761,17 @@ var Graph = (function () {
       return 'rgb(' + r + ', ' + g + ', ' + b + ')';
     }
     return 'rgb(0, 0, 0)';
+  }
+  
+  function getHealthColor(health, maxHealth) {
+    var hue = Math.floor((health / maxHealth) * 120);
+    
+    return 'hsl(' + hue + ', 100%, 50%)';
+  }
+  
+  function onResize() {
+    this.screenWidth = this._canvas.width = getDefaultWidth();
+    this.screenHeight = this._canvas.height = getDefaultHeight();
   }
 
   function isValueInRange(min, max, value) {
@@ -802,8 +831,18 @@ var WSController = (function () {
               length: 32,
               type: 'string'
             }, {
+              name: 'ownerId',
+              length: 32,
+              type: 'string'
+            }, {
               name: 'name',
               type: 'string'
+            }, {
+              name: 'health',
+              type: 'uint16le'
+            }, {
+              name: 'maxHealth',
+              type: 'uint16le'
             }, {
               name: 'x',
               type: 'float32le'
@@ -823,15 +862,25 @@ var WSController = (function () {
             fire.call(this, 'addNode', node);
             break;
           case OPCode.UPDATE_NODES:
-            var nodes = codec.parse([{
+            var updatedNodes = codec.parse({
               type: 'array',
               itemTemplate: [{
                 name: 'id',
                 length: 32,
                 type: 'string'
               }, {
+                name: 'ownerId',
+                length: 32,
+                type: 'string'
+              }, {
                 name: 'name',
                 type: 'string'
+              }, {
+                name: 'health',
+                type: 'uint16le'
+              }, {
+                name: 'maxHealth',
+                type: 'uint16le'
               }, {
                 name: 'x',
                 type: 'float32le'
@@ -854,8 +903,15 @@ var WSController = (function () {
                 name: 'b',
                 type: 'uint8'
               }]
-            }]);
-            fire.call(this, 'updateNodes', nodes);
+            });
+            var destroyedNodes = codec.parse({
+              type: 'array',
+              itemTemplate: { type: 'string', length: 32 }
+            });
+            fire.call(this, 'updateNodes', {
+              updatedNodes: updatedNodes,
+              destroyedNodes: destroyedNodes
+            });
             break;
           default:
             console.warn("Undefined opcode");
@@ -866,16 +922,21 @@ var WSController = (function () {
   }
   
   WSController.prototype.spawn = function (playerName) {
-    var buffer = new ArrayBuffer(2 + playerName.length * 2);
-    var uint8view = new Uint8Array(buffer); 
-    uint8view[0] = OPCode.SPAWN;
-    uint8view[1] = playerName.length;
-    if (playerName.length > 0) {
-      var bufferView = new Uint16Array(buffer, 2);
-      for (var i = 0, strLen = playerName.length; i < strLen; i++) {
-        bufferView[i] = playerName.charCodeAt(i);
-      }
-    }
+    var buffer = BufferCodec()
+      .uint8(OPCode.SPAWN)
+      .uint8(playerName.length)
+      .string(playerName)
+      .result();
+    // var buffer = new ArrayBuffer(2 + playerName.length * 2);
+    // var uint8view = new Uint8Array(buffer); 
+    // uint8view[0] = OPCode.SPAWN;
+    // uint8view[1] = playerName.length;
+    // if (playerName.length > 0) {
+    //   var bufferView = new Uint16Array(buffer, 2);
+    //   for (var i = 0, strLen = playerName.length; i < strLen; i++) {
+    //     bufferView[i] = playerName.charCodeAt(i);
+    //   }
+    // }
     this.__socket.send(buffer);
   }
   
@@ -959,8 +1020,8 @@ var WSController = (function () {
   function gameLoop() {
     
     playerList.forEach(function (player) {
-      var posX = player.position.x;
-      var posY = player.position.y;
+      // var posX = player.position.x;
+      // var posY = player.position.y;
       
       player.calculateNextPosition();
       
@@ -1025,18 +1086,34 @@ var WSController = (function () {
         playerList.push(currentPlayer);
       });
       
-      ws.on('updateNodes', function (updatedNodes) {
-        updatedNodes.forEach(function (updatedNode) {
-          var found = playerList.filter(function (player) {
-            return player.id === updatedNode.id;
+      ws.on('updateNodes', function (nodes) {
+        var updatedNodes = nodes.updatedNodes;
+        if (updatedNodes && updatedNodes.length > 0) {
+          updatedNodes.forEach(function (updatedNode) {
+            var found = playerList.filter(function (player) {
+              return player.id === updatedNode.id;
+            });
+            if (found.length === 0) {
+              var player = new Player(updatedNode);
+              playerList.splice(0, 0, player);
+            } else {
+              found[0].setTarget(updatedNode.targetX, updatedNode.targetY);
+            }
           });
-          if (found.length === 0) {
-            var player = new Player(updatedNode);
-            playerList.splice(0, 0, player);
-          } else {
-            found[0].setTarget(updatedNode.targetX, updatedNode.targetY);
-          }
-        });
+        }
+        
+        var destroyedNodes = nodes.destroyedNodes;
+        if (destroyedNodes && destroyedNodes.length > 0) {
+          destroyedNodes.forEach(function (destroyedNode) {
+            var index = -1;
+            for (var i = 0; i < playerList.length; i++) {
+              if (playerList[i].id === destroyedNode.id) {
+                index = i;
+              }
+            }
+            playerList.splice(index, 1);
+          });
+        }
       });
       
     });

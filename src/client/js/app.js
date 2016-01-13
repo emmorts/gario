@@ -50,8 +50,8 @@
   function gameLoop() {
     
     playerList.forEach(function (player) {
-      var posX = player.position.x;
-      var posY = player.position.y;
+      // var posX = player.position.x;
+      // var posY = player.position.y;
       
       player.calculateNextPosition();
       
@@ -116,18 +116,34 @@
         playerList.push(currentPlayer);
       });
       
-      ws.on('updateNodes', function (updatedNodes) {
-        updatedNodes.forEach(function (updatedNode) {
-          var found = playerList.filter(function (player) {
-            return player.id === updatedNode.id;
+      ws.on('updateNodes', function (nodes) {
+        var updatedNodes = nodes.updatedNodes;
+        if (updatedNodes && updatedNodes.length > 0) {
+          updatedNodes.forEach(function (updatedNode) {
+            var found = playerList.filter(function (player) {
+              return player.id === updatedNode.id;
+            });
+            if (found.length === 0) {
+              var player = new Player(updatedNode);
+              playerList.splice(0, 0, player);
+            } else {
+              found[0].setTarget(updatedNode.targetX, updatedNode.targetY);
+            }
           });
-          if (found.length === 0) {
-            var player = new Player(updatedNode);
-            playerList.splice(0, 0, player);
-          } else {
-            found[0].setTarget(updatedNode.targetX, updatedNode.targetY);
-          }
-        });
+        }
+        
+        var destroyedNodes = nodes.destroyedNodes;
+        if (destroyedNodes && destroyedNodes.length > 0) {
+          destroyedNodes.forEach(function (destroyedNode) {
+            var index = -1;
+            for (var i = 0; i < playerList.length; i++) {
+              if (playerList[i].id === destroyedNode.id) {
+                index = i;
+              }
+            }
+            playerList.splice(index, 1);
+          });
+        }
       });
       
     });

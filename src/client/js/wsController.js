@@ -32,8 +32,18 @@ var WSController = (function () {
               length: 32,
               type: 'string'
             }, {
+              name: 'ownerId',
+              length: 32,
+              type: 'string'
+            }, {
               name: 'name',
               type: 'string'
+            }, {
+              name: 'health',
+              type: 'uint16le'
+            }, {
+              name: 'maxHealth',
+              type: 'uint16le'
             }, {
               name: 'x',
               type: 'float32le'
@@ -53,15 +63,25 @@ var WSController = (function () {
             fire.call(this, 'addNode', node);
             break;
           case OPCode.UPDATE_NODES:
-            var nodes = codec.parse([{
+            var updatedNodes = codec.parse({
               type: 'array',
               itemTemplate: [{
                 name: 'id',
                 length: 32,
                 type: 'string'
               }, {
+                name: 'ownerId',
+                length: 32,
+                type: 'string'
+              }, {
                 name: 'name',
                 type: 'string'
+              }, {
+                name: 'health',
+                type: 'uint16le'
+              }, {
+                name: 'maxHealth',
+                type: 'uint16le'
               }, {
                 name: 'x',
                 type: 'float32le'
@@ -84,8 +104,15 @@ var WSController = (function () {
                 name: 'b',
                 type: 'uint8'
               }]
-            }]);
-            fire.call(this, 'updateNodes', nodes);
+            });
+            var destroyedNodes = codec.parse({
+              type: 'array',
+              itemTemplate: { type: 'string', length: 32 }
+            });
+            fire.call(this, 'updateNodes', {
+              updatedNodes: updatedNodes,
+              destroyedNodes: destroyedNodes
+            });
             break;
           default:
             console.warn("Undefined opcode");
@@ -96,16 +123,21 @@ var WSController = (function () {
   }
   
   WSController.prototype.spawn = function (playerName) {
-    var buffer = new ArrayBuffer(2 + playerName.length * 2);
-    var uint8view = new Uint8Array(buffer); 
-    uint8view[0] = OPCode.SPAWN;
-    uint8view[1] = playerName.length;
-    if (playerName.length > 0) {
-      var bufferView = new Uint16Array(buffer, 2);
-      for (var i = 0, strLen = playerName.length; i < strLen; i++) {
-        bufferView[i] = playerName.charCodeAt(i);
-      }
-    }
+    var buffer = BufferCodec()
+      .uint8(OPCode.SPAWN)
+      .uint8(playerName.length)
+      .string(playerName)
+      .result();
+    // var buffer = new ArrayBuffer(2 + playerName.length * 2);
+    // var uint8view = new Uint8Array(buffer); 
+    // uint8view[0] = OPCode.SPAWN;
+    // uint8view[1] = playerName.length;
+    // if (playerName.length > 0) {
+    //   var bufferView = new Uint16Array(buffer, 2);
+    //   for (var i = 0, strLen = playerName.length; i < strLen; i++) {
+    //     bufferView[i] = playerName.charCodeAt(i);
+    //   }
+    // }
     this.__socket.send(buffer);
   }
   

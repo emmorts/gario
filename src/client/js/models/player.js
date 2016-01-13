@@ -4,7 +4,10 @@ var Player = (function () {
     node = node || {};
     
     this.id = node.id || -1;
+    this.ownerId = node.ownerId || -1;
     this.name = node.name;
+    this.health = node.health;
+    this.maxHealth = node.maxHealth;
     this.speed = 6;
     this.acceleration = 0.01;
     this.rotation = 0;
@@ -55,9 +58,25 @@ var Player = (function () {
   return Player;
   
   function calculateRotation() {
-    if (this.rotation !== this.targetRotation) {
+    if (Math.abs(this.rotation - this.targetRotation) > 1e-5) {
       if (this._rotationTicks > 0) {
-        this.rotation += (this.targetRotation - this.rotation) / this._rotationTicks;
+        if (this.rotation > Math.PI) {
+          this.rotation = -Math.PI - (Math.PI - Math.abs(this.rotation));
+        } else if (this.rotation < -Math.PI) {
+          this.rotation = Math.PI + (Math.PI - Math.abs(this.rotation));
+        }
+        if (Math.abs(this.targetRotation - this.rotation) > Math.PI) {
+          var diffA = Math.PI - Math.abs(this.rotation);
+          var diffB = Math.PI - Math.abs(this.targetRotation);
+          var diff = diffA + diffB;
+          if (this.rotation > 0) {
+            this.rotation += diff / this._rotationTicks;
+          } else {
+            this.rotation -= diff / this._rotationTicks;
+          }
+        } else {
+          this.rotation += (this.targetRotation - this.rotation) / this._rotationTicks;
+        }
       } else {
         this.rotation = this.targetRotation;
         this._rotationTicks = 10

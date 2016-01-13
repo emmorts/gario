@@ -5,6 +5,7 @@ function FFA() {
 
   this.ID = 0;
   this.name = "Free For All";
+  this.baseHealth = 100;
   this.friction = 0.1;
 }
 
