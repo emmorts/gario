@@ -16,21 +16,13 @@ PacketHandler.prototype.handleMessage = function (message) {
   
   switch (opcode) {
     case OPCode.SPAWN:
-      const playerName = codec.parse({ type: 'string', encoding: 'utf8' });
-      
-      this.socket.playerController.setName(playerName);
-      this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this.socket.playerController);
-
+      spawnPlayer.call(this, codec);
       break;
     case OPCode.PLAYER_MOVE:
-      const target = codec.parse([{
-        name: 'x',
-        type: 'float32le'
-      }, {
-        name: 'y',
-        type: 'float32le'
-      }]);
-      this.socket.playerController.setTarget(target.x, target.y);
+      movePlayer.call(this, codec);
+      break;
+    case OPCode.CAST_PRIMARY:
+      castPrimary.call(this, codec);
       break;
     default:
       console.log("Undefined opcode %s", opcode);
@@ -38,3 +30,32 @@ PacketHandler.prototype.handleMessage = function (message) {
 }
 
 module.exports = PacketHandler;
+
+function spawnPlayer(codec) {
+  const playerName = codec.parse({ type: 'string', encoding: 'utf8' });
+  
+  this.socket.playerController.setName(playerName);
+  this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this.socket.playerController);
+}
+
+function movePlayer(codec) {
+  const target = codec.parse([{
+    name: 'x',
+    type: 'uint16le'
+  }, {
+    name: 'y',
+    type: 'uint16le'
+  }]);
+  
+  this.socket.playerController.setTarget(target.x, target.y);
+}
+
+function castPrimary(codec) {
+  const target = codec.parse([{
+    name: 'x',
+    type: 'uint16le'
+  }, {
+    name: 'y',
+    type: 'uint16le'
+  }]);
+}

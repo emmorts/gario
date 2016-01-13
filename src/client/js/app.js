@@ -1,4 +1,8 @@
-/* global Graph */
+var Graph = require('./graph');
+var WSController = require('./wsController');
+var KeyCode = require('./keyCode');
+var Models = require('./models');
+
 (function () {
   
   var graph;
@@ -84,8 +88,13 @@
 
     ws.on('open', function startGame() {
       
+      canvas.addEventListener('mousemove', function (event) {
+        mouse.x = event.x;
+        mouse.y = event.y;
+      });
+      
       canvas.addEventListener('mousedown', function (event) {
-        if (currentPlayer && event.button === 2 && (mouse.x !== event.x || mouse.y !== event.y)) {
+        if (currentPlayer && event.button === 2) {
           event.preventDefault();
           event.stopPropagation();
           var now = performance.now();
@@ -97,12 +106,23 @@
             targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
             currentPlayer.setTarget(targetX, targetY);
             targetTick = now;
-            mouse.x = event.x;
-            mouse.y = event.y;
             ws.move(currentPlayer);
           }
         }
       });
+      
+      // canvas.addEventListener('keydown', function (event) {
+      //   event.preventDefault();
+      //   event.stopPropagation();
+      //   switch (event.keyCode) {
+      //     case KeyCode.Q:
+      //       ws.cast(OPCode.CAST_PRIMARY, {
+      //         x: mouse.x,
+      //         y: mouse.y
+      //       });
+      //       break;
+      //   }
+      // });
       
       canvas.addEventListener('contextmenu', function (event) {
         event.preventDefault();
@@ -111,7 +131,7 @@
       ws.spawn(playerName);
       
       ws.on('addNode', function (node) {
-        currentPlayer = new Player(node);
+        currentPlayer = new Models.Player(node);
         graph.player = currentPlayer;
         playerList.push(currentPlayer);
       });
@@ -120,11 +140,9 @@
         var updatedNodes = nodes.updatedNodes;
         if (updatedNodes && updatedNodes.length > 0) {
           updatedNodes.forEach(function (updatedNode) {
-            var found = playerList.filter(function (player) {
-              return player.id === updatedNode.id;
-            });
+            var found = playerList.filter(player=> player.id === updatedNode.id);
             if (found.length === 0) {
-              var player = new Player(updatedNode);
+              var player = new Models.Player(updatedNode);
               playerList.splice(0, 0, player);
             } else {
               found[0].setTarget(updatedNode.targetX, updatedNode.targetY);
