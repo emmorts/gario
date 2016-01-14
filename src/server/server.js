@@ -1,16 +1,15 @@
 /* global Buffer */
 /* global __dirname */
 
-let GameServer = require('./gameServer');
+const GameServer = require('./gameServer');
 
-let server = require('http').createServer();
-let express = require('express');
-let app = express();
+const server = require('http').createServer();
+const express = require('express');
+const app = express();
 
-let config = require('./config');
+const config = require('./config');
 
-var gameServer = new GameServer(server);
-gameServer.start();
+new GameServer(server).start();
 
 app.use(express['static'](__dirname + '/../dist'));
 

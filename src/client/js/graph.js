@@ -183,6 +183,30 @@ Graph.prototype.drawPlayers = function (playerList) {
   return this;
 }
 
+Graph.prototype.drawSpells = function (spellList) {
+  if (spellList && spellList.length > 0) {
+    spellList.forEach(spell => drawSpell.call(this, spell));
+  }
+  
+  return this;
+}
+
+function drawSpell(spell) {
+  var start = {
+    x: this.player.position.x - (this.screenWidth / 2),
+    y: this.player.position.y - (this.screenHeight / 2)
+  };
+
+  var posX = -start.x + spell.position.x;
+  var posY = -start.y + spell.position.y;
+  
+  this._context.beginPath();
+  this._context.arc(posX, posY, 10, 0, 2 * Math.PI);
+  this._context.fillStyle = getColorInRGB(spell.color);
+  this._context.fill();
+  this._context.closePath();
+}
+
 function getColorInRGB(color, lightenPct) {
   if (color) {
     var r = color.r,

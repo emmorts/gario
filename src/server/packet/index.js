@@ -1,4 +1,5 @@
 module.exports = {
-    AddNode: require('./AddNode'),
-    UpdateNodes: require('./UpdateNodes')
+    AddPlayer: require('./AddPlayer'),
+    UpdatePlayers: require('./UpdatePlayers'),
+    UpdateSpells: require('./UpdateSpells')
 };

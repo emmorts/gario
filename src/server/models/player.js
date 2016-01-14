@@ -1,6 +1,6 @@
 const uuid = require('node-uuid');
 const config = require('../config');
-const Model = require('./model');
+const Model = require('./Model');
 
 function Player(gameServer, owner) {
   Model.apply(this, Array.prototype.slice.call(arguments));

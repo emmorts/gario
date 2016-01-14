@@ -6,6 +6,7 @@ function Spell() {
   this.type = OPCode.TYPE_SPELL;
   this.mass = 0;
   this.power = 0;
+  this.duration = 0;
 }
 
 module.exports = Spell;

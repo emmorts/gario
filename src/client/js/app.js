@@ -1,7 +1,11 @@
+require('./polyfills');
+
 var Graph = require('./graph');
 var WSController = require('./wsController');
 var KeyCode = require('./keyCode');
 var Models = require('./models');
+var Spells = require('./spells');
+var OPCode = require('../../opCode');
 
 (function () {
   
@@ -13,6 +17,7 @@ var Models = require('./models');
   var mouse = { x: 0, y: 0 };
 
   var playerList = [];
+  var spellList = [];
   var currentPlayer = null;
 
   var canvasElements = document.getElementsByClassName('js-canvas');
@@ -52,29 +57,15 @@ var Models = require('./models');
   }
 
   function gameLoop() {
-    
-    playerList.forEach(function (player) {
-      // var posX = player.position.x;
-      // var posY = player.position.y;
-      
-      player.calculateNextPosition();
-      
-      // if (currentPlayer === player) {
-      //   var now = performance.now();
-      //   var diff = now - moveTick;
-      //   if (diff > 100 && (player.position.x !== posX || player.position.y !== posY)) {
-      //     ws.move(player);
-      //     moveTick = now;
-      //   }
-      // }
-      
-    });
-    
     graph
       .clear()
       .drawGrid()
       .drawBorder()
+      .drawSpells(spellList)
       .drawPlayers(playerList);
+    
+    playerList.forEach(player => player.calculateNextPosition());
+    spellList.forEach(spell => spell.calculateNextPosition());
   }
 
   function startGame () {
@@ -111,18 +102,16 @@ var Models = require('./models');
         }
       });
       
-      // canvas.addEventListener('keydown', function (event) {
-      //   event.preventDefault();
-      //   event.stopPropagation();
-      //   switch (event.keyCode) {
-      //     case KeyCode.Q:
-      //       ws.cast(OPCode.CAST_PRIMARY, {
-      //         x: mouse.x,
-      //         y: mouse.y
-      //       });
-      //       break;
-      //   }
-      // });
+      canvas.addEventListener('keydown', function (event) {
+        switch (event.keyCode) {
+          case KeyCode.Q:
+            ws.cast(OPCode.CAST_PRIMARY, {
+              x: mouse.x,
+              y: mouse.y
+            });
+            break;
+        }
+      });
       
       canvas.addEventListener('contextmenu', function (event) {
         event.preventDefault();
@@ -130,13 +119,13 @@ var Models = require('./models');
       
       ws.spawn(playerName);
       
-      ws.on('addNode', function (node) {
+      ws.on('addPlayer', function (node) {
         currentPlayer = new Models.Player(node);
         graph.player = currentPlayer;
         playerList.push(currentPlayer);
       });
       
-      ws.on('updateNodes', function (nodes) {
+      ws.on('updatePlayers', function (nodes) {
         var updatedNodes = nodes.updatedNodes;
         if (updatedNodes && updatedNodes.length > 0) {
           updatedNodes.forEach(function (updatedNode) {
@@ -155,11 +144,39 @@ var Models = require('./models');
           destroyedNodes.forEach(function (destroyedNode) {
             var index = -1;
             for (var i = 0; i < playerList.length; i++) {
-              if (playerList[i].id === destroyedNode.id) {
+              if (playerList[i].id === destroyedNode) {
                 index = i;
               }
             }
-            playerList.splice(index, 1);
+            if (index !== -1) {
+              playerList.splice(index, 1);
+            }
+          });
+        }
+      });
+      
+      ws.on('updateSpells', function (spells) {
+        var updatedSpells = spells.updatedSpells;
+        if (updatedSpells && updatedSpells.length > 0) {
+          updatedSpells.forEach(function (updatedSpell) {
+            var SpellClass = Spells.get(updatedSpell.type);
+            var spell = new SpellClass(updatedSpell);
+            spellList.splice(0, 0, spell);
+          });
+        }
+        
+        var destroyedSpells = spells.destroyedSpells;
+        if (destroyedSpells && destroyedSpells.length > 0) {
+          destroyedSpells.forEach(function (destroyedSpell) {
+            var index = -1;
+            for (var i = 0; i < spellList.length; i++) {
+              if (spellList[i].id === destroyedSpell) {
+                index = i;
+              }
+            }
+            if (index !== -1) {
+              spellList.splice(index, 1);
+            }
           });
         }
       });

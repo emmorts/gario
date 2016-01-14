@@ -1,13 +1,16 @@
 module.exports = {
+  // actions
   "PING": 0x01,
   "PONG": 0x02,
-  "SPAWN": 0x03,
-  "ADD_NODE": 0x04,
-  "UPDATE_NODES": 0x05,
-  "PLAYER_MOVE": 0x06,
+  "SPAWN_PLAYER": 0x03,
+  "ADD_PLAYER": 0x04,
+  "UPDATE_PLAYERS": 0x05,
+  "UPDATE_SPELLS": 0x06,
+  "PLAYER_MOVE": 0x07,
   
-  "CAST_PRIMARY": 0x07,
+  // cast
+  "CAST_PRIMARY": 0x08,
   
-  "TYPE_MODEL": 0x08,
-  "TYPE_SPELL": 0x09
+  // types
+  "SPELL_PRIMARY": 0x0A
 };

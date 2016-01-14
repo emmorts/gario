@@ -15,7 +15,7 @@ PacketHandler.prototype.handleMessage = function (message) {
   const opcode = codec.parse({ type: 'uint8' });
   
   switch (opcode) {
-    case OPCode.SPAWN:
+    case OPCode.SPAWN_PLAYER:
       spawnPlayer.call(this, codec);
       break;
     case OPCode.PLAYER_MOVE:
@@ -47,7 +47,7 @@ function movePlayer(codec) {
     type: 'uint16le'
   }]);
   
-  this.socket.playerController.setTarget(target.x, target.y);
+  this.socket.playerController.setTarget(target);
 }
 
 function castPrimary(codec) {
@@ -58,4 +58,6 @@ function castPrimary(codec) {
     name: 'y',
     type: 'uint16le'
   }]);
+  
+  this.socket.playerController.cast(OPCode.SPELL_PRIMARY, target);
 }

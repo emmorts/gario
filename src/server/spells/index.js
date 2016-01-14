@@ -1,3 +1,3 @@
 module.exports = {
-  Primary: require('./primary.js')
+  Primary: require('./Primary.js')
 };

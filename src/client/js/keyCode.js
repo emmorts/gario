@@ -1,4 +1,4 @@
-window.KeyCode = {
+module.exports = {
   MAC_ENTER: 3,
   BACKSPACE: 8,
   TAB: 9,

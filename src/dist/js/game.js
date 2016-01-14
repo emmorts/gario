@@ -352,10 +352,14 @@ module.exports = BufferCodec;
 },{}],2:[function(require,module,exports){
 'use strict';
 
+require('./polyfills');
+
 var Graph = require('./graph');
 var WSController = require('./wsController');
 var KeyCode = require('./keyCode');
 var Models = require('./models');
+var Spells = require('./spells');
+var OPCode = require('../../opCode');
 
 (function () {
 
@@ -367,6 +371,7 @@ var Models = require('./models');
   var mouse = { x: 0, y: 0 };
 
   var playerList = [];
+  var spellList = [];
   var currentPlayer = null;
 
   var canvasElements = document.getElementsByClassName('js-canvas');
@@ -404,24 +409,14 @@ var Models = require('./models');
   }
 
   function gameLoop() {
+    graph.clear().drawGrid().drawBorder().drawSpells(spellList).drawPlayers(playerList);
 
     playerList.forEach(function (player) {
-      // var posX = player.position.x;
-      // var posY = player.position.y;
-
-      player.calculateNextPosition();
-
-      // if (currentPlayer === player) {
-      //   var now = performance.now();
-      //   var diff = now - moveTick;
-      //   if (diff > 100 && (player.position.x !== posX || player.position.y !== posY)) {
-      //     ws.move(player);
-      //     moveTick = now;
-      //   }
-      // }
+      return player.calculateNextPosition();
     });
-
-    graph.clear().drawGrid().drawBorder().drawPlayers(playerList);
+    spellList.forEach(function (spell) {
+      return spell.calculateNextPosition();
+    });
   }
 
   function startGame() {
@@ -458,18 +453,16 @@ var Models = require('./models');
         }
       });
 
-      // canvas.addEventListener('keydown', function (event) {
-      //   event.preventDefault();
-      //   event.stopPropagation();
-      //   switch (event.keyCode) {
-      //     case KeyCode.Q:
-      //       ws.cast(OPCode.CAST_PRIMARY, {
-      //         x: mouse.x,
-      //         y: mouse.y
-      //       });
-      //       break;
-      //   }
-      // });
+      canvas.addEventListener('keydown', function (event) {
+        switch (event.keyCode) {
+          case KeyCode.Q:
+            ws.cast(OPCode.CAST_PRIMARY, {
+              x: mouse.x,
+              y: mouse.y
+            });
+            break;
+        }
+      });
 
       canvas.addEventListener('contextmenu', function (event) {
         event.preventDefault();
@@ -477,13 +470,13 @@ var Models = require('./models');
 
       ws.spawn(playerName);
 
-      ws.on('addNode', function (node) {
+      ws.on('addPlayer', function (node) {
         currentPlayer = new Models.Player(node);
         graph.player = currentPlayer;
         playerList.push(currentPlayer);
       });
 
-      ws.on('updateNodes', function (nodes) {
+      ws.on('updatePlayers', function (nodes) {
         var updatedNodes = nodes.updatedNodes;
         if (updatedNodes && updatedNodes.length > 0) {
           updatedNodes.forEach(function (updatedNode) {
@@ -504,11 +497,39 @@ var Models = require('./models');
           destroyedNodes.forEach(function (destroyedNode) {
             var index = -1;
             for (var i = 0; i < playerList.length; i++) {
-              if (playerList[i].id === destroyedNode.id) {
+              if (playerList[i].id === destroyedNode) {
                 index = i;
               }
             }
-            playerList.splice(index, 1);
+            if (index !== -1) {
+              playerList.splice(index, 1);
+            }
+          });
+        }
+      });
+
+      ws.on('updateSpells', function (spells) {
+        var updatedSpells = spells.updatedSpells;
+        if (updatedSpells && updatedSpells.length > 0) {
+          updatedSpells.forEach(function (updatedSpell) {
+            var SpellClass = Spells.get(updatedSpell.type);
+            var spell = new SpellClass(updatedSpell);
+            spellList.splice(0, 0, spell);
+          });
+        }
+
+        var destroyedSpells = spells.destroyedSpells;
+        if (destroyedSpells && destroyedSpells.length > 0) {
+          destroyedSpells.forEach(function (destroyedSpell) {
+            var index = -1;
+            for (var i = 0; i < spellList.length; i++) {
+              if (spellList[i].id === destroyedSpell) {
+                index = i;
+              }
+            }
+            if (index !== -1) {
+              spellList.splice(index, 1);
+            }
           });
         }
       });
@@ -520,7 +541,7 @@ var Models = require('./models');
   }
 })();
 
-},{"./graph":3,"./keyCode":4,"./models":5,"./wsController":7}],3:[function(require,module,exports){
+},{"../../opCode":11,"./graph":3,"./keyCode":4,"./models":5,"./polyfills":7,"./spells":9,"./wsController":10}],3:[function(require,module,exports){
 'use strict';
 
 function Graph(canvas, options) {
@@ -716,6 +737,34 @@ Graph.prototype.drawPlayers = function (playerList) {
   return this;
 };
 
+Graph.prototype.drawSpells = function (spellList) {
+  var _this2 = this;
+
+  if (spellList && spellList.length > 0) {
+    spellList.forEach(function (spell) {
+      return drawSpell.call(_this2, spell);
+    });
+  }
+
+  return this;
+};
+
+function drawSpell(spell) {
+  var start = {
+    x: this.player.position.x - this.screenWidth / 2,
+    y: this.player.position.y - this.screenHeight / 2
+  };
+
+  var posX = -start.x + spell.position.x;
+  var posY = -start.y + spell.position.y;
+
+  this._context.beginPath();
+  this._context.arc(posX, posY, 10, 0, 2 * Math.PI);
+  this._context.fillStyle = getColorInRGB(spell.color);
+  this._context.fill();
+  this._context.closePath();
+}
+
 function getColorInRGB(color, lightenPct) {
   if (color) {
     var r = color.r,
@@ -759,7 +808,7 @@ module.exports = Graph;
 },{}],4:[function(require,module,exports){
 "use strict";
 
-window.KeyCode = {
+module.exports = {
   MAC_ENTER: 3,
   BACKSPACE: 8,
   TAB: 9,
@@ -860,14 +909,14 @@ module.exports = {
 },{"./player.js":6}],6:[function(require,module,exports){
 'use strict';
 
-function Player(node) {
-  node = node || {};
+function Player(playerModel) {
+  playerModel = playerModel || {};
 
-  this.id = node.id || -1;
-  this.ownerId = node.ownerId || -1;
-  this.name = node.name;
-  this.health = node.health;
-  this.maxHealth = node.maxHealth;
+  this.id = playerModel.id || -1;
+  this.ownerId = playerModel.ownerId || -1;
+  this.name = playerModel.name;
+  this.health = playerModel.health;
+  this.maxHealth = playerModel.maxHealth;
   this.speed = 6;
   this.acceleration = 0.01;
   this.rotation = 0;
@@ -878,19 +927,19 @@ function Player(node) {
   this.__friction = this._baseFriction;
 
   this.color = {
-    r: node.r || 0,
-    g: node.g | 0,
-    b: node.b || 0
+    r: playerModel.r || 0,
+    g: playerModel.g | 0,
+    b: playerModel.b || 0
   };
 
   this.position = {
-    x: node.x || 0,
-    y: node.y || 0
+    x: playerModel.x || 0,
+    y: playerModel.y || 0
   };
 
   this.target = {
-    x: node.targetX || node.x || 0,
-    y: node.targetY || node.y || 0
+    x: playerModel.targetX || playerModel.x || 0,
+    y: playerModel.targetY || playerModel.y || 0
   };
 }
 
@@ -991,6 +1040,141 @@ function arePositionsApproximatelyEqual(positionA, positionB) {
 },{}],7:[function(require,module,exports){
 'use strict';
 
+if (!Array.prototype.find) {
+  Array.prototype.find = function (predicate) {
+    if (this === null) {
+      throw new TypeError('Array.prototype.find called on null or undefined');
+    }
+    if (typeof predicate !== 'function') {
+      throw new TypeError('predicate must be a function');
+    }
+    var list = Object(this);
+    var length = list.length >>> 0;
+    var thisArg = arguments[1];
+    var value;
+
+    for (var i = 0; i < length; i++) {
+      value = list[i];
+      if (predicate.call(thisArg, value, i, list)) {
+        return value;
+      }
+    }
+    return undefined;
+  };
+}
+
+if (!Date.now) {
+  Date.now = function () {
+    return new Date().getTime();
+  };
+}
+
+(function () {
+  'use strict';
+
+  var vendors = ['webkit', 'moz'];
+  for (var i = 0; i < vendors.length && !window.requestAnimationFrame; ++i) {
+    var vp = vendors[i];
+    window.requestAnimationFrame = window[vp + 'RequestAnimationFrame'];
+    window.cancelAnimationFrame = window[vp + 'CancelAnimationFrame'] || window[vp + 'CancelRequestAnimationFrame'];
+  }
+  if (/iP(ad|hone|od).*OS 6/.test(window.navigator.userAgent) // iOS6 is buggy
+   || !window.requestAnimationFrame || !window.cancelAnimationFrame) {
+    var lastTime = 0;
+    window.requestAnimationFrame = function (callback) {
+      var now = Date.now();
+      var nextTime = Math.max(lastTime + 16, now);
+      return setTimeout(function () {
+        callback(lastTime = nextTime);
+      }, nextTime - now);
+    };
+    window.cancelAnimationFrame = clearTimeout;
+  }
+})();
+
+},{}],8:[function(require,module,exports){
+'use strict';
+
+function Primary(spellModel) {
+  this.id = spellModel.id;
+  this.ownerId = spellModel.ownerId;
+  this.type = spellModel.type;
+  this.mass = spellModel.mass;
+  this.power = spellModel.power;
+  this.direction = { x: 0, y: 0 };
+  this.speed = 10;
+
+  this.position = {
+    x: spellModel.x,
+    y: spellModel.y
+  };
+
+  this.color = {
+    r: spellModel.r,
+    g: spellModel.g,
+    b: spellModel.b
+  };
+
+  setTarget.call(this, spellModel.targetX, spellModel.targetY);
+}
+
+Primary.prototype.calculateNextPosition = function () {
+  if (typeof this.direction.x !== 'undefined' && typeof this.direction.y !== 'undefined') {
+    calculatePosition.call(this);
+  }
+};
+
+module.exports = Primary;
+
+function calculatePosition() {
+  this.position = {
+    x: this.position.x + this.direction.x * this.speed,
+    y: this.position.y + this.direction.y * this.speed
+  };
+  console.log(this.position.x, this.position.y);
+}
+
+function getHypotenuseLength(x, y) {
+  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+}
+
+function setTarget(x, y) {
+  this.target = { x: x, y: y };
+
+  var vX = this.target.x - this.position.x;
+  var vY = this.target.y - this.position.y;
+  var distance = getHypotenuseLength(vX, vY);
+
+  this.direction = {
+    x: vX / distance,
+    y: vY / distance
+  };
+}
+
+},{}],9:[function(require,module,exports){
+'use strict';
+
+var OPCode = require('../../../opCode');
+
+module.exports = {
+  Primary: require('./Primary')
+};
+
+module.exports.get = function (code) {
+  var spell = null;
+
+  switch (code) {
+    case OPCode.SPELL_PRIMARY:
+      spell = module.exports.Primary;
+      break;
+  }
+
+  return spell;
+};
+
+},{"../../../opCode":11,"./Primary":8}],10:[function(require,module,exports){
+'use strict';
+
 var BufferCodec = require('buffercodec');
 var OPCode = require('../../opCode');
 
@@ -1004,7 +1188,7 @@ function WSController() {
 }
 
 WSController.prototype.spawn = function (playerName) {
-  var buffer = BufferCodec().uint8(OPCode.SPAWN).uint8(playerName.length).string(playerName).result();
+  var buffer = BufferCodec().uint8(OPCode.SPAWN_PLAYER).uint8(playerName.length).string(playerName).result();
   this.__socket.send(buffer);
 };
 
@@ -1047,7 +1231,7 @@ function setupSocket() {
       var code = codec.parse({ type: 'uint8' });
 
       switch (code) {
-        case OPCode.ADD_NODE:
+        case OPCode.ADD_PLAYER:
           var node = codec.parse([{
             name: 'id',
             length: 32,
@@ -1081,9 +1265,9 @@ function setupSocket() {
             name: 'b',
             type: 'uint8'
           }]);
-          fire.call(this, 'addNode', node);
+          fire.call(this, 'addPlayer', node);
           break;
-        case OPCode.UPDATE_NODES:
+        case OPCode.UPDATE_PLAYERS:
           var updatedNodes = codec.parse({
             type: 'array',
             itemTemplate: [{
@@ -1130,9 +1314,61 @@ function setupSocket() {
             type: 'array',
             itemTemplate: { type: 'string', length: 32 }
           });
-          fire.call(this, 'updateNodes', {
-            updatedNodes: updatedNodes,
-            destroyedNodes: destroyedNodes
+          fire.call(this, 'updatePlayers', {
+            destroyedNodes: destroyedNodes,
+            updatedNodes: updatedNodes
+          });
+          break;
+        case OPCode.UPDATE_SPELLS:
+          var updatedSpells = codec.parse({
+            type: 'array',
+            itemTemplate: [{
+              name: 'id',
+              length: 32,
+              type: 'string'
+            }, {
+              name: 'ownerId',
+              length: 32,
+              type: 'string'
+            }, {
+              name: 'type',
+              type: 'uint8'
+            }, {
+              name: 'mass',
+              type: 'uint8'
+            }, {
+              name: 'power',
+              type: 'uint8'
+            }, {
+              name: 'x',
+              type: 'float32le'
+            }, {
+              name: 'y',
+              type: 'float32le'
+            }, {
+              name: 'targetX',
+              type: 'float32le'
+            }, {
+              name: 'targetY',
+              type: 'float32le'
+            }, {
+              name: 'r',
+              type: 'uint8'
+            }, {
+              name: 'g',
+              type: 'uint8'
+            }, {
+              name: 'b',
+              type: 'uint8'
+            }]
+          });
+          var destroyedSpells = codec.parse({
+            type: 'array',
+            itemTemplate: { type: 'string', length: 32 }
+          });
+          fire.call(this, 'updateSpells', {
+            destroyedSpells: destroyedSpells,
+            updatedSpells: updatedSpells
           });
           break;
         default:
@@ -1145,21 +1381,24 @@ function setupSocket() {
 
 module.exports = WSController;
 
-},{"../../opCode":8,"buffercodec":1}],8:[function(require,module,exports){
+},{"../../opCode":11,"buffercodec":1}],11:[function(require,module,exports){
 "use strict";
 
 module.exports = {
+  // actions
   "PING": 0x01,
   "PONG": 0x02,
-  "SPAWN": 0x03,
-  "ADD_NODE": 0x04,
-  "UPDATE_NODES": 0x05,
-  "PLAYER_MOVE": 0x06,
+  "SPAWN_PLAYER": 0x03,
+  "ADD_PLAYER": 0x04,
+  "UPDATE_PLAYERS": 0x05,
+  "UPDATE_SPELLS": 0x06,
+  "PLAYER_MOVE": 0x07,
 
-  "CAST_PRIMARY": 0x07,
+  // cast
+  "CAST_PRIMARY": 0x08,
 
-  "TYPE_MODEL": 0x08,
-  "TYPE_SPELL": 0x09
+  // types
+  "SPELL_PRIMARY": 0x0A
 };
 
 },{}]},{},[2])

@@ -1,11 +1,11 @@
-function Player(node) {
-  node = node || {};
+function Player(playerModel) {
+  playerModel = playerModel || {};
   
-  this.id = node.id || -1;
-  this.ownerId = node.ownerId || -1;
-  this.name = node.name;
-  this.health = node.health;
-  this.maxHealth = node.maxHealth;
+  this.id = playerModel.id || -1;
+  this.ownerId = playerModel.ownerId || -1;
+  this.name = playerModel.name;
+  this.health = playerModel.health;
+  this.maxHealth = playerModel.maxHealth;
   this.speed = 6;
   this.acceleration = 0.01;
   this.rotation = 0;
@@ -16,19 +16,19 @@ function Player(node) {
   this.__friction = this._baseFriction;
   
   this.color = {
-    r: node.r || 0,
-    g: node.g | 0,
-    b: node.b || 0
+    r: playerModel.r || 0,
+    g: playerModel.g | 0,
+    b: playerModel.b || 0
   };
   
   this.position = {
-    x: node.x || 0,
-    y: node.y || 0
+    x: playerModel.x || 0,
+    y: playerModel.y || 0
   };
   
   this.target = {
-    x: node.targetX || node.x || 0,
-    y: node.targetY || node.y || 0
+    x: playerModel.targetX || playerModel.x || 0,
+    y: playerModel.targetY || playerModel.y || 0
   };
 }
 

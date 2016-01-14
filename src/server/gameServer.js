@@ -13,9 +13,8 @@ function GameServer(server) {
   this.debug = process.env.DEVELOPMENT ? true : false;
   this.clients = [];
   
-  this.nodes = [];
-  this.nodesPlayer = [];
-  this.movingNodes = [];
+  this.players = [];
+  this.playersPlayer = [];
 
   this.time = Date.now();
   this.startTime = this.time;
@@ -60,14 +59,12 @@ GameServer.prototype.start = function () {
     this.clients.push(socket);
 
     function closeConnection(error) {
-      const nodes = this.nodes.filter(function (node) {
-        return node.ownerId === socket.playerController.pId;
-      }, this);
+      const nodes = this.players.filter(node => node.ownerId === socket.playerController.pId);
       
       if (nodes.length > 0) {
         this.clients.forEach(function (client) {
           if (client !== socket) {
-            client.sendPacket(new Packet.UpdateNodes(nodes));
+            client.sendPacket(new Packet.UpdatePlayers(nodes));
           }
         }, this);
       }
@@ -104,25 +101,18 @@ GameServer.prototype.gameLoop = function () {
 }
 
 GameServer.prototype.movementTick = function () {
-  this.updateMovementEngine();
+  // something
 }
 
-GameServer.prototype.addNode = function (node) {
-  this.nodes.push(node);
+GameServer.prototype.addPlayer = function (player) {
+  this.players.push(player);
 
-  if (node.owner) {
-    node.setColor(node.owner.color);
-    node.owner.socket.sendPacket(new Packet.AddNode(node));
+  if (player.owner) {
+    player.setColor(player.owner.color);
+    player.owner.socket.sendPacket(new Packet.AddPlayer(player));
   }
 
-  node.onAdd(this);
-
-  this.clients.forEach(function (client) {
-    let controller = client.playerController;
-    if (controller && '_socket' in controller.socket) {
-      controller.nodeAdditionQueue.push(node);
-    }
-  }, this);
+  player.onAdd();
 }
 
 GameServer.prototype.updateClients = function () {
@@ -133,39 +123,24 @@ GameServer.prototype.updateClients = function () {
   }, this);
 }
 
-GameServer.prototype.updateMovementEngine = function () {
-  this.movingNodes = [];
-  
-  // this.nodes.forEach(function (node) {
-  //   const currentPosX = node.position.x;
-  //   const currentPosY = node.position.y;
-    
-  //   node.calculateNextPosition();
-    
-  //   const diffX = Math.abs(currentPosX - node.position.x);
-  //   const diffY = Math.abs(currentPosY - node.position.y);
-    
-  //   if (diffX + diffY > 1) {
-  //     this.movingNodes.push(node);
-  //   }
-  // }, this);
-  
-  // this.clients.forEach(function (client) {
-  //   client.playerController.nodeAdditionQueue = client.playerController.nodeAdditionQueue.concat(this.movingNodes); 
-  // }, this);
-}
-
 GameServer.prototype.onTargetUpdated = function (socket) {
-  const node = this.nodes.find(function (node) {
-    return node.ownerId === socket.playerController.pId;
-  });
+  const node = this.players.find(node => node.ownerId === socket.playerController.pId);
+  
   if (node) {
     this.clients.forEach(function (client) {
       if (client !== socket) {
-        client.sendPacket(new Packet.UpdateNodes([], [ node ]));
+        client.sendPacket(new Packet.UpdatePlayers([], [ node ]));
       }
     }, this);
   }
+}
+
+GameServer.prototype.onCast = function (spell) {
+  this.clients.forEach(client => client.playerController.spellAdditionQueue.push(spell));
+  
+  setTimeout(() => 
+    this.clients.forEach(client => client.playerController.spellDestroyQueue.push(spell)), 
+    spell.duration);
 }
 
 GameServer.prototype.spawnPlayer = function (player) {
@@ -176,7 +151,9 @@ GameServer.prototype.spawnPlayer = function (player) {
     y: playerModel.position.y
   };
 
-  this.addNode(playerModel);
+  player.model = playerModel;
+  
+  this.addPlayer(playerModel);
 }
 
 GameServer.prototype.getRandomColor = function () {
@@ -203,18 +180,6 @@ GameServer.prototype.getRandomColor = function () {
 }
 
 WebSocket.prototype.sendPacket = function (packet) {
-  // function getBuffer(data) {
-  //   let array = new Uint8Array(data.buffer || data);
-  //   let length = data.byteLength || data.length;
-  //   let offset = data.byteOffset || 0;
-  //   let buffer = new Buffer(length);
-
-  //   for (let i = 0; i < length; i++) {
-  //     buffer[i] = array[offset + i];
-  //   }
-
-  //   return buffer;
-  // }
   if (process.env.DEVELOPMENT) {
     console.log(packet);
   }
