@@ -5,7 +5,8 @@ function Primary(spellModel) {
   this.mass = spellModel.mass;
   this.power = spellModel.power;
   this.direction = { x: 0, y: 0 };
-  this.speed = 10;
+  this.speed = 7;
+  this.radius = 10;
   
   this.position = {
     x: spellModel.x,
@@ -27,6 +28,10 @@ Primary.prototype.calculateNextPosition = function () {
   }
 }
 
+Primary.prototype.onCollision = function (model) {
+  model.health -= 10;
+}
+
 module.exports = Primary;
 
 function calculatePosition() {
@@ -34,7 +39,6 @@ function calculatePosition() {
     x: this.position.x + this.direction.x * this.speed,
     y: this.position.y + this.direction.y * this.speed
   };
-  console.log(this.position.x, this.position.y);
 }
 
 function getHypotenuseLength(x, y) {

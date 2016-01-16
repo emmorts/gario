@@ -6,10 +6,12 @@ function Player(playerModel) {
   this.name = playerModel.name;
   this.health = playerModel.health;
   this.maxHealth = playerModel.maxHealth;
-  this.speed = 6;
+  this.speed = 4;
   this.acceleration = 0.01;
   this.rotation = 0;
   this.targetRotation = 0;
+  this.radius = 30;
+  this.velocity = { x: 0, y: 0 };
   this._baseFriction = 0.2;
   this._baseRotationTicks = 10;
   this.__rotationTicks = this._baseRotationTicks;
@@ -43,7 +45,7 @@ Player.prototype.calculateNextPosition = function () {
 
 Player.prototype.setTarget = function (x, y) {
   this.targetRotation = Math.atan2(y - this.position.y, x - this.position.x);
-  var diff = this.targetRotation - this.rotation;
+  var diff = Math.abs(this.targetRotation - this.rotation);
   
   if (diff > Math.PI / 2) {
     this.__friction = this._baseFriction;
@@ -96,24 +98,18 @@ function calculatePosition() {
     var velX = (vX / distance) * speed;
     var velY = (vY / distance) * speed;
     
+    this.velocity = {
+      x: velX,
+      y: velY
+    };
+    
     this.position = {
       x: this.position.x + velX,
       y: this.position.y + velY
     };
   } else {
     this.__friction = this._baseFriction;
-  }
-}
-
-function getQuadrant(radians) {
-  if (radians > 0 && radians < Math.PI / 2) {
-    return 4;
-  } else if (radians >= Math.PI / 2 && radians < Math.PI) {
-    return 3
-  } else if (radians < -Math.PI / 2 && radians > -Math.PI) {
-    return 2;
-  } else if (radians < 0 && radians > -Math.PI / 2) {
-    return 1;
+    this.velocity = { x: 0, y: 0 };
   }
 }
 

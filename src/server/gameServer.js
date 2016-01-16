@@ -14,7 +14,7 @@ function GameServer(server) {
   this.clients = [];
   
   this.players = [];
-  this.playersPlayer = [];
+  this.spells = [];
 
   this.time = Date.now();
   this.startTime = this.time;
@@ -89,11 +89,6 @@ GameServer.prototype.gameLoop = function () {
       setTimeout(this.movementTick.bind(this), 0);
     }
 
-    this.tickMain++;
-    if (this.tickMain >= 20) {
-      this.tickMain = 0;
-    }
-
     this.updateClients();
 
     this.tick = 0;
@@ -101,7 +96,7 @@ GameServer.prototype.gameLoop = function () {
 }
 
 GameServer.prototype.movementTick = function () {
-  // something
+  this.players.forEach(player => player.calculateNextPosition());
 }
 
 GameServer.prototype.addPlayer = function (player) {
@@ -136,11 +131,17 @@ GameServer.prototype.onTargetUpdated = function (socket) {
 }
 
 GameServer.prototype.onCast = function (spell) {
+  this.spells.push(spell);
   this.clients.forEach(client => client.playerController.spellAdditionQueue.push(spell));
   
-  setTimeout(() => 
-    this.clients.forEach(client => client.playerController.spellDestroyQueue.push(spell)), 
-    spell.duration);
+  setTimeout(() => {
+    this.clients.forEach(client => client.playerController.spellDestroyQueue.push(spell));
+    
+    const index = this.spells.indexOf(spell);
+    if (index !== -1) {
+      this.spells.splice(index, 1);
+    }
+  }, spell.duration);
 }
 
 GameServer.prototype.spawnPlayer = function (player) {

@@ -29,11 +29,13 @@ WSController.prototype.move = function (player) {
   this.__socket.send(buffer);
 }
 
-WSController.prototype.cast = function (opcode, mouse) {
+WSController.prototype.cast = function (opcode, options) {
   var buffer = BufferCodec()
     .uint8(opcode)
-    .uint16le(mouse.x)
-    .uint16le(mouse.y)
+    .uint16le(options.playerX)
+    .uint16le(options.playerY)
+    .uint16le(options.x)
+    .uint16le(options.y)
     .result();
 
   this.__socket.send(buffer);

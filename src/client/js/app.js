@@ -60,12 +60,29 @@ var OPCode = require('../../opCode');
     graph
       .clear()
       .drawGrid()
-      .drawBorder()
+      // .drawBorder()
+      .drawArena()
       .drawSpells(spellList)
-      .drawPlayers(playerList);
+      .drawPlayers(playerList)
+      .drawDebug();
     
     playerList.forEach(player => player.calculateNextPosition());
     spellList.forEach(spell => spell.calculateNextPosition());
+    
+
+    spellList.forEach((spell, spellIndex) => {
+      playerList.forEach(player => {
+        if (spell.ownerId !== player.ownerId) {
+          var distanceX = player.position.x - spell.position.x;
+          var distanceY = player.position.y - spell.position.y;
+          var distance = distanceX * distanceX + distanceY * distanceY;
+          if (distance < Math.pow(spell.radius + player.radius, 2)) {
+            spell.onCollision(player);
+            spellList.splice(spellIndex, 1);
+          }
+        }
+      });
+    });
   }
 
   function startGame () {
@@ -80,8 +97,16 @@ var OPCode = require('../../opCode');
     ws.on('open', function startGame() {
       
       canvas.addEventListener('mousemove', function (event) {
+        // mouse.x = -(graph.screenWidth / 2 - currentPlayer.position.x - event.x);
+        // mouse.y = -(graph.screenHeight / 2 - currentPlayer.position.y - event.y);
         mouse.x = event.x;
         mouse.y = event.y;
+        // console.log('screen', graph.screenWidth, graph.screenHeight);
+        // console.log('player', currentPlayer.position.x, currentPlayer.position.y);
+        // console.log('mouse', mouse.x, mouse.y);
+        // console.log('estimate', 
+        //   graph.screenWidth / 2 - currentPlayer.position.x - mouse.x,
+        //   graph.screenHeight / 2 - currentPlayer.position.y - mouse.y);
       });
       
       canvas.addEventListener('mousedown', function (event) {
@@ -91,8 +116,8 @@ var OPCode = require('../../opCode');
           var now = performance.now();
           var diff = now - targetTick;
           if (diff > 100) {
-            var targetX = currentPlayer.position.x + event.x - graph.screenWidth / 2;
-            var targetY = currentPlayer.position.y + event.y - graph.screenHeight / 2;
+            var targetX = mouse.x;
+            var targetY = mouse.y;
             targetX = Math.min(Math.max(targetX, 0), graph._gameWidth);
             targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
             currentPlayer.setTarget(targetX, targetY);
@@ -106,6 +131,8 @@ var OPCode = require('../../opCode');
         switch (event.keyCode) {
           case KeyCode.Q:
             ws.cast(OPCode.CAST_PRIMARY, {
+              playerX: currentPlayer.position.x,
+              playerY: currentPlayer.position.y,
               x: mouse.x,
               y: mouse.y
             });

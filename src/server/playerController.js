@@ -13,7 +13,7 @@ function PlayerController(gameServer, socket) {
   this.nodeDestroyQueue = [];
   this.spellAdditionQueue = [];
   this.spellDestroyQueue = [];
-  
+  this.spells = [];
   this.target = {x: 0, y: 0};
 
   if (gameServer) {
@@ -31,12 +31,25 @@ PlayerController.prototype.setTarget = function (target) {
   this.gameServer.onTargetUpdated(this.socket);
 }
 
-PlayerController.prototype.cast = function (type, target) {
+PlayerController.prototype.cast = function (type, options) {
   let spell = null;
   
   switch (type) {
     case OPCode.SPELL_PRIMARY:
-      spell = new Spells.Primary(this.gameServer, this, { target });
+      if (!(OPCode.SPELL_PRIMARY in this.spells)) {
+        spell = new Spells.Primary(this.gameServer, this, { 
+          position: {
+            x: options.playerX,
+            y: options.playerY
+          },
+          target: {
+            x: options.x,
+            y: options.y
+          }
+        });
+        this.spells[OPCode.SPELL_PRIMARY] = spell;
+        setTimeout(() => delete this.spells[OPCode.SPELL_PRIMARY], spell.cooldown);
+      }
       break;
   }
   

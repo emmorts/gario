@@ -8,8 +8,9 @@ function Graph(canvas, options) {
   this._borderColor = '#666';
   this._gridColor = '#ececec';
   this._globalAlpha = options.globalAlpha || 0.15;
-  this._gameWidth = options.gameWidth || 5000;
-  this._gameHeight = options.gameHeight || 5000;
+  this._gameWidth = this.screenWidth || 1000;
+  this._gameHeight = this.screenHeight || 1000;
+  this._arenaSize = 500;
   this._xOffset = -this._gameWidth;
   this._yOffset = -this._gameHeight;
   
@@ -41,18 +42,53 @@ Graph.prototype.clear = function () {
   return this;
 }
 
+Graph.prototype.drawDebug = function () {
+  if (this.player.id !== -1) {
+    // COORDINATES
+    var posX = this.player.position.x;
+    var posY = this.player.position.y;
+    var coordinates = 'Coordinates: ' + Math.round(posX) + ' ' + Math.round(posY);
+    this.drawText(coordinates, 50, 50);
+    
+    // VELOCITY
+    var velocity = 'Velocity: ' + Math.round(this.player.velocity.x) + ' ' + Math.round(this.player.velocity.y);
+    this.drawText(velocity, 50, 30);
+  }
+  
+  return this;
+}
+
+Graph.prototype.drawArena = function () {
+  this._context.lineWidth = 2;
+  this._context.strokeStyle = '#000';
+  this._context.beginPath();
+  
+  var startX = (this._gameWidth - this._arenaSize) / 2;
+  var startY = (this._gameHeight - this._arenaSize) / 2;
+  
+  this._context.moveTo(startX, startY);
+  this._context.lineTo(startX, startY + this._arenaSize);
+  this._context.lineTo(startX + this._arenaSize, startY + this._arenaSize);
+  this._context.lineTo(startX + this._arenaSize, startY);
+  this._context.lineTo(startX, startY);
+  
+  this._context.stroke();
+  
+  return this;
+}
+
 Graph.prototype.drawGrid = function () {
   this._context.lineWidth = 1;
   this._context.strokeStyle = this._gridColor;
   this._context.beginPath();
 
-  for (var x = this._xOffset - this.player.position.x; x < this.screenWidth; x += 40.5) {
+  for (var x = this._xOffset; x < this.screenWidth; x += 40.5) {
     x = Math.round(x) + 0.5;
     this._context.moveTo(x, 0);
     this._context.lineTo(x, this.screenHeight);
   }
 
-  for (var y = this._yOffset - this.player.position.y; y < this.screenHeight; y += 40.5) {
+  for (var y = this._yOffset; y < this.screenHeight; y += 40.5) {
     x = Math.round(y) + 0.5;
     this._context.moveTo(0, y);
     this._context.lineTo(this.screenWidth, y);
@@ -138,7 +174,6 @@ Graph.prototype.drawText = function (text, x, y, fontSize, hasStroke = true) {
   this._context.font = 'bold ' + fontSize + 'px sans-serif';
   this._context.miterLimit = 1;
   this._context.lineJoin = 'round';
-  this._context.textAlign = 'center';
   this._context.textBaseline = 'middle';
   if (hasStroke) {
     this._context.strokeText(text, x, y);
@@ -147,17 +182,11 @@ Graph.prototype.drawText = function (text, x, y, fontSize, hasStroke = true) {
 }
 
 Graph.prototype.drawPlayer = function (player) {
-  var start = {
-    x: this.player.position.x - (this.screenWidth / 2),
-    y: this.player.position.y - (this.screenHeight / 2)
-  };
-
-  var posX = -start.x + player.position.x;
-  var posY = -start.y + player.position.y;
+  var posX = player.position.x;
+  var posY = player.position.y;
 
   this._context.beginPath();
-  // TODO: REMOVE HARDCODED RADIUS
-  this._context.arc(posX, posY, 30, Math.PI / 7 + player.rotation, -Math.PI / 7 + player.rotation);
+  this._context.arc(posX, posY, player.radius, Math.PI / 7 + player.rotation, -Math.PI / 7 + player.rotation);
   this._context.fillStyle = getColorInRGB(player.color);
   this._context.fill();
   this._context.lineWidth = 6;
@@ -166,8 +195,6 @@ Graph.prototype.drawPlayer = function (player) {
   this._context.closePath();
 
   this.drawText(player.name, posX, posY, 16);
-  var coordinates = Math.round(player.position.x) + ' ' + Math.round(player.position.y);
-  this.drawText(coordinates, posX, posY + 15, 10, false);
 }
 
 Graph.prototype.drawPlayers = function (playerList) {
@@ -192,16 +219,11 @@ Graph.prototype.drawSpells = function (spellList) {
 }
 
 function drawSpell(spell) {
-  var start = {
-    x: this.player.position.x - (this.screenWidth / 2),
-    y: this.player.position.y - (this.screenHeight / 2)
-  };
-
-  var posX = -start.x + spell.position.x;
-  var posY = -start.y + spell.position.y;
+  var posX = spell.position.x;
+  var posY = spell.position.y;
   
   this._context.beginPath();
-  this._context.arc(posX, posY, 10, 0, 2 * Math.PI);
+  this._context.arc(posX, posY, spell.radius, 0, 2 * Math.PI);
   this._context.fillStyle = getColorInRGB(spell.color);
   this._context.fill();
   this._context.closePath();

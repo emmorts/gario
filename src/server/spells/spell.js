@@ -16,5 +16,5 @@ Spell.prototype.onAdd = function () {
 }
 
 Spell.prototype.onCollision = function (model) {
-  // override
+  model.health -= 10;
 }

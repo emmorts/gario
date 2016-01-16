@@ -409,13 +409,29 @@ var OPCode = require('../../opCode');
   }
 
   function gameLoop() {
-    graph.clear().drawGrid().drawBorder().drawSpells(spellList).drawPlayers(playerList);
+    graph.clear().drawGrid()
+    // .drawBorder()
+    .drawArena().drawSpells(spellList).drawPlayers(playerList).drawDebug();
 
     playerList.forEach(function (player) {
       return player.calculateNextPosition();
     });
     spellList.forEach(function (spell) {
       return spell.calculateNextPosition();
+    });
+
+    spellList.forEach(function (spell, spellIndex) {
+      playerList.forEach(function (player) {
+        if (spell.ownerId !== player.ownerId) {
+          var distanceX = player.position.x - spell.position.x;
+          var distanceY = player.position.y - spell.position.y;
+          var distance = distanceX * distanceX + distanceY * distanceY;
+          if (distance < Math.pow(spell.radius + player.radius, 2)) {
+            spell.onCollision(player);
+            spellList.splice(spellIndex, 1);
+          }
+        }
+      });
     });
   }
 
@@ -431,8 +447,16 @@ var OPCode = require('../../opCode');
     ws.on('open', function startGame() {
 
       canvas.addEventListener('mousemove', function (event) {
+        // mouse.x = -(graph.screenWidth / 2 - currentPlayer.position.x - event.x);
+        // mouse.y = -(graph.screenHeight / 2 - currentPlayer.position.y - event.y);
         mouse.x = event.x;
         mouse.y = event.y;
+        // console.log('screen', graph.screenWidth, graph.screenHeight);
+        // console.log('player', currentPlayer.position.x, currentPlayer.position.y);
+        // console.log('mouse', mouse.x, mouse.y);
+        // console.log('estimate',
+        //   graph.screenWidth / 2 - currentPlayer.position.x - mouse.x,
+        //   graph.screenHeight / 2 - currentPlayer.position.y - mouse.y);
       });
 
       canvas.addEventListener('mousedown', function (event) {
@@ -442,8 +466,8 @@ var OPCode = require('../../opCode');
           var now = performance.now();
           var diff = now - targetTick;
           if (diff > 100) {
-            var targetX = currentPlayer.position.x + event.x - graph.screenWidth / 2;
-            var targetY = currentPlayer.position.y + event.y - graph.screenHeight / 2;
+            var targetX = mouse.x;
+            var targetY = mouse.y;
             targetX = Math.min(Math.max(targetX, 0), graph._gameWidth);
             targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
             currentPlayer.setTarget(targetX, targetY);
@@ -457,6 +481,8 @@ var OPCode = require('../../opCode');
         switch (event.keyCode) {
           case KeyCode.Q:
             ws.cast(OPCode.CAST_PRIMARY, {
+              playerX: currentPlayer.position.x,
+              playerY: currentPlayer.position.y,
               x: mouse.x,
               y: mouse.y
             });
@@ -554,8 +580,9 @@ function Graph(canvas, options) {
   this._borderColor = '#666';
   this._gridColor = '#ececec';
   this._globalAlpha = options.globalAlpha || 0.15;
-  this._gameWidth = options.gameWidth || 5000;
-  this._gameHeight = options.gameHeight || 5000;
+  this._gameWidth = this.screenWidth || 1000;
+  this._gameHeight = this.screenHeight || 1000;
+  this._arenaSize = 500;
   this._xOffset = -this._gameWidth;
   this._yOffset = -this._gameHeight;
 
@@ -587,18 +614,53 @@ Graph.prototype.clear = function () {
   return this;
 };
 
+Graph.prototype.drawDebug = function () {
+  if (this.player.id !== -1) {
+    // COORDINATES
+    var posX = this.player.position.x;
+    var posY = this.player.position.y;
+    var coordinates = 'Coordinates: ' + Math.round(posX) + ' ' + Math.round(posY);
+    this.drawText(coordinates, 50, 50);
+
+    // VELOCITY
+    var velocity = 'Velocity: ' + Math.round(this.player.velocity.x) + ' ' + Math.round(this.player.velocity.y);
+    this.drawText(velocity, 50, 30);
+  }
+
+  return this;
+};
+
+Graph.prototype.drawArena = function () {
+  this._context.lineWidth = 2;
+  this._context.strokeStyle = '#000';
+  this._context.beginPath();
+
+  var startX = (this._gameWidth - this._arenaSize) / 2;
+  var startY = (this._gameHeight - this._arenaSize) / 2;
+
+  this._context.moveTo(startX, startY);
+  this._context.lineTo(startX, startY + this._arenaSize);
+  this._context.lineTo(startX + this._arenaSize, startY + this._arenaSize);
+  this._context.lineTo(startX + this._arenaSize, startY);
+  this._context.lineTo(startX, startY);
+
+  this._context.stroke();
+
+  return this;
+};
+
 Graph.prototype.drawGrid = function () {
   this._context.lineWidth = 1;
   this._context.strokeStyle = this._gridColor;
   this._context.beginPath();
 
-  for (var x = this._xOffset - this.player.position.x; x < this.screenWidth; x += 40.5) {
+  for (var x = this._xOffset; x < this.screenWidth; x += 40.5) {
     x = Math.round(x) + 0.5;
     this._context.moveTo(x, 0);
     this._context.lineTo(x, this.screenHeight);
   }
 
-  for (var y = this._yOffset - this.player.position.y; y < this.screenHeight; y += 40.5) {
+  for (var y = this._yOffset; y < this.screenHeight; y += 40.5) {
     x = Math.round(y) + 0.5;
     this._context.moveTo(0, y);
     this._context.lineTo(this.screenWidth, y);
@@ -686,7 +748,6 @@ Graph.prototype.drawText = function (text, x, y, fontSize) {
   this._context.font = 'bold ' + fontSize + 'px sans-serif';
   this._context.miterLimit = 1;
   this._context.lineJoin = 'round';
-  this._context.textAlign = 'center';
   this._context.textBaseline = 'middle';
   if (hasStroke) {
     this._context.strokeText(text, x, y);
@@ -695,17 +756,11 @@ Graph.prototype.drawText = function (text, x, y, fontSize) {
 };
 
 Graph.prototype.drawPlayer = function (player) {
-  var start = {
-    x: this.player.position.x - this.screenWidth / 2,
-    y: this.player.position.y - this.screenHeight / 2
-  };
-
-  var posX = -start.x + player.position.x;
-  var posY = -start.y + player.position.y;
+  var posX = player.position.x;
+  var posY = player.position.y;
 
   this._context.beginPath();
-  // TODO: REMOVE HARDCODED RADIUS
-  this._context.arc(posX, posY, 30, Math.PI / 7 + player.rotation, -Math.PI / 7 + player.rotation);
+  this._context.arc(posX, posY, player.radius, Math.PI / 7 + player.rotation, -Math.PI / 7 + player.rotation);
   this._context.fillStyle = getColorInRGB(player.color);
   this._context.fill();
   this._context.lineWidth = 6;
@@ -714,8 +769,6 @@ Graph.prototype.drawPlayer = function (player) {
   this._context.closePath();
 
   this.drawText(player.name, posX, posY, 16);
-  var coordinates = Math.round(player.position.x) + ' ' + Math.round(player.position.y);
-  this.drawText(coordinates, posX, posY + 15, 10, false);
 };
 
 Graph.prototype.drawPlayers = function (playerList) {
@@ -750,16 +803,11 @@ Graph.prototype.drawSpells = function (spellList) {
 };
 
 function drawSpell(spell) {
-  var start = {
-    x: this.player.position.x - this.screenWidth / 2,
-    y: this.player.position.y - this.screenHeight / 2
-  };
-
-  var posX = -start.x + spell.position.x;
-  var posY = -start.y + spell.position.y;
+  var posX = spell.position.x;
+  var posY = spell.position.y;
 
   this._context.beginPath();
-  this._context.arc(posX, posY, 10, 0, 2 * Math.PI);
+  this._context.arc(posX, posY, spell.radius, 0, 2 * Math.PI);
   this._context.fillStyle = getColorInRGB(spell.color);
   this._context.fill();
   this._context.closePath();
@@ -917,10 +965,12 @@ function Player(playerModel) {
   this.name = playerModel.name;
   this.health = playerModel.health;
   this.maxHealth = playerModel.maxHealth;
-  this.speed = 6;
+  this.speed = 4;
   this.acceleration = 0.01;
   this.rotation = 0;
   this.targetRotation = 0;
+  this.radius = 30;
+  this.velocity = { x: 0, y: 0 };
   this._baseFriction = 0.2;
   this._baseRotationTicks = 10;
   this.__rotationTicks = this._baseRotationTicks;
@@ -954,7 +1004,7 @@ Player.prototype.calculateNextPosition = function () {
 
 Player.prototype.setTarget = function (x, y) {
   this.targetRotation = Math.atan2(y - this.position.y, x - this.position.x);
-  var diff = this.targetRotation - this.rotation;
+  var diff = Math.abs(this.targetRotation - this.rotation);
 
   if (diff > Math.PI / 2) {
     this.__friction = this._baseFriction;
@@ -1007,24 +1057,18 @@ function calculatePosition() {
     var velX = vX / distance * speed;
     var velY = vY / distance * speed;
 
+    this.velocity = {
+      x: velX,
+      y: velY
+    };
+
     this.position = {
       x: this.position.x + velX,
       y: this.position.y + velY
     };
   } else {
     this.__friction = this._baseFriction;
-  }
-}
-
-function getQuadrant(radians) {
-  if (radians > 0 && radians < Math.PI / 2) {
-    return 4;
-  } else if (radians >= Math.PI / 2 && radians < Math.PI) {
-    return 3;
-  } else if (radians < -Math.PI / 2 && radians > -Math.PI) {
-    return 2;
-  } else if (radians < 0 && radians > -Math.PI / 2) {
-    return 1;
+    this.velocity = { x: 0, y: 0 };
   }
 }
 
@@ -1102,7 +1146,8 @@ function Primary(spellModel) {
   this.mass = spellModel.mass;
   this.power = spellModel.power;
   this.direction = { x: 0, y: 0 };
-  this.speed = 10;
+  this.speed = 7;
+  this.radius = 10;
 
   this.position = {
     x: spellModel.x,
@@ -1124,6 +1169,10 @@ Primary.prototype.calculateNextPosition = function () {
   }
 };
 
+Primary.prototype.onCollision = function (model) {
+  model.health -= 10;
+};
+
 module.exports = Primary;
 
 function calculatePosition() {
@@ -1131,7 +1180,6 @@ function calculatePosition() {
     x: this.position.x + this.direction.x * this.speed,
     y: this.position.y + this.direction.y * this.speed
   };
-  console.log(this.position.x, this.position.y);
 }
 
 function getHypotenuseLength(x, y) {
@@ -1198,8 +1246,8 @@ WSController.prototype.move = function (player) {
   this.__socket.send(buffer);
 };
 
-WSController.prototype.cast = function (opcode, mouse) {
-  var buffer = BufferCodec().uint8(opcode).uint16le(mouse.x).uint16le(mouse.y).result();
+WSController.prototype.cast = function (opcode, options) {
+  var buffer = BufferCodec().uint8(opcode).uint16le(options.playerX).uint16le(options.playerY).uint16le(options.x).uint16le(options.y).result();
 
   this.__socket.send(buffer);
 };

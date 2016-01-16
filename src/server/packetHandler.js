@@ -51,7 +51,13 @@ function movePlayer(codec) {
 }
 
 function castPrimary(codec) {
-  const target = codec.parse([{
+  const options = codec.parse([{
+    name: 'playerX',
+    type: 'uint16le'
+  }, {
+    name: 'playerY',
+    type: 'uint16le'
+  }, {
     name: 'x',
     type: 'uint16le'
   }, {
@@ -59,5 +65,5 @@ function castPrimary(codec) {
     type: 'uint16le'
   }]);
   
-  this.socket.playerController.cast(OPCode.SPELL_PRIMARY, target);
+  this.socket.playerController.cast(OPCode.SPELL_PRIMARY, options);
 }
