@@ -6,12 +6,14 @@ function Player(playerModel) {
   this.name = playerModel.name;
   this.health = playerModel.health;
   this.maxHealth = playerModel.maxHealth;
-  this.speed = 4;
-  this.acceleration = 0.01;
+  this.speed = 3;
+  this.acceleration = 0.2;
   this.rotation = 0;
   this.targetRotation = 0;
-  this.radius = 30;
+  this.radius = 20;
+  this.mass = 20;
   this.velocity = { x: 0, y: 0 };
+  this.stunned = 0;
   this._baseFriction = 0.2;
   this._baseRotationTicks = 10;
   this.__rotationTicks = this._baseRotationTicks;
@@ -85,28 +87,49 @@ function calculateRotation() {
 }
 
 function calculatePosition() {
-  if (!arePositionsApproximatelyEqual(this.position, this.target)) {
+  if (!arePositionsApproximatelyEqual(this.position, this.target) || this.stunned) {
     if (this.__friction < 1) {
       this.__friction += this.acceleration;
     }
     
     var speed = this.speed * this.__friction;
-    var vX = this.target.x - this.position.x;
-    var vY = this.target.y - this.position.y;
-    var distance = getHypotenuseLength(vX, vY);
+    var velX = this.velocity.x;
+    var velY = this.velocity.y;
+    var velocity = 0, fn;
     
-    var velX = (vX / distance) * speed;
-    var velY = (vY / distance) * speed;
+    if (!this.stunned) {
+      var vX = this.target.x - this.position.x;
+      var vY = this.target.y - this.position.y;
+      var distance = getHypotenuseLength(vX, vY);
+      
+      velX = (vX / distance) * speed;
+      velY = (vY / distance) * speed;
+    }
     
-    this.velocity = {
-      x: velX,
-      y: velY
-    };
+    if (Math.abs(this.velocity.x - velX) > this.acceleration) {
+      velocity = this.acceleration * Math.sign(velX);
+      fn = Math.sign(velX) !== 1 ? Math.max : Math.min;
+      this.velocity.x = fn(this.velocity.x + velocity, Math.sign(velX) * speed); 
+    } else {
+      this.velocity.x = velX;
+    }
     
-    this.position = {
-      x: this.position.x + velX,
-      y: this.position.y + velY
-    };
+    if (Math.abs(this.velocity.y - velY) > this.acceleration) {
+      velocity = this.acceleration * Math.sign(velY);
+      fn = Math.sign(velY) !== 1 ? Math.max : Math.min;
+      this.velocity.y = fn(this.velocity.y + velocity, Math.sign(velY) * speed); 
+    } else {
+      this.velocity.y = velY;
+    }
+    
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+    
+    if (this.stunned) {
+      this.target.x = this.position.x;
+      this.target.y = this.position.y;
+      this.stunned--;
+    }
   } else {
     this.__friction = this._baseFriction;
     this.velocity = { x: 0, y: 0 };

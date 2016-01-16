@@ -4,7 +4,7 @@ function Primary(spellModel) {
   this.type = spellModel.type;
   this.mass = spellModel.mass;
   this.power = spellModel.power;
-  this.direction = { x: 0, y: 0 };
+  this.velocity = { x: 0, y: 0 };
   this.speed = 7;
   this.radius = 10;
   
@@ -23,21 +23,24 @@ function Primary(spellModel) {
 }
 
 Primary.prototype.calculateNextPosition = function () {
-  if (typeof this.direction.x !== 'undefined' && typeof this.direction.y !== 'undefined') {
+  if (typeof this.velocity.x !== 'undefined' && typeof this.velocity.y !== 'undefined') {
     calculatePosition.call(this);
   }
 }
 
 Primary.prototype.onCollision = function (model) {
   model.health -= 10;
+  
+  model.velocity.x += this.power * this.mass * this.velocity.x / model.mass;
+  model.velocity.y += this.power * this.mass * this.velocity.y / model.mass;
 }
 
 module.exports = Primary;
 
 function calculatePosition() {
   this.position = {
-    x: this.position.x + this.direction.x * this.speed,
-    y: this.position.y + this.direction.y * this.speed
+    x: this.position.x + this.velocity.x * this.speed,
+    y: this.position.y + this.velocity.y * this.speed
   };
 }
 
@@ -52,7 +55,7 @@ function setTarget(x, y) {
   var vY = this.target.y - this.position.y;
   var distance = getHypotenuseLength(vX, vY);
   
-  this.direction = {
+  this.velocity = {
     x: vX / distance,
     y: vY / distance
   };

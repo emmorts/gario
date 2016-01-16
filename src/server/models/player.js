@@ -12,7 +12,7 @@ function Player(gameServer, owner) {
   this.gameServer = gameServer;
   this.health = this.maxHealth = gameServer.gameMode.baseHealth;
   this.radius = 30;
-  this.speed = 4;
+  this.speed = 3;
   this.acceleration = 0.01;
   this._baseFriction = 0.2;
   this.__friction = this._baseFriction;

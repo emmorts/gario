@@ -15,7 +15,7 @@ function Primary(gameServer, owner, options) {
   this.position = options.position;
   this.target = options.target;
   this.mass = 10;
-  this.power = 10;
+  this.power = 8;
   this.duration = 5000;
   this.cooldown = 4000;
   this.radius = 10;

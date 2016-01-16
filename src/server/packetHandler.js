@@ -64,6 +64,7 @@ function castPrimary(codec) {
     name: 'y',
     type: 'uint16le'
   }]);
+  console.log('casting');
   
   this.socket.playerController.cast(OPCode.SPELL_PRIMARY, options);
 }
