@@ -1321,7 +1321,7 @@ function calculateRotation() {
 function updateAnimation() {
   if (this.__castTicks > 0) {
     var sign = Math.sign(this.__castTicks - this._baseCastTicks / 2);
-    this.radius += sign * (this.__maxRadius - this._baseRadius) / 2;
+    this.radius += sign * (this.__maxRadius - this.radius) / 2;
     this.__castTicks--;
   } else {
     this.radius = this._baseRadius;
