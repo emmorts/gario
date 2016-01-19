@@ -28,6 +28,10 @@ Primary.prototype.calculateNextPosition = function () {
   }
 }
 
+Primary.prototype.onAdd = function (owner) {
+  owner.onCast(this);
+}
+
 Primary.prototype.onCollision = function (model) {
   model.health -= 10;
   

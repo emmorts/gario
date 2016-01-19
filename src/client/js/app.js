@@ -36,6 +36,10 @@ var OPCode = require('../../opCode');
       var playButtonElement = playButtonElements[0];
       var errorElement = errorElements[0];
       playerNameElement.addEventListener('keyup', function validate(event) {
+        console.log(event.keyCode);
+        if ([KeyCode.ENTER, KeyCode.MAC_ENTER].indexOf(event.keyCode) !== -1) {
+          startGame();
+        }
         if (event && event.target) {
           var pattern = /^[a-zA-Z0-9 ]{0,25}$/;
           if (event.target.value.match(pattern)) {
@@ -188,6 +192,7 @@ var OPCode = require('../../opCode');
           updatedSpells.forEach(function (updatedSpell) {
             var SpellClass = Spells.get(updatedSpell.type);
             var spell = new SpellClass(updatedSpell);
+            spell.onAdd(playerList.find(p => p.ownerId === spell.ownerId));
             spellList.splice(0, 0, spell);
           });
         }

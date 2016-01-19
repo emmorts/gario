@@ -16,8 +16,13 @@ function Player(playerModel) {
   this.stunned = 0;
   this._baseFriction = 0.2;
   this._baseRotationTicks = 10;
+  this._baseCastTicks = 10;
+  this._baseRadius = this.radius;
+  this.__maxRadius = 25;
   this.__rotationTicks = this._baseRotationTicks;
+  this.__castTicks = this._baseCastTicks;
   this.__friction = this._baseFriction;
+  this.__animateCast = false;
   
   this.color = {
     r: playerModel.r || 0,
@@ -43,6 +48,14 @@ Player.prototype.calculateNextPosition = function () {
   if (typeof this.targetRotation !== 'undefined') {
     calculateRotation.call(this);
   }
+  if (this.__animateCast) {
+    updateAnimation.call(this);
+  }
+}
+
+Player.prototype.onCast = function (spell) {
+  this.__animateCast = true;
+  this.targetRotation = Math.atan2(spell.target.y - this.position.y, spell.target.x - this.position.x);
 }
 
 Player.prototype.setTarget = function (x, y) {
@@ -58,33 +71,6 @@ Player.prototype.setTarget = function (x, y) {
 }
 
 module.exports = Player;
-
-function calculateRotation() {
-  if (Math.abs(this.rotation - this.targetRotation) > 1e-5) {
-    if (this.__rotationTicks > 0) {
-      if (this.rotation > Math.PI) {
-        this.rotation = -Math.PI - (Math.PI - Math.abs(this.rotation));
-      } else if (this.rotation < -Math.PI) {
-        this.rotation = Math.PI + (Math.PI - Math.abs(this.rotation));
-      }
-      if (Math.abs(this.targetRotation - this.rotation) > Math.PI) {
-        var diffA = Math.PI - Math.abs(this.rotation);
-        var diffB = Math.PI - Math.abs(this.targetRotation);
-        var diff = diffA + diffB;
-        if (this.rotation > 0) {
-          this.rotation += diff / this.__rotationTicks;
-        } else {
-          this.rotation -= diff / this.__rotationTicks;
-        }
-      } else {
-        this.rotation += (this.targetRotation - this.rotation) / this.__rotationTicks;
-      }
-    } else {
-      this.rotation = this.targetRotation;
-      this.__rotationTicks = 10
-    }
-  }
-}
 
 function calculatePosition() {
   if (!arePositionsApproximatelyEqual(this.position, this.target) || this.stunned) {
@@ -133,6 +119,46 @@ function calculatePosition() {
   } else {
     this.__friction = this._baseFriction;
     this.velocity = { x: 0, y: 0 };
+  }
+}
+
+function calculateRotation() {
+  if (Math.abs(this.rotation - this.targetRotation) > 1e-5) {
+    if (this.__rotationTicks > 0) {
+      if (this.rotation > Math.PI) {
+        this.rotation = -Math.PI - (Math.PI - Math.abs(this.rotation));
+      } else if (this.rotation < -Math.PI) {
+        this.rotation = Math.PI + (Math.PI - Math.abs(this.rotation));
+      }
+      if (Math.abs(this.targetRotation - this.rotation) > Math.PI) {
+        var diffA = Math.PI - Math.abs(this.rotation);
+        var diffB = Math.PI - Math.abs(this.targetRotation);
+        var diff = diffA + diffB;
+        if (this.rotation > 0) {
+          this.rotation += diff / this.__rotationTicks;
+        } else {
+          this.rotation -= diff / this.__rotationTicks;
+        }
+      } else {
+        this.rotation += (this.targetRotation - this.rotation) / this.__rotationTicks;
+      }
+    } else {
+      this.rotation = this.targetRotation;
+      this.__rotationTicks = this._baseRotationTicks;
+    }
+  }
+}
+
+function updateAnimation() {
+  if (this.__castTicks > 0) {
+    var sign = Math.sign(this.__castTicks - this._baseCastTicks / 2);
+    this.radius += sign * (this.__maxRadius - this._baseRadius) / 2;
+    this.__castTicks--;
+  } else {
+    this.radius = this._baseRadius;
+    this.__castTicks = this._baseCastTicks;
+    this.__animateCast = false;
+    this.targetRotation = Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
   }
 }
 
