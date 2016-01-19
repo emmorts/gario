@@ -10,12 +10,9 @@ var babel = require('babelify');
 function compile(watch) {
   var bundler = watchify(
       browserify({
-        // Define the entry point for our application
         entries: ['./src/client/js/app.js'],
-        // Debugging is nice
         debug: true,
         builtins: [],
-        // Allow importing from the following extensions
         extensions: [' ', 'js']
       }).transform(babel.configure({
         presets: ["es2015"]
@@ -49,26 +46,6 @@ function watch() {
   return compile(true);
 };
 
-gulp.task('build', function () { return compile(); });
-gulp.task('watch', function () { return watch(); });
-
-// var src = [
-//   './src/opCode.js',
-//   './node_modules/buffercodec/index.js',
-//   './src/client/js/keyCode.js',
-//   './src/client/js/models/*.js',
-//   './src/client/js/polyfills.js',
-//   './src/client/js/graph.js',
-//   './src/client/js/wsController.js',
-//   './src/client/js/app.js'
-// ];
-
-// gulp.task('js', function () {
-//   return gulp.src(src)
-//     .pipe(concat('game.js'))
-//     .pipe(gulp.dest('./src/dist/js'));
-// });
-
 gulp.task('css', function () {
   return gulp.src('./src/client/css/*.css')
     .pipe(gulp.dest('./src/dist/css'));
@@ -79,8 +56,12 @@ gulp.task('html', function () {
     .pipe(gulp.dest('./src/dist/'));
 });
 
-// gulp.task('default', ['js', 'css', 'html'], function () {
-//   gulp.watch(src, ['js']);
-//   gulp.watch(['./src/client/*.html'], ['html']);
-//   gulp.watch(['./src/client/css/*.css'], ['css']);
-// });
+gulp.task('build', ['css', 'html'], function () {
+  return compile();
+});
+ 
+gulp.task('watch', ['css', 'html'], function () {
+  return watch();
+});
+
+gulp.task('default', ['watch']);

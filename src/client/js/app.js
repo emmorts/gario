@@ -1,8 +1,8 @@
 require('./polyfills');
 
-var Graph = require('./graph');
-var WSController = require('./wsController');
-var KeyCode = require('./keyCode');
+var Graph = require('./Graph');
+var WSController = require('./WSController');
+var KeyCode = require('./KeyCode');
 var Models = require('./models');
 var Spells = require('./spells');
 var OPCode = require('../../opCode');

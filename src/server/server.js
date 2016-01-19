@@ -1,7 +1,7 @@
 /* global Buffer */
 /* global __dirname */
 
-const GameServer = require('./gameServer');
+const GameServer = require('./GameServer');
 
 const server = require('http').createServer();
 const express = require('express');

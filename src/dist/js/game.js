@@ -1,573 +1,367 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-function BufferCodec(buffer) {
-  if (!(this instanceof BufferCodec)) {
-    return new BufferCodec(buffer);
-  }
+(function (Buffer){
+/* global Buffer */
+var BufferCodec = (function () {
 
-  this.offset = 0;
-  this.jobs = [];
-
-  if (buffer) {
-    if (buffer.byteLength > 0) {
-      if (buffer instanceof ArrayBuffer) {
-        this.buffer = buffer;
-      } else {
-        var arrayBuffer = new ArrayBuffer(buffer.length);
-        var view = new Uint8Array(arrayBuffer);
-        for (var i = 0; i < buffer.length; ++i) {
-          view[i] = buffer[i];
-        }
-        this.buffer = arrayBuffer;
-      }
+  function BufferCodec(buffer) {
+    if (!(this instanceof BufferCodec)) {
+      return new BufferCodec(buffer);
     }
-    if (!this.buffer) {
-      console.warn("Received malformed data");
-    }
-  }
-}
 
-BufferCodec.prototype.result = function () {
-  this.offset = 0;
-  
-  var bufferLength = this.jobs.reduce(function(last, current) {
-    return last + current.length;
-  }, 0);
-  var buffer = new ArrayBuffer(bufferLength);
-  var dataView = new DataView(buffer);
-  
-  if (this.jobs.length > 0) {
-    this.jobs.forEach(function (job) {
-      if (job.method !== 'string') {
-        dataView[job.method](this.offset, job.data, job.littleEndian);
-        this.offset += job.length;
-      } else {
-        if (job.encoding === 'utf16') {
-          for (var i = 0; i < job.length / 2; i++, this.offset += 2) {
-            dataView.setUint16(this.offset, job.data.charCodeAt(i), true);
+    this.offset = 0;
+    this.jobs = [];
+
+    if (buffer) {
+      if (buffer.byteLength > 0) {
+        if (typeof Buffer !== 'undefined' && buffer instanceof Buffer) {
+          var arrayBuffer = new ArrayBuffer(buffer.length);
+          var view = new Uint8Array(arrayBuffer);
+          for (var i = 0; i < buffer.length; ++i) {
+            view[i] = buffer[i];
           }
-        } else if (job.encoding === 'utf8') {
-          for (var i = 0; i < job.length; i++, this.offset++) {
-            dataView.setUint8(this.offset, job.data.charCodeAt(i));
-          }
+          this.buffer = arrayBuffer;
         } else {
-          console.warn('Undefined encoding: ' + job.encoding);
+          this.buffer = buffer;
         }
       }
-    }, this);
+      if (!this.buffer) {
+        console.warn("Received malformed data");
+      }
+    }
   }
   
-  this.jobs = [];
-  
-  return dataView.buffer;
-}
-
-BufferCodec.prototype.string = function (value, encoding) {
-  this.jobs.push({
-    method: 'string',
-    data: value,
-    length: (!encoding || encoding === 'utf16') ? value.length * 2 : value.length,
-    encoding: encoding ? encoding : 'utf16'
-  });
-
-  return this;
-}
-
-BufferCodec.prototype.int8 = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setInt8',
-    length: 1
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.uint8 = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setUint8',
-    length: 1
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.int16le = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setInt16',
-    length: 2,
-    littleEndian: true
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.int16be = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setInt16',
-    length: 2,
-    littleEndian: false
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.uint16le = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setUint16',
-    length: 2,
-    littleEndian: true
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.uint16be = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setUint16',
-    length: 2,
-    littleEndian: false
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.int32le = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setInt32',
-    length: 4,
-    littleEndian: true
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.int32be = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setInt32',
-    length: 4,
-    littleEndian: false
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.uint32le = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setUint32',
-    length: 4,
-    littleEndian: true
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.uint32be = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setUint32',
-    length: 4,
-    littleEndian: false
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.float32le = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setFloat32',
-    length: 4,
-    littleEndian: true
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.float32be = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setFloat32',
-    length: 4,
-    littleEndian: false
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.float64le = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setFloat64',
-    length: 8,
-    littleEndian: true
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.float64be = function (value) {
-  this.jobs.push({
-    data: value,
-    method: 'setFloat64',
-    length: 8,
-    littleEndian: false
-  });
-  
-  return this;
-}
-
-BufferCodec.prototype.parse = function (template) {
-  if (this.buffer && template) {
-    var data = new DataView(this.buffer);
-    var result = {};
-
-    if (template.constructor === Array) {
-      template.forEach(function (element) {
-        parseItem.call(this, element, result)
+  BufferCodec.prototype.result = function () {
+    this.offset = 0;
+    
+    var bufferLength = this.jobs.reduce(function(last, current) {
+      return last + current.length;
+    }, 0);
+    var buffer = new ArrayBuffer(bufferLength);
+    var dataView = new DataView(buffer);
+    
+    if (this.jobs.length > 0) {
+      this.jobs.forEach(function (job) {
+        if (job.method !== 'string') {
+          dataView[job.method](this.offset, job.data, job.littleEndian);
+          this.offset += job.length;
+        } else {
+          if (job.encoding === 'utf16') {
+            for (var i = 0; i < job.length / 2; i++, this.offset += 2) {
+              dataView.setUint16(this.offset, job.data.charCodeAt(i), true);
+            }
+          } else if (job.encoding === 'utf8') {
+            for (var i = 0; i < job.length; i++, this.offset++) {
+              dataView.setUint8(this.offset, job.data.charCodeAt(i));
+            }
+          } else {
+            console.warn('Undefined encoding: ' + job.encoding);
+          }
+        }
       }, this);
-    } else {
-      parseItem.call(this, template, result);
     }
-
-    return result;
+    
+    this.jobs = [];
+    
+    return dataView.buffer;
   }
 
-  function parseArray(data, template) {
-    var result = [];
+  BufferCodec.prototype.string = function (value, encoding) {
+    this.jobs.push({
+      method: 'string',
+      data: value,
+      length: (!encoding || encoding === 'utf16') ? value.length * 2 : value.length,
+      encoding: encoding ? encoding : 'utf16'
+    });
 
-    var length = data.getUint8(this.offset++);
-    if (length > 0) {
-      for (var i = 0; i < length; i++) {
-        result.push(this.parse(template));
+    return this;
+  }
+  
+  BufferCodec.prototype.int8 = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setInt8',
+      length: 1
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.uint8 = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setUint8',
+      length: 1
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.int16le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setInt16',
+      length: 2,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.int16be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setInt16',
+      length: 2,
+      littleEndian: false
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.uint16le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setUint16',
+      length: 2,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.uint16be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setUint16',
+      length: 2,
+      littleEndian: false
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.int32le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setInt32',
+      length: 4,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.int32be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setInt32',
+      length: 4,
+      littleEndian: false
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.uint32le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setUint32',
+      length: 4,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.uint32be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setUint32',
+      length: 4,
+      littleEndian: false
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.float32le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setFloat32',
+      length: 4,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.float32be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setFloat32',
+      length: 4,
+      littleEndian: false
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.float64le = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setFloat64',
+      length: 8,
+      littleEndian: true
+    });
+    
+    return this;
+  }
+  
+  BufferCodec.prototype.float64be = function (value) {
+    this.jobs.push({
+      data: value,
+      method: 'setFloat64',
+      length: 8,
+      littleEndian: false
+    });
+    
+    return this;
+  }
+
+  BufferCodec.prototype.parse = function (template) {
+    if (this.buffer && template) {
+      var data = new DataView(this.buffer);
+      var result = {};
+
+      if (template.constructor === Array) {
+        template.forEach(function (element) {
+          parseItem.call(this, element, result)
+        }, this);
+      } else {
+        parseItem.call(this, template, result);
       }
+
+      return result;
     }
 
-    return result;
-  }
+    function parseArray(data, template) {
+      var result = [];
 
-  function parseItem(element) {
-    var templateResult;
-    switch (element.type) {
-      case 'int8':
-        templateResult = data.getInt8(this.offset);
-        this.offset += 1;
-        break;
-      case 'uint8':
-        templateResult = data.getUint8(this.offset);
-        this.offset += 1;
-        break;
-      case 'int16le':
-        templateResult = data.getInt16(this.offset, true);
-        this.offset += 2;
-        break;
-      case 'uint16le':
-        templateResult = data.getUint16(this.offset, true);
-        this.offset += 2;
-        break;
-      case 'int16be':
-        templateResult = data.getInt16(this.offset, false);
-        this.offset += 2;
-        break;
-      case 'uint16be':
-        templateResult = data.getUint16(this.offset, false);
-        this.offset += 2;
-        break;
-      case 'int32le':
-        templateResult = data.getInt32(this.offset, true);
-        this.offset += 4;
-        break;
-      case 'uint32le':
-        templateResult = data.getUint32(this.offset, true);
-        this.offset += 4;
-        break;
-      case 'int32be':
-        templateResult = data.getInt32(this.offset, false);
-        this.offset += 4;
-        break;
-      case 'uint32be':
-        templateResult = data.getUint32(this.offset, false);
-        this.offset += 4;
-        break;
-      case 'float32le':
-        templateResult = data.getFloat32(this.offset, true);
-        this.offset += 4;
-        break;
-      case 'float32be':
-        templateResult = data.getFloat32(this.offset, false);
-        this.offset += 4;
-        break;
-      case 'float64le':
-        templateResult = data.getFloat64(this.offset, true);
-        this.offset += 8;
-        break;
-      case 'float64be':
-        templateResult = data.getFloat64(this.offset, false);
-        this.offset += 8;
-        break;
-      case 'string':
-        if (typeof element.length === 'undefined') {
-          element.length = data.getUint8(this.offset++);
-        } else if (!element.length) {
-          templateResult = '';
+      var length = data.getUint8(this.offset++);
+      if (length > 0) {
+        for (var i = 0; i < length; i++) {
+          result.push(this.parse(template));
+        }
+      }
+
+      return result;
+    }
+
+    function parseItem(element) {
+      var templateResult;
+      switch (element.type) {
+        case 'int8':
+          templateResult = data.getInt8(this.offset);
+          this.offset += 1;
           break;
-        }
-        if (!element.encoding || element.encoding === 'utf16') {
-          var utf16 = new ArrayBuffer(element.length * 2);
-          var utf16view = new Uint16Array(utf16);
-          for (var i = 0; i < element.length; i++ , this.offset += 2) {
-            utf16view[i] = data.getUint8(this.offset);
-          }
-          templateResult = String.fromCharCode.apply(null, utf16view);
-        } else if (element.encoding === 'utf8') {
-          var utf8 = new ArrayBuffer(element.length);
-          var utf8view = new Uint8Array(utf8);
-          for (var i = 0; i < element.length; i++ , this.offset += 2) {
-            utf8view[i] = data.getUint8(this.offset);
-          }
-          templateResult = String.fromCharCode.apply(null, utf8view);
-        }
-        break;
-      case 'array':
-        templateResult = parseArray.call(this, data, element.itemTemplate);
-        break;
-    }
-
-    if (element.name) {
-      result[element.name] = templateResult;
-    } else {
-      result = templateResult;
-    }
-  }
-}
-
-module.exports = BufferCodec;
-},{}],2:[function(require,module,exports){
-'use strict';
-
-require('./polyfills');
-
-var Graph = require('./graph');
-var WSController = require('./wsController');
-var KeyCode = require('./keyCode');
-var Models = require('./models');
-var Spells = require('./spells');
-var OPCode = require('../../opCode');
-
-(function () {
-
-  var graph;
-  var ws;
-  var animLoopHandle;
-  var moveTick = performance.now();
-  var targetTick = performance.now();
-  var mouse = { x: 0, y: 0 };
-
-  var playerList = [];
-  var spellList = [];
-  var currentPlayer = null;
-
-  var canvasElements = document.getElementsByClassName('js-canvas');
-  if (canvasElements && canvasElements.length > 0) {
-    var canvas = canvasElements[0];
-    graph = new Graph(canvasElements[0]);
-  }
-
-  var playerNameElements = document.getElementsByClassName('js-player-name');
-  var playButtonElements = document.getElementsByClassName('js-play-button');
-  var errorElements = document.getElementsByClassName('js-error');
-  if (playerNameElements && playerNameElements.length > 0 && playButtonElements && playButtonElements.length > 0 && errorElements && errorElements.length > 0) {
-    var playerNameElement = playerNameElements[0];
-    var playButtonElement = playButtonElements[0];
-    var errorElement = errorElements[0];
-    playerNameElement.addEventListener('keyup', function validate(event) {
-      if (event && event.target) {
-        var pattern = /^[a-zA-Z0-9 ]{0,25}$/;
-        if (event.target.value.match(pattern)) {
-          errorElement.style.display = 'none';
-          playButtonElement.disabled = false;
-        } else {
-          errorElement.style.display = 'block';
-          playButtonElement.disabled = true;
-        }
-      }
-    });
-    playButtonElement.addEventListener('mouseup', startGame);
-  }
-
-  function animationLoop() {
-    animLoopHandle = window.requestAnimationFrame(animationLoop);
-
-    gameLoop();
-  }
-
-  function gameLoop() {
-    graph.clear().drawGrid()
-    // .drawBorder()
-    .drawArena().drawSpells(spellList).drawPlayers(playerList).drawDebug();
-
-    playerList.forEach(function (player) {
-      return player.calculateNextPosition();
-    });
-    spellList.forEach(function (spell) {
-      return spell.calculateNextPosition();
-    });
-
-    spellList.forEach(function (spell, spellIndex) {
-      playerList.forEach(function (player) {
-        if (spell.ownerId !== player.ownerId) {
-          var distanceX = player.position.x - spell.position.x;
-          var distanceY = player.position.y - spell.position.y;
-          var distance = distanceX * distanceX + distanceY * distanceY;
-          if (distance < Math.pow(spell.radius + player.radius, 2)) {
-            spell.onCollision(player);
-            spellList.splice(spellIndex, 1);
-          }
-        }
-      });
-    });
-  }
-
-  function startGame() {
-    var playerName = playerNameElement.value;
-    var startMenuElements = document.getElementsByClassName('js-start-menu');
-    if (startMenuElements && startMenuElements.length > 0) {
-      startMenuElements[0].style.display = 'none';
-    }
-
-    ws = new WSController();
-
-    ws.on('open', function startGame() {
-
-      canvas.addEventListener('mousemove', function (event) {
-        // mouse.x = -(graph.screenWidth / 2 - currentPlayer.position.x - event.x);
-        // mouse.y = -(graph.screenHeight / 2 - currentPlayer.position.y - event.y);
-        mouse.x = event.x;
-        mouse.y = event.y;
-        // console.log('screen', graph.screenWidth, graph.screenHeight);
-        // console.log('player', currentPlayer.position.x, currentPlayer.position.y);
-        // console.log('mouse', mouse.x, mouse.y);
-        // console.log('estimate',
-        //   graph.screenWidth / 2 - currentPlayer.position.x - mouse.x,
-        //   graph.screenHeight / 2 - currentPlayer.position.y - mouse.y);
-      });
-
-      canvas.addEventListener('mousedown', function (event) {
-        if (currentPlayer && event.button === 2) {
-          event.preventDefault();
-          event.stopPropagation();
-          var now = performance.now();
-          var diff = now - targetTick;
-          if (diff > 100) {
-            var targetX = mouse.x;
-            var targetY = mouse.y;
-            targetX = Math.min(Math.max(targetX, 0), graph._gameWidth);
-            targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
-            currentPlayer.setTarget(targetX, targetY);
-            targetTick = now;
-            ws.move(currentPlayer);
-          }
-        }
-      });
-
-      canvas.addEventListener('keydown', function (event) {
-        switch (event.keyCode) {
-          case KeyCode.Q:
-            ws.cast(OPCode.CAST_PRIMARY, {
-              playerX: currentPlayer.position.x,
-              playerY: currentPlayer.position.y,
-              x: mouse.x,
-              y: mouse.y
-            });
+        case 'uint8':
+          templateResult = data.getUint8(this.offset);
+          this.offset += 1;
+          break;
+        case 'int16le':
+          templateResult = data.getInt16(this.offset, true);
+          this.offset += 2;
+          break;
+        case 'uint16le':
+          templateResult = data.getUint16(this.offset, true);
+          this.offset += 2;
+          break;
+        case 'int16be':
+          templateResult = data.getInt16(this.offset, false);
+          this.offset += 2;
+          break;
+        case 'uint16be':
+          templateResult = data.getUint16(this.offset, false);
+          this.offset += 2;
+          break;
+        case 'int32le':
+          templateResult = data.getInt32(this.offset, true);
+          this.offset += 4;
+          break;
+        case 'uint32le':
+          templateResult = data.getUint32(this.offset, true);
+          this.offset += 4;
+          break;
+        case 'int32be':
+          templateResult = data.getInt32(this.offset, false);
+          this.offset += 4;
+          break;
+        case 'uint32be':
+          templateResult = data.getUint32(this.offset, false);
+          this.offset += 4;
+          break;
+        case 'float32le':
+          templateResult = data.getFloat32(this.offset, true);
+          this.offset += 4;
+          break;
+        case 'float32be':
+          templateResult = data.getFloat32(this.offset, false);
+          this.offset += 4;
+          break;
+        case 'float64le':
+          templateResult = data.getFloat64(this.offset, true);
+          this.offset += 8;
+          break;
+        case 'float64be':
+          templateResult = data.getFloat64(this.offset, false);
+          this.offset += 8;
+          break;
+        case 'string':
+          if (typeof element.length === 'undefined') {
+            element.length = data.getUint8(this.offset++);
+          } else if (!element.length) {
+            templateResult = '';
             break;
-        }
-      });
-
-      canvas.addEventListener('contextmenu', function (event) {
-        event.preventDefault();
-      });
-
-      ws.spawn(playerName);
-
-      ws.on('addPlayer', function (node) {
-        currentPlayer = new Models.Player(node);
-        graph.player = currentPlayer;
-        playerList.push(currentPlayer);
-      });
-
-      ws.on('updatePlayers', function (nodes) {
-        var updatedNodes = nodes.updatedNodes;
-        if (updatedNodes && updatedNodes.length > 0) {
-          updatedNodes.forEach(function (updatedNode) {
-            var found = playerList.filter(function (player) {
-              return player.id === updatedNode.id;
-            });
-            if (found.length === 0) {
-              var player = new Models.Player(updatedNode);
-              playerList.splice(0, 0, player);
-            } else {
-              found[0].setTarget(updatedNode.targetX, updatedNode.targetY);
+          }
+          if (!element.encoding || element.encoding === 'utf16') {
+            var utf16 = new ArrayBuffer(element.length * 2);
+            var utf16view = new Uint16Array(utf16);
+            for (var i = 0; i < element.length; i++ , this.offset += 2) {
+              utf16view[i] = data.getUint8(this.offset);
             }
-          });
-        }
-
-        var destroyedNodes = nodes.destroyedNodes;
-        if (destroyedNodes && destroyedNodes.length > 0) {
-          destroyedNodes.forEach(function (destroyedNode) {
-            var index = -1;
-            for (var i = 0; i < playerList.length; i++) {
-              if (playerList[i].id === destroyedNode) {
-                index = i;
-              }
+            templateResult = String.fromCharCode.apply(null, utf16view);
+          } else if (element.encoding === 'utf8') {
+            var utf8 = new ArrayBuffer(element.length);
+            var utf8view = new Uint8Array(utf8);
+            for (var i = 0; i < element.length; i++ , this.offset += 2) {
+              utf8view[i] = data.getUint8(this.offset);
             }
-            if (index !== -1) {
-              playerList.splice(index, 1);
-            }
-          });
-        }
-      });
+            templateResult = String.fromCharCode.apply(null, utf8view);
+          }
+          break;
+        case 'array':
+          templateResult = parseArray.call(this, data, element.itemTemplate);
+          break;
+      }
 
-      ws.on('updateSpells', function (spells) {
-        var updatedSpells = spells.updatedSpells;
-        if (updatedSpells && updatedSpells.length > 0) {
-          updatedSpells.forEach(function (updatedSpell) {
-            var SpellClass = Spells.get(updatedSpell.type);
-            var spell = new SpellClass(updatedSpell);
-            spellList.splice(0, 0, spell);
-          });
-        }
-
-        var destroyedSpells = spells.destroyedSpells;
-        if (destroyedSpells && destroyedSpells.length > 0) {
-          destroyedSpells.forEach(function (destroyedSpell) {
-            var index = -1;
-            for (var i = 0; i < spellList.length; i++) {
-              if (spellList[i].id === destroyedSpell) {
-                index = i;
-              }
-            }
-            if (index !== -1) {
-              spellList.splice(index, 1);
-            }
-          });
-        }
-      });
-    });
-
-    if (!animLoopHandle) {
-      animationLoop();
+      if (element.name) {
+        result[element.name] = templateResult;
+      } else {
+        result = templateResult;
+      }
     }
   }
+
+  return BufferCodec;
+
 })();
 
-},{"../../opCode":11,"./graph":3,"./keyCode":4,"./models":5,"./polyfills":7,"./spells":9,"./wsController":10}],3:[function(require,module,exports){
+if (typeof window === 'undefined') {
+  module.exports = BufferCodec;
+}
+}).call(this,require("buffer").Buffer)
+
+},{"buffer":undefined}],2:[function(require,module,exports){
 'use strict';
 
 function Graph(canvas, options) {
@@ -853,7 +647,7 @@ function getDefaultHeight() {
 
 module.exports = Graph;
 
-},{}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -947,307 +741,7 @@ module.exports = {
   F12: 123
 };
 
-},{}],5:[function(require,module,exports){
-'use strict';
-
-module.exports = {
-  Player: require('./player.js')
-};
-
-},{"./player.js":6}],6:[function(require,module,exports){
-'use strict';
-
-function Player(playerModel) {
-  playerModel = playerModel || {};
-
-  this.id = playerModel.id || -1;
-  this.ownerId = playerModel.ownerId || -1;
-  this.name = playerModel.name;
-  this.health = playerModel.health;
-  this.maxHealth = playerModel.maxHealth;
-  this.speed = 3;
-  this.acceleration = 0.2;
-  this.rotation = 0;
-  this.targetRotation = 0;
-  this.radius = 20;
-  this.mass = 20;
-  this.velocity = { x: 0, y: 0 };
-  this.stunned = 0;
-  this._baseFriction = 0.2;
-  this._baseRotationTicks = 10;
-  this.__rotationTicks = this._baseRotationTicks;
-  this.__friction = this._baseFriction;
-
-  this.color = {
-    r: playerModel.r || 0,
-    g: playerModel.g | 0,
-    b: playerModel.b || 0
-  };
-
-  this.position = {
-    x: playerModel.x || 0,
-    y: playerModel.y || 0
-  };
-
-  this.target = {
-    x: playerModel.targetX || playerModel.x || 0,
-    y: playerModel.targetY || playerModel.y || 0
-  };
-}
-
-Player.prototype.calculateNextPosition = function () {
-  if (typeof this.target.x !== 'undefined' && typeof this.target.y !== 'undefined') {
-    calculatePosition.call(this);
-  }
-  if (typeof this.targetRotation !== 'undefined') {
-    calculateRotation.call(this);
-  }
-};
-
-Player.prototype.setTarget = function (x, y) {
-  this.targetRotation = Math.atan2(y - this.position.y, x - this.position.x);
-  var diff = Math.abs(this.targetRotation - this.rotation);
-
-  if (diff > Math.PI / 2) {
-    this.__friction = this._baseFriction;
-  }
-
-  this.target.x = x;
-  this.target.y = y;
-};
-
-module.exports = Player;
-
-function calculateRotation() {
-  if (Math.abs(this.rotation - this.targetRotation) > 1e-5) {
-    if (this.__rotationTicks > 0) {
-      if (this.rotation > Math.PI) {
-        this.rotation = -Math.PI - (Math.PI - Math.abs(this.rotation));
-      } else if (this.rotation < -Math.PI) {
-        this.rotation = Math.PI + (Math.PI - Math.abs(this.rotation));
-      }
-      if (Math.abs(this.targetRotation - this.rotation) > Math.PI) {
-        var diffA = Math.PI - Math.abs(this.rotation);
-        var diffB = Math.PI - Math.abs(this.targetRotation);
-        var diff = diffA + diffB;
-        if (this.rotation > 0) {
-          this.rotation += diff / this.__rotationTicks;
-        } else {
-          this.rotation -= diff / this.__rotationTicks;
-        }
-      } else {
-        this.rotation += (this.targetRotation - this.rotation) / this.__rotationTicks;
-      }
-    } else {
-      this.rotation = this.targetRotation;
-      this.__rotationTicks = 10;
-    }
-  }
-}
-
-function calculatePosition() {
-  if (!arePositionsApproximatelyEqual(this.position, this.target) || this.stunned) {
-    if (this.__friction < 1) {
-      this.__friction += this.acceleration;
-    }
-
-    var speed = this.speed * this.__friction;
-    var velX = this.velocity.x;
-    var velY = this.velocity.y;
-    var velocity = 0,
-        fn;
-
-    if (!this.stunned) {
-      var vX = this.target.x - this.position.x;
-      var vY = this.target.y - this.position.y;
-      var distance = getHypotenuseLength(vX, vY);
-
-      velX = vX / distance * speed;
-      velY = vY / distance * speed;
-    }
-
-    if (Math.abs(this.velocity.x - velX) > this.acceleration) {
-      velocity = this.acceleration * Math.sign(velX);
-      fn = Math.sign(velX) !== 1 ? Math.max : Math.min;
-      this.velocity.x = fn(this.velocity.x + velocity, Math.sign(velX) * speed);
-    } else {
-      this.velocity.x = velX;
-    }
-
-    if (Math.abs(this.velocity.y - velY) > this.acceleration) {
-      velocity = this.acceleration * Math.sign(velY);
-      fn = Math.sign(velY) !== 1 ? Math.max : Math.min;
-      this.velocity.y = fn(this.velocity.y + velocity, Math.sign(velY) * speed);
-    } else {
-      this.velocity.y = velY;
-    }
-
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
-
-    if (this.stunned) {
-      this.target.x = this.position.x;
-      this.target.y = this.position.y;
-      this.stunned--;
-    }
-  } else {
-    this.__friction = this._baseFriction;
-    this.velocity = { x: 0, y: 0 };
-  }
-}
-
-function getHypotenuseLength(x, y) {
-  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-}
-
-function arePositionsApproximatelyEqual(positionA, positionB) {
-  var errorMargin = 5;
-  return Math.abs(positionA.x - positionB.x) < errorMargin && Math.abs(positionA.y - positionB.y) < errorMargin;
-}
-
-},{}],7:[function(require,module,exports){
-'use strict';
-
-if (!Array.prototype.find) {
-  Array.prototype.find = function (predicate) {
-    if (this === null) {
-      throw new TypeError('Array.prototype.find called on null or undefined');
-    }
-    if (typeof predicate !== 'function') {
-      throw new TypeError('predicate must be a function');
-    }
-    var list = Object(this);
-    var length = list.length >>> 0;
-    var thisArg = arguments[1];
-    var value;
-
-    for (var i = 0; i < length; i++) {
-      value = list[i];
-      if (predicate.call(thisArg, value, i, list)) {
-        return value;
-      }
-    }
-    return undefined;
-  };
-}
-
-if (!Date.now) {
-  Date.now = function () {
-    return new Date().getTime();
-  };
-}
-
-(function () {
-  'use strict';
-
-  var vendors = ['webkit', 'moz'];
-  for (var i = 0; i < vendors.length && !window.requestAnimationFrame; ++i) {
-    var vp = vendors[i];
-    window.requestAnimationFrame = window[vp + 'RequestAnimationFrame'];
-    window.cancelAnimationFrame = window[vp + 'CancelAnimationFrame'] || window[vp + 'CancelRequestAnimationFrame'];
-  }
-  if (/iP(ad|hone|od).*OS 6/.test(window.navigator.userAgent) // iOS6 is buggy
-   || !window.requestAnimationFrame || !window.cancelAnimationFrame) {
-    var lastTime = 0;
-    window.requestAnimationFrame = function (callback) {
-      var now = Date.now();
-      var nextTime = Math.max(lastTime + 16, now);
-      return setTimeout(function () {
-        callback(lastTime = nextTime);
-      }, nextTime - now);
-    };
-    window.cancelAnimationFrame = clearTimeout;
-  }
-})();
-
-},{}],8:[function(require,module,exports){
-'use strict';
-
-function Primary(spellModel) {
-  this.id = spellModel.id;
-  this.ownerId = spellModel.ownerId;
-  this.type = spellModel.type;
-  this.mass = spellModel.mass;
-  this.power = spellModel.power;
-  this.velocity = { x: 0, y: 0 };
-  this.speed = 7;
-  this.radius = 10;
-
-  this.position = {
-    x: spellModel.x,
-    y: spellModel.y
-  };
-
-  this.color = {
-    r: spellModel.r,
-    g: spellModel.g,
-    b: spellModel.b
-  };
-
-  setTarget.call(this, spellModel.targetX, spellModel.targetY);
-}
-
-Primary.prototype.calculateNextPosition = function () {
-  if (typeof this.velocity.x !== 'undefined' && typeof this.velocity.y !== 'undefined') {
-    calculatePosition.call(this);
-  }
-};
-
-Primary.prototype.onCollision = function (model) {
-  model.health -= 10;
-
-  model.velocity.x += this.power * this.mass * this.velocity.x / model.mass;
-  model.velocity.y += this.power * this.mass * this.velocity.y / model.mass;
-};
-
-module.exports = Primary;
-
-function calculatePosition() {
-  this.position = {
-    x: this.position.x + this.velocity.x * this.speed,
-    y: this.position.y + this.velocity.y * this.speed
-  };
-}
-
-function getHypotenuseLength(x, y) {
-  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-}
-
-function setTarget(x, y) {
-  this.target = { x: x, y: y };
-
-  var vX = this.target.x - this.position.x;
-  var vY = this.target.y - this.position.y;
-  var distance = getHypotenuseLength(vX, vY);
-
-  this.velocity = {
-    x: vX / distance,
-    y: vY / distance
-  };
-}
-
-},{}],9:[function(require,module,exports){
-'use strict';
-
-var OPCode = require('../../../opCode');
-
-module.exports = {
-  Primary: require('./Primary')
-};
-
-module.exports.get = function (code) {
-  var spell = null;
-
-  switch (code) {
-    case OPCode.SPELL_PRIMARY:
-      spell = module.exports.Primary;
-      break;
-  }
-
-  return spell;
-};
-
-},{"../../../opCode":11,"./Primary":8}],10:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var BufferCodec = require('buffercodec');
@@ -1456,7 +950,525 @@ function setupSocket() {
 
 module.exports = WSController;
 
-},{"../../opCode":11,"buffercodec":1}],11:[function(require,module,exports){
+},{"../../opCode":11,"buffercodec":1}],5:[function(require,module,exports){
+'use strict';
+
+require('./polyfills');
+
+var Graph = require('./Graph');
+var WSController = require('./WSController');
+var KeyCode = require('./KeyCode');
+var Models = require('./models');
+var Spells = require('./spells');
+var OPCode = require('../../opCode');
+
+(function () {
+
+  var graph;
+  var ws;
+  var animLoopHandle;
+  var moveTick = performance.now();
+  var targetTick = performance.now();
+  var mouse = { x: 0, y: 0 };
+
+  var playerList = [];
+  var spellList = [];
+  var currentPlayer = null;
+
+  var canvasElements = document.getElementsByClassName('js-canvas');
+  if (canvasElements && canvasElements.length > 0) {
+    var canvas = canvasElements[0];
+    graph = new Graph(canvasElements[0]);
+  }
+
+  var playerNameElements = document.getElementsByClassName('js-player-name');
+  var playButtonElements = document.getElementsByClassName('js-play-button');
+  var errorElements = document.getElementsByClassName('js-error');
+  if (playerNameElements && playerNameElements.length > 0 && playButtonElements && playButtonElements.length > 0 && errorElements && errorElements.length > 0) {
+    var playerNameElement = playerNameElements[0];
+    var playButtonElement = playButtonElements[0];
+    var errorElement = errorElements[0];
+    playerNameElement.addEventListener('keyup', function validate(event) {
+      if (event && event.target) {
+        var pattern = /^[a-zA-Z0-9 ]{0,25}$/;
+        if (event.target.value.match(pattern)) {
+          errorElement.style.display = 'none';
+          playButtonElement.disabled = false;
+        } else {
+          errorElement.style.display = 'block';
+          playButtonElement.disabled = true;
+        }
+      }
+    });
+    playButtonElement.addEventListener('mouseup', startGame);
+  }
+
+  function animationLoop() {
+    animLoopHandle = window.requestAnimationFrame(animationLoop);
+
+    gameLoop();
+  }
+
+  function gameLoop() {
+    graph.clear().drawGrid()
+    // .drawBorder()
+    .drawArena().drawSpells(spellList).drawPlayers(playerList).drawDebug();
+
+    playerList.forEach(function (player) {
+      return player.calculateNextPosition();
+    });
+    spellList.forEach(function (spell) {
+      return spell.calculateNextPosition();
+    });
+
+    spellList.forEach(function (spell, spellIndex) {
+      playerList.forEach(function (player) {
+        if (spell.ownerId !== player.ownerId) {
+          var distanceX = player.position.x - spell.position.x;
+          var distanceY = player.position.y - spell.position.y;
+          var distance = distanceX * distanceX + distanceY * distanceY;
+          if (distance < Math.pow(spell.radius + player.radius, 2)) {
+            spell.onCollision(player);
+            spellList.splice(spellIndex, 1);
+          }
+        }
+      });
+    });
+  }
+
+  function startGame() {
+    var playerName = playerNameElement.value;
+    var startMenuElements = document.getElementsByClassName('js-start-menu');
+    if (startMenuElements && startMenuElements.length > 0) {
+      startMenuElements[0].style.display = 'none';
+    }
+
+    ws = new WSController();
+
+    ws.on('open', function startGame() {
+
+      canvas.addEventListener('mousemove', function (event) {
+        // mouse.x = -(graph.screenWidth / 2 - currentPlayer.position.x - event.x);
+        // mouse.y = -(graph.screenHeight / 2 - currentPlayer.position.y - event.y);
+        mouse.x = event.x;
+        mouse.y = event.y;
+        // console.log('screen', graph.screenWidth, graph.screenHeight);
+        // console.log('player', currentPlayer.position.x, currentPlayer.position.y);
+        // console.log('mouse', mouse.x, mouse.y);
+        // console.log('estimate',
+        //   graph.screenWidth / 2 - currentPlayer.position.x - mouse.x,
+        //   graph.screenHeight / 2 - currentPlayer.position.y - mouse.y);
+      });
+
+      canvas.addEventListener('mousedown', function (event) {
+        if (currentPlayer && event.button === 2) {
+          event.preventDefault();
+          event.stopPropagation();
+          var now = performance.now();
+          var diff = now - targetTick;
+          if (diff > 100) {
+            var targetX = mouse.x;
+            var targetY = mouse.y;
+            targetX = Math.min(Math.max(targetX, 0), graph._gameWidth);
+            targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
+            currentPlayer.setTarget(targetX, targetY);
+            targetTick = now;
+            ws.move(currentPlayer);
+          }
+        }
+      });
+
+      canvas.addEventListener('keydown', function (event) {
+        switch (event.keyCode) {
+          case KeyCode.Q:
+            ws.cast(OPCode.CAST_PRIMARY, {
+              playerX: currentPlayer.position.x,
+              playerY: currentPlayer.position.y,
+              x: mouse.x,
+              y: mouse.y
+            });
+            break;
+        }
+      });
+
+      canvas.addEventListener('contextmenu', function (event) {
+        event.preventDefault();
+      });
+
+      ws.spawn(playerName);
+
+      ws.on('addPlayer', function (node) {
+        currentPlayer = new Models.Player(node);
+        graph.player = currentPlayer;
+        playerList.push(currentPlayer);
+      });
+
+      ws.on('updatePlayers', function (nodes) {
+        var updatedNodes = nodes.updatedNodes;
+        if (updatedNodes && updatedNodes.length > 0) {
+          updatedNodes.forEach(function (updatedNode) {
+            var found = playerList.filter(function (player) {
+              return player.id === updatedNode.id;
+            });
+            if (found.length === 0) {
+              var player = new Models.Player(updatedNode);
+              playerList.splice(0, 0, player);
+            } else {
+              found[0].setTarget(updatedNode.targetX, updatedNode.targetY);
+            }
+          });
+        }
+
+        var destroyedNodes = nodes.destroyedNodes;
+        if (destroyedNodes && destroyedNodes.length > 0) {
+          destroyedNodes.forEach(function (destroyedNode) {
+            var index = -1;
+            for (var i = 0; i < playerList.length; i++) {
+              if (playerList[i].id === destroyedNode) {
+                index = i;
+              }
+            }
+            if (index !== -1) {
+              playerList.splice(index, 1);
+            }
+          });
+        }
+      });
+
+      ws.on('updateSpells', function (spells) {
+        var updatedSpells = spells.updatedSpells;
+        if (updatedSpells && updatedSpells.length > 0) {
+          updatedSpells.forEach(function (updatedSpell) {
+            var SpellClass = Spells.get(updatedSpell.type);
+            var spell = new SpellClass(updatedSpell);
+            spellList.splice(0, 0, spell);
+          });
+        }
+
+        var destroyedSpells = spells.destroyedSpells;
+        if (destroyedSpells && destroyedSpells.length > 0) {
+          destroyedSpells.forEach(function (destroyedSpell) {
+            var index = -1;
+            for (var i = 0; i < spellList.length; i++) {
+              if (spellList[i].id === destroyedSpell) {
+                index = i;
+              }
+            }
+            if (index !== -1) {
+              spellList.splice(index, 1);
+            }
+          });
+        }
+      });
+    });
+
+    if (!animLoopHandle) {
+      animationLoop();
+    }
+  }
+})();
+
+},{"../../opCode":11,"./Graph":2,"./KeyCode":3,"./WSController":4,"./models":7,"./polyfills":8,"./spells":10}],6:[function(require,module,exports){
+'use strict';
+
+function Player(playerModel) {
+  playerModel = playerModel || {};
+
+  this.id = playerModel.id || -1;
+  this.ownerId = playerModel.ownerId || -1;
+  this.name = playerModel.name;
+  this.health = playerModel.health;
+  this.maxHealth = playerModel.maxHealth;
+  this.speed = 3;
+  this.acceleration = 0.2;
+  this.rotation = 0;
+  this.targetRotation = 0;
+  this.radius = 20;
+  this.mass = 20;
+  this.velocity = { x: 0, y: 0 };
+  this.stunned = 0;
+  this._baseFriction = 0.2;
+  this._baseRotationTicks = 10;
+  this.__rotationTicks = this._baseRotationTicks;
+  this.__friction = this._baseFriction;
+
+  this.color = {
+    r: playerModel.r || 0,
+    g: playerModel.g | 0,
+    b: playerModel.b || 0
+  };
+
+  this.position = {
+    x: playerModel.x || 0,
+    y: playerModel.y || 0
+  };
+
+  this.target = {
+    x: playerModel.targetX || playerModel.x || 0,
+    y: playerModel.targetY || playerModel.y || 0
+  };
+}
+
+Player.prototype.calculateNextPosition = function () {
+  if (typeof this.target.x !== 'undefined' && typeof this.target.y !== 'undefined') {
+    calculatePosition.call(this);
+  }
+  if (typeof this.targetRotation !== 'undefined') {
+    calculateRotation.call(this);
+  }
+};
+
+Player.prototype.setTarget = function (x, y) {
+  this.targetRotation = Math.atan2(y - this.position.y, x - this.position.x);
+  var diff = Math.abs(this.targetRotation - this.rotation);
+
+  if (diff > Math.PI / 2) {
+    this.__friction = this._baseFriction;
+  }
+
+  this.target.x = x;
+  this.target.y = y;
+};
+
+module.exports = Player;
+
+function calculateRotation() {
+  if (Math.abs(this.rotation - this.targetRotation) > 1e-5) {
+    if (this.__rotationTicks > 0) {
+      if (this.rotation > Math.PI) {
+        this.rotation = -Math.PI - (Math.PI - Math.abs(this.rotation));
+      } else if (this.rotation < -Math.PI) {
+        this.rotation = Math.PI + (Math.PI - Math.abs(this.rotation));
+      }
+      if (Math.abs(this.targetRotation - this.rotation) > Math.PI) {
+        var diffA = Math.PI - Math.abs(this.rotation);
+        var diffB = Math.PI - Math.abs(this.targetRotation);
+        var diff = diffA + diffB;
+        if (this.rotation > 0) {
+          this.rotation += diff / this.__rotationTicks;
+        } else {
+          this.rotation -= diff / this.__rotationTicks;
+        }
+      } else {
+        this.rotation += (this.targetRotation - this.rotation) / this.__rotationTicks;
+      }
+    } else {
+      this.rotation = this.targetRotation;
+      this.__rotationTicks = 10;
+    }
+  }
+}
+
+function calculatePosition() {
+  if (!arePositionsApproximatelyEqual(this.position, this.target) || this.stunned) {
+    if (this.__friction < 1) {
+      this.__friction += this.acceleration;
+    }
+
+    var speed = this.speed * this.__friction;
+    var velX = this.velocity.x;
+    var velY = this.velocity.y;
+    var velocity = 0,
+        fn;
+
+    if (!this.stunned) {
+      var vX = this.target.x - this.position.x;
+      var vY = this.target.y - this.position.y;
+      var distance = getHypotenuseLength(vX, vY);
+
+      velX = vX / distance * speed;
+      velY = vY / distance * speed;
+    }
+
+    if (Math.abs(this.velocity.x - velX) > this.acceleration) {
+      velocity = this.acceleration * Math.sign(velX);
+      fn = Math.sign(velX) !== 1 ? Math.max : Math.min;
+      this.velocity.x = fn(this.velocity.x + velocity, Math.sign(velX) * speed);
+    } else {
+      this.velocity.x = velX;
+    }
+
+    if (Math.abs(this.velocity.y - velY) > this.acceleration) {
+      velocity = this.acceleration * Math.sign(velY);
+      fn = Math.sign(velY) !== 1 ? Math.max : Math.min;
+      this.velocity.y = fn(this.velocity.y + velocity, Math.sign(velY) * speed);
+    } else {
+      this.velocity.y = velY;
+    }
+
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+
+    if (this.stunned) {
+      this.target.x = this.position.x;
+      this.target.y = this.position.y;
+      this.stunned--;
+    }
+  } else {
+    this.__friction = this._baseFriction;
+    this.velocity = { x: 0, y: 0 };
+  }
+}
+
+function getHypotenuseLength(x, y) {
+  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+}
+
+function arePositionsApproximatelyEqual(positionA, positionB) {
+  var errorMargin = 5;
+  return Math.abs(positionA.x - positionB.x) < errorMargin && Math.abs(positionA.y - positionB.y) < errorMargin;
+}
+
+},{}],7:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  Player: require('./Player.js')
+};
+
+},{"./Player.js":6}],8:[function(require,module,exports){
+'use strict';
+
+if (!Array.prototype.find) {
+  Array.prototype.find = function (predicate) {
+    if (this === null) {
+      throw new TypeError('Array.prototype.find called on null or undefined');
+    }
+    if (typeof predicate !== 'function') {
+      throw new TypeError('predicate must be a function');
+    }
+    var list = Object(this);
+    var length = list.length >>> 0;
+    var thisArg = arguments[1];
+    var value;
+
+    for (var i = 0; i < length; i++) {
+      value = list[i];
+      if (predicate.call(thisArg, value, i, list)) {
+        return value;
+      }
+    }
+    return undefined;
+  };
+}
+
+if (!Date.now) {
+  Date.now = function () {
+    return new Date().getTime();
+  };
+}
+
+(function () {
+  'use strict';
+
+  var vendors = ['webkit', 'moz'];
+  for (var i = 0; i < vendors.length && !window.requestAnimationFrame; ++i) {
+    var vp = vendors[i];
+    window.requestAnimationFrame = window[vp + 'RequestAnimationFrame'];
+    window.cancelAnimationFrame = window[vp + 'CancelAnimationFrame'] || window[vp + 'CancelRequestAnimationFrame'];
+  }
+  if (/iP(ad|hone|od).*OS 6/.test(window.navigator.userAgent) // iOS6 is buggy
+   || !window.requestAnimationFrame || !window.cancelAnimationFrame) {
+    var lastTime = 0;
+    window.requestAnimationFrame = function (callback) {
+      var now = Date.now();
+      var nextTime = Math.max(lastTime + 16, now);
+      return setTimeout(function () {
+        callback(lastTime = nextTime);
+      }, nextTime - now);
+    };
+    window.cancelAnimationFrame = clearTimeout;
+  }
+})();
+
+},{}],9:[function(require,module,exports){
+'use strict';
+
+function Primary(spellModel) {
+  this.id = spellModel.id;
+  this.ownerId = spellModel.ownerId;
+  this.type = spellModel.type;
+  this.mass = spellModel.mass;
+  this.power = spellModel.power;
+  this.velocity = { x: 0, y: 0 };
+  this.speed = 7;
+  this.radius = 10;
+
+  this.position = {
+    x: spellModel.x,
+    y: spellModel.y
+  };
+
+  this.color = {
+    r: spellModel.r,
+    g: spellModel.g,
+    b: spellModel.b
+  };
+
+  setTarget.call(this, spellModel.targetX, spellModel.targetY);
+}
+
+Primary.prototype.calculateNextPosition = function () {
+  if (typeof this.velocity.x !== 'undefined' && typeof this.velocity.y !== 'undefined') {
+    calculatePosition.call(this);
+  }
+};
+
+Primary.prototype.onCollision = function (model) {
+  model.health -= 10;
+
+  model.velocity.x += this.power * this.mass * this.velocity.x / model.mass;
+  model.velocity.y += this.power * this.mass * this.velocity.y / model.mass;
+};
+
+module.exports = Primary;
+
+function calculatePosition() {
+  this.position = {
+    x: this.position.x + this.velocity.x * this.speed,
+    y: this.position.y + this.velocity.y * this.speed
+  };
+}
+
+function getHypotenuseLength(x, y) {
+  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+}
+
+function setTarget(x, y) {
+  this.target = { x: x, y: y };
+
+  var vX = this.target.x - this.position.x;
+  var vY = this.target.y - this.position.y;
+  var distance = getHypotenuseLength(vX, vY);
+
+  this.velocity = {
+    x: vX / distance,
+    y: vY / distance
+  };
+}
+
+},{}],10:[function(require,module,exports){
+'use strict';
+
+var OPCode = require('../../../opCode');
+
+module.exports = {
+  Primary: require('./Primary')
+};
+
+module.exports.get = function (code) {
+  var spell = null;
+
+  switch (code) {
+    case OPCode.SPELL_PRIMARY:
+      spell = module.exports.Primary;
+      break;
+  }
+
+  return spell;
+};
+
+},{"../../../opCode":11,"./Primary":9}],11:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -1476,7 +1488,7 @@ module.exports = {
   "SPELL_PRIMARY": 0x0A
 };
 
-},{}]},{},[2])
+},{}]},{},[5])
 
 
 //# sourceMappingURL=game.js.map

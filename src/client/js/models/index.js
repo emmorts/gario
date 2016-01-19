@@ -1,3 +1,3 @@
 module.exports = {
-  Player: require('./player.js')
+  Player: require('./Player.js')
 };

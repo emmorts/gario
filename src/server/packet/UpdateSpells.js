@@ -1,5 +1,5 @@
 const BufferCodec = require('buffercodec');
-const OPCode = require('../../opcode');
+const OPCode = require('../../opCode');
 
 function UpdateSpells(destroyQueue, updateQueue) {
   this.destroyQueue = destroyQueue || [];
