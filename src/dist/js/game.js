@@ -550,7 +550,9 @@ Graph.prototype.drawPlayer = function (player) {
   this._context.stroke();
   this._context.closePath();
 
-  this.drawText(player.name, posX, posY, 16);
+  this._context.textAlign = 'center';
+  this.drawText(player.name, posX, posY - 40, 14);
+  this._context.textAlign = 'left';
 };
 
 Graph.prototype.drawPlayers = function (playerList) {
@@ -736,7 +738,7 @@ var BufferCodec = require('buffercodec');
 var OPCode = require('../../opCode');
 
 function WSController() {
-  this.__uri = 'ws://localhost:3000';
+  this.__uri = 'ws://192.168.2.116:3000';
   this.__acknoledged = false;
   this.__socket = null;
   this.__eventHandlers = [];
@@ -955,6 +957,7 @@ var OPCode = require('../../opCode');
   var graph;
   var ws;
   var animLoopHandle;
+  var lastUpdate;
   var moveTick = performance.now();
   var targetTick = performance.now();
   var mouse = { x: 0, y: 0 };
@@ -995,22 +998,23 @@ var OPCode = require('../../opCode');
     playButtonElement.addEventListener('mouseup', startGame);
   }
 
-  function animationLoop() {
+  function animationLoop(timestamp) {
     animLoopHandle = window.requestAnimationFrame(animationLoop);
 
-    gameLoop();
+    gameLoop(timestamp - lastUpdate);
+    lastUpdate = timestamp;
   }
 
-  function gameLoop() {
+  function gameLoop(deltaT) {
     graph.clear().drawGrid()
     // .drawBorder()
     .drawArena().drawSpells(spellList).drawPlayers(playerList).drawDebug();
 
     playerList.forEach(function (player) {
-      return player.calculateNextPosition();
+      return player.calculateNextPosition(deltaT);
     });
     spellList.forEach(function (spell) {
-      return spell.calculateNextPosition();
+      return spell.calculateNextPosition(deltaT);
     });
 
     spellList.forEach(function (spell, spellIndex) {
@@ -1070,7 +1074,7 @@ var OPCode = require('../../opCode');
         }
       });
 
-      canvas.addEventListener('keydown', function (event) {
+      window.document.addEventListener('keydown', function (event) {
         switch (event.keyCode) {
           case KeyCode.Q:
             ws.cast(OPCode.CAST_PRIMARY, {
@@ -1158,7 +1162,8 @@ var OPCode = require('../../opCode');
     });
 
     if (!animLoopHandle) {
-      animationLoop();
+      lastUpdate = Date.now();
+      animationLoop(lastUpdate);
     }
   }
 })();
@@ -1175,7 +1180,7 @@ function Player(playerModel) {
   this.health = playerModel.health;
   this.maxHealth = playerModel.maxHealth;
   this.speed = 3;
-  this.acceleration = 0.2;
+  this.acceleration = 0.1;
   this.rotation = 0;
   this.targetRotation = 0;
   this.radius = 20;
@@ -1209,12 +1214,12 @@ function Player(playerModel) {
   };
 }
 
-Player.prototype.calculateNextPosition = function () {
+Player.prototype.calculateNextPosition = function (deltaT) {
   if (typeof this.target.x !== 'undefined' && typeof this.target.y !== 'undefined') {
-    calculatePosition.call(this);
+    calculatePosition.call(this, deltaT);
   }
   if (typeof this.targetRotation !== 'undefined') {
-    calculateRotation.call(this);
+    calculateRotation.call(this, deltaT);
   }
   if (this.__animateCast) {
     updateAnimation.call(this);
@@ -1240,7 +1245,7 @@ Player.prototype.setTarget = function (x, y) {
 
 module.exports = Player;
 
-function calculatePosition() {
+function calculatePosition(deltaT) {
   if (!arePositionsApproximatelyEqual(this.position, this.target) || this.stunned) {
     if (this.__friction < 1) {
       this.__friction += this.acceleration;
@@ -1281,6 +1286,8 @@ function calculatePosition() {
     this.position.y += this.velocity.y;
 
     if (this.stunned) {
+      this.velocity.x *= 1 - this.acceleration;
+      this.velocity.y *= 1 - this.acceleration;
       this.target.x = this.position.x;
       this.target.y = this.position.y;
       this.stunned--;
@@ -1444,6 +1451,8 @@ Primary.prototype.onCollision = function (model) {
 
   model.velocity.x += this.power * this.mass * this.velocity.x / model.mass;
   model.velocity.y += this.power * this.mass * this.velocity.y / model.mass;
+
+  model.stunned = 50;
 };
 
 module.exports = Primary;

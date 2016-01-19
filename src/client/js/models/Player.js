@@ -7,7 +7,7 @@ function Player(playerModel) {
   this.health = playerModel.health;
   this.maxHealth = playerModel.maxHealth;
   this.speed = 3;
-  this.acceleration = 0.2;
+  this.acceleration = 0.1;
   this.rotation = 0;
   this.targetRotation = 0;
   this.radius = 20;
@@ -41,12 +41,12 @@ function Player(playerModel) {
   };
 }
 
-Player.prototype.calculateNextPosition = function () {
+Player.prototype.calculateNextPosition = function (deltaT) {
   if (typeof this.target.x !== 'undefined' && typeof this.target.y !== 'undefined') {
-    calculatePosition.call(this);
+    calculatePosition.call(this, deltaT);
   }
   if (typeof this.targetRotation !== 'undefined') {
-    calculateRotation.call(this);
+    calculateRotation.call(this, deltaT);
   }
   if (this.__animateCast) {
     updateAnimation.call(this);
@@ -72,7 +72,7 @@ Player.prototype.setTarget = function (x, y) {
 
 module.exports = Player;
 
-function calculatePosition() {
+function calculatePosition(deltaT) {
   if (!arePositionsApproximatelyEqual(this.position, this.target) || this.stunned) {
     if (this.__friction < 1) {
       this.__friction += this.acceleration;
@@ -112,6 +112,8 @@ function calculatePosition() {
     this.position.y += this.velocity.y;
     
     if (this.stunned) {
+      this.velocity.x *= (1 - this.acceleration);
+      this.velocity.y *= (1 - this.acceleration);
       this.target.x = this.position.x;
       this.target.y = this.position.y;
       this.stunned--;

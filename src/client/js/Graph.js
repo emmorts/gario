@@ -194,7 +194,9 @@ Graph.prototype.drawPlayer = function (player) {
   this._context.stroke();
   this._context.closePath();
 
-  this.drawText(player.name, posX, posY, 16);
+  this._context.textAlign = 'center';
+  this.drawText(player.name, posX, posY - 40, 14);
+  this._context.textAlign = 'left';
 }
 
 Graph.prototype.drawPlayers = function (playerList) {

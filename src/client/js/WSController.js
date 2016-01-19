@@ -2,7 +2,7 @@ var BufferCodec = require('buffercodec');
 var OPCode = require('../../opCode')
 
 function WSController() {
-  this.__uri = 'ws://localhost:3000';
+  this.__uri = 'ws://192.168.2.116:3000';
   this.__acknoledged = false;
   this.__socket = null;
   this.__eventHandlers = [];

@@ -12,6 +12,7 @@ var OPCode = require('../../opCode');
   var graph;
   var ws;
   var animLoopHandle;
+  var lastUpdate;
   var moveTick = performance.now();
   var targetTick = performance.now();
   var mouse = { x: 0, y: 0 };
@@ -54,13 +55,14 @@ var OPCode = require('../../opCode');
       playButtonElement.addEventListener('mouseup', startGame);
   }
 
-  function animationLoop() {
+  function animationLoop(timestamp) {
     animLoopHandle = window.requestAnimationFrame(animationLoop);
     
-    gameLoop();
+    gameLoop(timestamp - lastUpdate);
+    lastUpdate = timestamp;
   }
 
-  function gameLoop() {
+  function gameLoop(deltaT) {
     graph
       .clear()
       .drawGrid()
@@ -70,8 +72,8 @@ var OPCode = require('../../opCode');
       .drawPlayers(playerList)
       .drawDebug();
     
-    playerList.forEach(player => player.calculateNextPosition());
-    spellList.forEach(spell => spell.calculateNextPosition());
+    playerList.forEach(player => player.calculateNextPosition(deltaT));
+    spellList.forEach(spell => spell.calculateNextPosition(deltaT));
     
 
     spellList.forEach((spell, spellIndex) => {
@@ -131,7 +133,7 @@ var OPCode = require('../../opCode');
         }
       });
       
-      canvas.addEventListener('keydown', function (event) {
+      window.document.addEventListener('keydown', function (event) {
         switch (event.keyCode) {
           case KeyCode.Q:
             ws.cast(OPCode.CAST_PRIMARY, {
@@ -216,7 +218,8 @@ var OPCode = require('../../opCode');
     });
     
     if (!animLoopHandle) {
-      animationLoop();
+      lastUpdate = Date.now();
+      animationLoop(lastUpdate);
     }
   }
     

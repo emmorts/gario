@@ -37,6 +37,8 @@ Primary.prototype.onCollision = function (model) {
   
   model.velocity.x += this.power * this.mass * this.velocity.x / model.mass;
   model.velocity.y += this.power * this.mass * this.velocity.y / model.mass;
+  
+  model.stunned = 50;
 }
 
 module.exports = Primary;
