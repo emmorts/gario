@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon --use-strict src/server/server",
+    "start": "nodemon --watch src/server --use-strict src/server/server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Tomas Stropus",
   "license": "ISC",
   "dependencies": {
     "buffercodec": "^0.*.*",

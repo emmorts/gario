@@ -16,6 +16,7 @@ var OPCode = require('../../opCode');
   var moveTick = performance.now();
   var targetTick = performance.now();
   var mouse = { x: 0, y: 0 };
+  var scroll = null;
 
   var playerList = [];
   var spellList = [];
@@ -37,7 +38,6 @@ var OPCode = require('../../opCode');
       var playButtonElement = playButtonElements[0];
       var errorElement = errorElements[0];
       playerNameElement.addEventListener('keyup', function validate(event) {
-        console.log(event.keyCode);
         if ([KeyCode.ENTER, KeyCode.MAC_ENTER].indexOf(event.keyCode) !== -1) {
           startGame();
         }
@@ -65,6 +65,7 @@ var OPCode = require('../../opCode');
   function gameLoop(deltaT) {
     graph
       .clear()
+      .updateOffset(scroll)
       .drawGrid()
       // .drawBorder()
       .drawArena()
@@ -103,6 +104,29 @@ var OPCode = require('../../opCode');
     ws.on('open', function startGame() {
       
       canvas.addEventListener('mousemove', function (event) {
+        var westBreakpoint = graph.screenWidth / 10,
+            eastBreakpoint = graph.screenWidth * 9 / 10,
+            northBreakpoint = graph.screenHeight / 10,
+            southBreakpoint = graph.screenHeight * 9 / 10;
+        if (event.x < westBreakpoint && event.y < northBreakpoint) {
+          scroll = OPCode.DIRECTION_NWEST;
+        } else if (event.x > eastBreakpoint && event.y < northBreakpoint) {
+          scroll = OPCode.DIRECTION_NEAST;
+        } else if (event.x < westBreakpoint && event.y > southBreakpoint) {
+          scroll = OPCode.DIRECTION_SWEST;
+        } else if (event.x > eastBreakpoint && event.y > southBreakpoint) {
+          scroll = OPCode.DIRECTION_SEAST;
+        } else if (event.x < westBreakpoint) {
+          scroll = OPCode.DIRECTION_WEST;
+        } else if (event.x > eastBreakpoint) {
+          scroll = OPCode.DIRECTION_EAST;
+        } else if (event.y < northBreakpoint) {
+          scroll = OPCode.DIRECTION_NORTH;
+        } else if (event.y > southBreakpoint) {
+          scroll = OPCode.DIRECTION_SOUTH;
+        } else {
+          scroll = null;
+        }
         // mouse.x = -(graph.screenWidth / 2 - currentPlayer.position.x - event.x);
         // mouse.y = -(graph.screenHeight / 2 - currentPlayer.position.y - event.y);
         mouse.x = event.x;
@@ -122,8 +146,8 @@ var OPCode = require('../../opCode');
           var now = performance.now();
           var diff = now - targetTick;
           if (diff > 100) {
-            var targetX = mouse.x;
-            var targetY = mouse.y;
+            var targetX = mouse.x + graph.xOffset;
+            var targetY = mouse.y + graph.yOffset;
             targetX = Math.min(Math.max(targetX, 0), graph._gameWidth);
             targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
             currentPlayer.setTarget(targetX, targetY);
@@ -139,8 +163,8 @@ var OPCode = require('../../opCode');
             ws.cast(OPCode.CAST_PRIMARY, {
               playerX: currentPlayer.position.x,
               playerY: currentPlayer.position.y,
-              x: mouse.x,
-              y: mouse.y
+              x: mouse.x + graph.xOffset,
+              y: mouse.y + graph.yOffset
             });
             break;
         }

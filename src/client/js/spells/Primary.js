@@ -5,7 +5,7 @@ function Primary(spellModel) {
   this.mass = spellModel.mass;
   this.power = spellModel.power;
   this.velocity = { x: 0, y: 0 };
-  this.speed = 7;
+  this.speed = 5;
   this.radius = 10;
   
   this.position = {

@@ -352,6 +352,8 @@ module.exports = BufferCodec;
 },{}],2:[function(require,module,exports){
 'use strict';
 
+var OPCode = require('../../opCode');
+
 function Graph(canvas, options) {
   this._canvas = canvas;
   this._context = this._canvas.getContext('2d');
@@ -359,14 +361,15 @@ function Graph(canvas, options) {
   options = options || {};
   this.screenWidth = this._canvas.width = options.screenWidth || getDefaultWidth();
   this.screenHeight = this._canvas.height = options.screenHeight || getDefaultHeight();
+  this.xOffset = 0;
+  this.yOffset = 0;
   this._borderColor = '#666';
   this._gridColor = '#ececec';
   this._globalAlpha = options.globalAlpha || 0.15;
-  this._gameWidth = this.screenWidth || 1000;
-  this._gameHeight = this.screenHeight || 1000;
+  this._gameWidth = 1000;
+  this._gameHeight = 1000;
   this._arenaSize = 500;
-  this._xOffset = -this._gameWidth;
-  this._yOffset = -this._gameHeight;
+  this.__scrollSpeed = 4;
 
   window.addEventListener('resize', onResize.bind(this));
 
@@ -396,6 +399,46 @@ Graph.prototype.clear = function () {
   return this;
 };
 
+Graph.prototype.updateOffset = function (scroll) {
+  switch (scroll) {
+    case OPCode.DIRECTION_NWEST:
+      this.xOffset -= this.__scrollSpeed;
+      this.yOffset -= this.__scrollSpeed;
+      break;
+    case OPCode.DIRECTION_NEAST:
+      this.xOffset += this.__scrollSpeed;
+      this.yOffset -= this.__scrollSpeed;
+      break;
+    case OPCode.DIRECTION_SWEST:
+      this.xOffset -= this.__scrollSpeed;
+      this.yOffset += this.__scrollSpeed;
+      break;
+    case OPCode.DIRECTION_SEAST:
+      this.xOffset += this.__scrollSpeed;
+      this.yOffset += this.__scrollSpeed;
+      break;
+    case OPCode.DIRECTION_WEST:
+      this.xOffset -= this.__scrollSpeed;
+      break;
+    case OPCode.DIRECTION_EAST:
+      this.xOffset += this.__scrollSpeed;
+      break;
+    case OPCode.DIRECTION_NORTH:
+      this.yOffset -= this.__scrollSpeed;
+      break;
+    case OPCode.DIRECTION_SOUTH:
+      this.yOffset += this.__scrollSpeed;
+      break;
+  }
+
+  this.xOffset = Math.max(this.xOffset, 0);
+  this.xOffset = Math.min(this.xOffset, (this._gameWidth - this._arenaSize) / 2);
+  this.yOffset = Math.max(this.yOffset, 0);
+  this.yOffset = Math.min(this.yOffset, (this._gameHeight - this._arenaSize) / 2);
+
+  return this;
+};
+
 Graph.prototype.drawDebug = function () {
   if (this.player.id !== -1) {
     // COORDINATES
@@ -403,6 +446,10 @@ Graph.prototype.drawDebug = function () {
     var posY = this.player.position.y;
     var coordinates = 'Coordinates: ' + Math.round(posX) + ' ' + Math.round(posY);
     this.drawText(coordinates, 50, 50);
+
+    // OFFSET
+    var offset = 'Offset: ' + Math.round(this.xOffset) + ' ' + Math.round(this.yOffset);
+    this.drawText(offset, 50, 70);
 
     // VELOCITY
     var velocity = 'Velocity: ' + Math.round(this.player.velocity.x) + ' ' + Math.round(this.player.velocity.y);
@@ -414,11 +461,10 @@ Graph.prototype.drawDebug = function () {
 
 Graph.prototype.drawArena = function () {
   this._context.lineWidth = 2;
-  this._context.strokeStyle = '#000';
   this._context.beginPath();
 
-  var startX = (this._gameWidth - this._arenaSize) / 2;
-  var startY = (this._gameHeight - this._arenaSize) / 2;
+  var startX = (this._gameWidth - this._arenaSize) / 2 - this.xOffset;
+  var startY = (this._gameHeight - this._arenaSize) / 2 - this.yOffset;
 
   this._context.moveTo(startX, startY);
   this._context.lineTo(startX, startY + this._arenaSize);
@@ -426,7 +472,12 @@ Graph.prototype.drawArena = function () {
   this._context.lineTo(startX + this._arenaSize, startY);
   this._context.lineTo(startX, startY);
 
+  this._context.strokeStyle = '#000';
   this._context.stroke();
+  this._context.fillStyle = '#eee';
+  this._context.fill();
+
+  this._context.closePath();
 
   return this;
 };
@@ -436,13 +487,13 @@ Graph.prototype.drawGrid = function () {
   this._context.strokeStyle = this._gridColor;
   this._context.beginPath();
 
-  for (var x = this._xOffset; x < this.screenWidth; x += 40.5) {
+  for (var x = -this.xOffset; x < this.screenWidth + this.xOffset; x += 40) {
     x = Math.round(x) + 0.5;
     this._context.moveTo(x, 0);
     this._context.lineTo(x, this.screenHeight);
   }
 
-  for (var y = this._yOffset; y < this.screenHeight; y += 40.5) {
+  for (var y = -this.yOffset; y < this.screenHeight + this.yOffset; y += 40) {
     x = Math.round(y) + 0.5;
     this._context.moveTo(0, y);
     this._context.lineTo(this.screenWidth, y);
@@ -538,13 +589,22 @@ Graph.prototype.drawText = function (text, x, y, fontSize) {
 };
 
 Graph.prototype.drawPlayer = function (player) {
-  var posX = player.position.x;
-  var posY = player.position.y;
+  var posX = player.position.x - this.xOffset;
+  var posY = player.position.y - this.yOffset;
+
+  var arcLength = 2 * (player.health / player.maxHealth) * Math.PI;
+  var deficit = (2 * Math.PI - arcLength) / 2;
+  var arcStart = player.rotation + deficit;
+  var arcEnd = arcLength + player.rotation + deficit;
 
   this._context.beginPath();
-  this._context.arc(posX, posY, player.radius, Math.PI / 7 + player.rotation, -Math.PI / 7 + player.rotation);
+  this._context.arc(posX, posY, player.radius, 0, 2 * Math.PI);
   this._context.fillStyle = getColorInRGB(player.color);
   this._context.fill();
+  this._context.closePath();
+
+  this._context.beginPath();
+  this._context.arc(posX, posY, player.radius - 3, arcStart, arcEnd);
   this._context.lineWidth = 6;
   this._context.strokeStyle = getHealthColor(player.health, player.maxHealth);
   this._context.stroke();
@@ -587,8 +647,8 @@ Graph.prototype.drawSpells = function (spellList) {
 };
 
 function drawSpell(spell) {
-  var posX = spell.position.x;
-  var posY = spell.position.y;
+  var posX = spell.position.x - this.xOffset;
+  var posY = spell.position.y - this.yOffset;
 
   this._context.beginPath();
   this._context.arc(posX, posY, spell.radius, 0, 2 * Math.PI);
@@ -637,7 +697,7 @@ function getDefaultHeight() {
 
 module.exports = Graph;
 
-},{}],3:[function(require,module,exports){
+},{"../../opCode":11}],3:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -961,6 +1021,7 @@ var OPCode = require('../../opCode');
   var moveTick = performance.now();
   var targetTick = performance.now();
   var mouse = { x: 0, y: 0 };
+  var scroll = null;
 
   var playerList = [];
   var spellList = [];
@@ -980,7 +1041,6 @@ var OPCode = require('../../opCode');
     var playButtonElement = playButtonElements[0];
     var errorElement = errorElements[0];
     playerNameElement.addEventListener('keyup', function validate(event) {
-      console.log(event.keyCode);
       if ([KeyCode.ENTER, KeyCode.MAC_ENTER].indexOf(event.keyCode) !== -1) {
         startGame();
       }
@@ -1006,7 +1066,7 @@ var OPCode = require('../../opCode');
   }
 
   function gameLoop(deltaT) {
-    graph.clear().drawGrid()
+    graph.clear().updateOffset(scroll).drawGrid()
     // .drawBorder()
     .drawArena().drawSpells(spellList).drawPlayers(playerList).drawDebug();
 
@@ -1044,6 +1104,29 @@ var OPCode = require('../../opCode');
     ws.on('open', function startGame() {
 
       canvas.addEventListener('mousemove', function (event) {
+        var westBreakpoint = graph.screenWidth / 10,
+            eastBreakpoint = graph.screenWidth * 9 / 10,
+            northBreakpoint = graph.screenHeight / 10,
+            southBreakpoint = graph.screenHeight * 9 / 10;
+        if (event.x < westBreakpoint && event.y < northBreakpoint) {
+          scroll = OPCode.DIRECTION_NWEST;
+        } else if (event.x > eastBreakpoint && event.y < northBreakpoint) {
+          scroll = OPCode.DIRECTION_NEAST;
+        } else if (event.x < westBreakpoint && event.y > southBreakpoint) {
+          scroll = OPCode.DIRECTION_SWEST;
+        } else if (event.x > eastBreakpoint && event.y > southBreakpoint) {
+          scroll = OPCode.DIRECTION_SEAST;
+        } else if (event.x < westBreakpoint) {
+          scroll = OPCode.DIRECTION_WEST;
+        } else if (event.x > eastBreakpoint) {
+          scroll = OPCode.DIRECTION_EAST;
+        } else if (event.y < northBreakpoint) {
+          scroll = OPCode.DIRECTION_NORTH;
+        } else if (event.y > southBreakpoint) {
+          scroll = OPCode.DIRECTION_SOUTH;
+        } else {
+          scroll = null;
+        }
         // mouse.x = -(graph.screenWidth / 2 - currentPlayer.position.x - event.x);
         // mouse.y = -(graph.screenHeight / 2 - currentPlayer.position.y - event.y);
         mouse.x = event.x;
@@ -1063,8 +1146,8 @@ var OPCode = require('../../opCode');
           var now = performance.now();
           var diff = now - targetTick;
           if (diff > 100) {
-            var targetX = mouse.x;
-            var targetY = mouse.y;
+            var targetX = mouse.x + graph.xOffset;
+            var targetY = mouse.y + graph.yOffset;
             targetX = Math.min(Math.max(targetX, 0), graph._gameWidth);
             targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
             currentPlayer.setTarget(targetX, targetY);
@@ -1080,8 +1163,8 @@ var OPCode = require('../../opCode');
             ws.cast(OPCode.CAST_PRIMARY, {
               playerX: currentPlayer.position.x,
               playerY: currentPlayer.position.y,
-              x: mouse.x,
-              y: mouse.y
+              x: mouse.x + graph.xOffset,
+              y: mouse.y + graph.yOffset
             });
             break;
         }
@@ -1328,7 +1411,7 @@ function calculateRotation() {
 function updateAnimation() {
   if (this.__castTicks > 0) {
     var sign = Math.sign(this.__castTicks - this._baseCastTicks / 2);
-    this.radius += sign * (this.__maxRadius - this.radius) / 2;
+    this.radius += sign * (this.__maxRadius - this.radius) / 4;
     this.__castTicks--;
   } else {
     this.radius = this._baseRadius;
@@ -1419,7 +1502,7 @@ function Primary(spellModel) {
   this.mass = spellModel.mass;
   this.power = spellModel.power;
   this.velocity = { x: 0, y: 0 };
-  this.speed = 7;
+  this.speed = 5;
   this.radius = 10;
 
   this.position = {
@@ -1519,7 +1602,17 @@ module.exports = {
   "CAST_PRIMARY": 0x08,
 
   // types
-  "SPELL_PRIMARY": 0x0A
+  "SPELL_PRIMARY": 0x0A,
+
+  // direction
+  "DIRECTION_WEST": 0X14,
+  "DIRECTION_EAST": 0X15,
+  "DIRECTION_NORTH": 0X16,
+  "DIRECTION_SOUTH": 0X17,
+  "DIRECTION_NWEST": 0X18,
+  "DIRECTION_NEAST": 0X19,
+  "DIRECTION_SWEST": 0X1A,
+  "DIRECTION_SEAST": 0X1B
 };
 
 },{}]},{},[5])

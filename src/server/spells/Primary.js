@@ -17,7 +17,7 @@ function Primary(gameServer, owner, options) {
   this.mass = 10;
   this.power = 30;
   this.duration = 5000;
-  this.cooldown = 4000;
+  this.cooldown = 1000;
   this.radius = 10;
   this.color = {
     r: 200,
