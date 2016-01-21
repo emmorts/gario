@@ -1,217 +1,96 @@
 var BufferCodec = require('buffercodec');
-var OPCode = require('../../opCode')
+var OPCode = require('../../opCode');
 
-function WSController() {
-  this.__uri = 'ws://192.168.2.116:3000';
-  this.__acknoledged = false;
-  this.__socket = null;
-  this.__eventHandlers = [];
+import * as Packets from './packets/index';
 
-  setupSocket.call(this);
-}
+export default class WSController {
+  constructor() {
+    this._uri = 'ws://192.168.2.116:3000';
+    this._socket = null;
+    this._eventHandlers = [];
 
-WSController.prototype.spawn = function (playerName) {
-  var buffer = BufferCodec()
-    .uint8(OPCode.SPAWN_PLAYER)
-    .uint8(playerName.length)
-    .string(playerName)
-    .result();
-  this.__socket.send(buffer);
-}
-
-WSController.prototype.move = function (player) {
-  var buffer = BufferCodec()
-    .uint8(OPCode.PLAYER_MOVE)
-    .uint16le(player.target.x)
-    .uint16le(player.target.y)
-    .result();
-
-  this.__socket.send(buffer);
-}
-
-WSController.prototype.cast = function (opcode, options) {
-  var buffer = BufferCodec()
-    .uint8(opcode)
-    .uint16le(options.playerX)
-    .uint16le(options.playerY)
-    .uint16le(options.x)
-    .uint16le(options.y)
-    .result();
-
-  this.__socket.send(buffer);
-}
-
-WSController.prototype.on = function (name, listener) {
-  if (!(name in this.__eventHandlers) || !(this.__eventHandlers[name] instanceof Array)) {
-    this.__eventHandlers[name] = [];
+    this._setupSocket();
   }
-  this.__eventHandlers[name].push(listener);
-}
-
-function fire(name, options) {
-  if (name in this.__eventHandlers && this.__eventHandlers[name].length > 0) {
-    this.__eventHandlers[name].forEach(handler => handler(options));
+  
+  spawn(playerName) {
+    var buffer = BufferCodec()
+      .uint8(OPCode.SPAWN_PLAYER)
+      .uint8(playerName.length)
+      .string(playerName)
+      .result();
+      
+    this._socket.send(buffer);
   }
-}
+  
+  move(player) {
+    var buffer = BufferCodec()
+      .uint8(OPCode.PLAYER_MOVE)
+      .uint16le(player.target.x)
+      .uint16le(player.target.y)
+      .result();
 
-function setupSocket() {
-  this.__socket = new WebSocket(this.__uri);
-  this.__socket.binaryType = 'arraybuffer';
+    this._socket.send(buffer);
+  }
+  
+  cast(opcode, options) {
+    var buffer = BufferCodec()
+      .uint8(opcode)
+      .uint16le(options.playerX)
+      .uint16le(options.playerY)
+      .uint16le(options.x)
+      .uint16le(options.y)
+      .result();
 
-  this.__socket.onopen = function (event) {
-    fire.call(this, 'open');
+    this._socket.send(buffer);
+  }
+  
+  on(name, listener) {
+    if (!(name in this._eventHandlers) || !(this._eventHandlers[name] instanceof Array)) {
+      this._eventHandlers[name] = [];
+    }
+    this._eventHandlers[name].push(listener);
+  }
+  
+  _fire(name, options) {
+    if (name in this._eventHandlers && this._eventHandlers[name].length > 0) {
+      this._eventHandlers[name].forEach(handler => handler(options));
+    }
+  }
+  
+  _setupSocket() {
+    this._socket = new WebSocket(this._uri);
+    this._socket.binaryType = 'arraybuffer';
 
-    this.__socket.onmessage = function handleMessage(message) {
-      var codec = BufferCodec(message.data);
-      var code = codec.parse({ type: 'uint8' });
+    this._socket.onopen = function (event) {
+      this._fire('open');
 
-      switch (code) {
-        case OPCode.ADD_PLAYER:
-          var node = codec.parse([{
-              name: 'id',
-              length: 32,
-              type: 'string'
-            }, {
-              name: 'ownerId',
-              length: 32,
-              type: 'string'
-            }, {
-              name: 'name',
-              type: 'string'
-            }, {
-              name: 'health',
-              type: 'uint16le'
-            }, {
-              name: 'maxHealth',
-              type: 'uint16le'
-            }, {
-              name: 'x',
-              type: 'float32le'
-            }, {
-              name: 'y',
-              type: 'float32le'
-            }, {
-              name: 'r',
-              type: 'uint8'
-            }, {
-              name: 'g',
-              type: 'uint8'
-            }, {
-              name: 'b',
-              type: 'uint8'
-            }]);
-          fire.call(this, 'addPlayer', node);
-          break;
-        case OPCode.UPDATE_PLAYERS:
-          var updatedNodes = codec.parse({
-            type: 'array',
-            itemTemplate: [{
-                name: 'id',
-                length: 32,
-                type: 'string'
-              }, {
-                name: 'ownerId',
-                length: 32,
-                type: 'string'
-              }, {
-                name: 'name',
-                type: 'string'
-              }, {
-                name: 'health',
-                type: 'uint16le'
-              }, {
-                name: 'maxHealth',
-                type: 'uint16le'
-              }, {
-                name: 'x',
-                type: 'float32le'
-              }, {
-                name: 'y',
-                type: 'float32le'
-              }, {
-                name: 'targetX',
-                type: 'float32le'
-              }, {
-                name: 'targetY',
-                type: 'float32le'
-              }, {
-                name: 'r',
-                type: 'uint8'
-              }, {
-                name: 'g',
-                type: 'uint8'
-              }, {
-                name: 'b',
-                type: 'uint8'
-              }]
-          });
-          var destroyedNodes = codec.parse({
-            type: 'array',
-            itemTemplate: { type: 'string', length: 32 }
-          });
-          fire.call(this, 'updatePlayers', {
-            destroyedNodes: destroyedNodes,
-            updatedNodes: updatedNodes
-          });
-          break;
-        case OPCode.UPDATE_SPELLS:
-          var updatedSpells = codec.parse({
-            type: 'array',
-            itemTemplate: [{
-                name: 'id',
-                length: 32,
-                type: 'string'
-              }, {
-                name: 'ownerId',
-                length: 32,
-                type: 'string'
-              }, {
-                name: 'type',
-                type: 'uint8'
-              }, {
-                name: 'mass',
-                type: 'uint8'
-              }, {
-                name: 'power',
-                type: 'uint8'
-              }, {
-                name: 'x',
-                type: 'float32le'
-              }, {
-                name: 'y',
-                type: 'float32le'
-              }, {
-                name: 'targetX',
-                type: 'float32le'
-              }, {
-                name: 'targetY',
-                type: 'float32le'
-              }, {
-                name: 'r',
-                type: 'uint8'
-              }, {
-                name: 'g',
-                type: 'uint8'
-              }, {
-                name: 'b',
-                type: 'uint8'
-              }]
-          });
-          var destroyedSpells = codec.parse({
-            type: 'array',
-            itemTemplate: { type: 'string', length: 32 }
-          });
-          fire.call(this, 'updateSpells', {
-            destroyedSpells: destroyedSpells,
-            updatedSpells: updatedSpells
-          });
-          break;
-        default:
-          console.warn("Undefined opcode");
-          break;
-      }
+      this._socket.onmessage = function handleMessage(message) {
+        var codec = BufferCodec(message.data);
+        var code = this._getOpCode(codec);
+
+        switch (code) {
+          case OPCode.ADD_PLAYER:
+            this._fire('addPlayer', this._parse(codec, Packets.AddPlayer));
+            break;
+          case OPCode.UPDATE_PLAYERS:
+            this._fire('updatePlayers', this._parse(codec, Packets.UpdatePlayers));
+            break;
+          case OPCode.UPDATE_SPELLS:
+            this._fire('updateSpells', this._parse(codec, Packets.UpdateSpells));
+            break;
+          default:
+            console.warn("Undefined opcode");
+            break;
+        }
+      }.bind(this)
     }.bind(this)
-  }.bind(this)
+  }
+  
+  _parse(codec, packet) {
+    return codec.parse(packet.mapping, packet.transform);
+  }
+  
+  _getOpCode(codec) {
+    return codec.parse({ code: 'uint8' }, obj => obj.code);
+  }
 }
-
-module.exports = WSController;

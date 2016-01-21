@@ -1,68 +1,63 @@
-function Primary(spellModel) {
-  this.id = spellModel.id;
-  this.ownerId = spellModel.ownerId;
-  this.type = spellModel.type;
-  this.mass = spellModel.mass;
-  this.power = spellModel.power;
-  this.velocity = { x: 0, y: 0 };
-  this.speed = 5;
-  this.radius = 10;
-  
-  this.position = {
-    x: spellModel.x,
-    y: spellModel.y
-  };
-  
-  this.color = {
-    r: spellModel.r,
-    g: spellModel.g,
-    b: spellModel.b,
-  };
-  
-  setTarget.call(this, spellModel.targetX, spellModel.targetY);
-}
-
-Primary.prototype.calculateNextPosition = function () {
-  if (typeof this.velocity.x !== 'undefined' && typeof this.velocity.y !== 'undefined') {
-    calculatePosition.call(this);
+export default class Primary {
+  constructor(spellModel) {
+    this.id = spellModel.id;
+    this.ownerId = spellModel.ownerId;
+    this.type = spellModel.type;
+    this.mass = spellModel.mass;
+    this.power = spellModel.power;
+    this.velocity = { x: 0, y: 0 };
+    this.speed = 5;
+    this.radius = 10;
+    
+    this.color = spellModel.color || { r: 0, g: 0, b: 0 };
+    this.position = spellModel.position || { x: 0, y: 0 };
+    
+    this.setTarget(spellModel.target);
   }
-}
-
-Primary.prototype.onAdd = function (owner) {
-  owner.onCast(this);
-}
-
-Primary.prototype.onCollision = function (model) {
-  model.health -= 10;
   
-  model.velocity.x += this.power * this.mass * this.velocity.x / model.mass;
-  model.velocity.y += this.power * this.mass * this.velocity.y / model.mass;
+  calculateNextPosition() {
+    if (typeof this.velocity.x !== 'undefined' && typeof this.velocity.y !== 'undefined') {
+      this._calculatePosition.call(this);
+    }
+  }
   
-  model.stunned = 50;
-}
-
-module.exports = Primary;
-
-function calculatePosition() {
-  this.position = {
-    x: this.position.x + this.velocity.x * this.speed,
-    y: this.position.y + this.velocity.y * this.speed
-  };
-}
-
-function getHypotenuseLength(x, y) {
-  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-}
-
-function setTarget(x, y) {
-  this.target = { x, y };
+  onAdd(owner) {
+    owner.onCast(this);
+  }
   
-  var vX = this.target.x - this.position.x;
-  var vY = this.target.y - this.position.y;
-  var distance = getHypotenuseLength(vX, vY);
+  onCollision(model) {
+    model.health -= this.power;
+    
+    model.velocity.x += this.power * this.mass * this.velocity.x / model.mass;
+    model.velocity.y += this.power * this.mass * this.velocity.y / model.mass;
+    
+    model.stunned = 50;
+  }
   
-  this.velocity = {
-    x: vX / distance,
-    y: vY / distance
-  };
+  setTarget(target) {
+    this.target = {
+      x: target.x,
+      y: target.y
+    };
+    
+    var vX = this.target.x - this.position.x;
+    var vY = this.target.y - this.position.y;
+    var distance = this._getHypotenuseLength(vX, vY);
+    
+    this.velocity = {
+      x: vX / distance,
+      y: vY / distance
+    };
+  }
+  
+  _calculatePosition() {
+    this.position = {
+      x: this.position.x + this.velocity.x * this.speed,
+      y: this.position.y + this.velocity.y * this.speed
+    };
+  }
+  
+  _getHypotenuseLength(x, y) {
+    return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+  }
 }

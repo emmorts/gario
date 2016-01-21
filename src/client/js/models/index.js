@@ -1,3 +1,1 @@
-module.exports = {
-  Player: require('./Player.js')
-};
+export { default as Player } from './Player';

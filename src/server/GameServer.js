@@ -6,7 +6,7 @@ let PlayerController = require('./PlayerController');
 let GameMode = require('./gamemodes');
 let Model = require('./models');
 let WebSocketServer = WebSocket.Server;
-let Packet = require('./packet');
+let Packets = require('./packets');
 
 function GameServer(server) {
   this.run = true;
@@ -64,7 +64,7 @@ GameServer.prototype.start = function () {
       if (nodes.length > 0) {
         this.clients.forEach(function (client) {
           if (client !== socket) {
-            client.sendPacket(new Packet.UpdatePlayers(nodes));
+            client.sendPacket(new Packets.UpdatePlayers(nodes));
           }
         }, this);
       }
@@ -104,7 +104,7 @@ GameServer.prototype.addPlayer = function (player) {
 
   if (player.owner) {
     player.setColor(player.owner.color);
-    player.owner.socket.sendPacket(new Packet.AddPlayer(player));
+    player.owner.socket.sendPacket(new Packets.AddPlayer(player));
   }
 
   player.onAdd();
@@ -124,7 +124,7 @@ GameServer.prototype.onTargetUpdated = function (socket) {
   if (node) {
     this.clients.forEach(function (client) {
       if (client !== socket) {
-        client.sendPacket(new Packet.UpdatePlayers([], [ node ]));
+        client.sendPacket(new Packets.UpdatePlayers([], [ node ]));
       }
     }, this);
   }

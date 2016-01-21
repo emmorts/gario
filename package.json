@@ -10,7 +10,7 @@
   "author": "Tomas Stropus",
   "license": "ISC",
   "dependencies": {
-    "buffercodec": "^0.*.*",
+    "buffercodec": "*.*.*",
     "express": "^4.13.3",
     "node-uuid": "^1.4.7",
     "ws": "^0.8.1"

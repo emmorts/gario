@@ -1,11 +1,13 @@
 require('./polyfills');
 
-var Graph = require('./Graph');
-var WSController = require('./WSController');
-var KeyCode = require('./KeyCode');
 var Models = require('./models');
-var Spells = require('./spells');
 var OPCode = require('../../opCode');
+
+import KeyCode from './KeyCode';
+import Graph from './Graph';
+import WSController from './WSController';
+import DomElement from './DomElement';
+import * as Spells from './spells';
 
 (function () {
   
@@ -16,44 +18,34 @@ var OPCode = require('../../opCode');
   var moveTick = performance.now();
   var targetTick = performance.now();
   var mouse = { x: 0, y: 0 };
-  var scroll = null;
+  var scrollDirection = null;
 
   var playerList = [];
   var spellList = [];
   var currentPlayer = null;
 
-  var canvasElements = document.getElementsByClassName('js-canvas');
-  if (canvasElements && canvasElements.length > 0) {
-    var canvas = canvasElements[0];
-    graph = new Graph(canvasElements[0]);
-  }
+  var canvas = new DomElement('.js-canvas', Graph);
+  graph = canvas.instance;
 
-  var playerNameElements = document.getElementsByClassName('js-player-name');
-  var playButtonElements = document.getElementsByClassName('js-play-button');
-  var errorElements = document.getElementsByClassName('js-error');
-  if (playerNameElements && playerNameElements.length > 0 &&
-      playButtonElements && playButtonElements.length > 0 &&
-      errorElements && errorElements.length > 0) {
-      var playerNameElement = playerNameElements[0];
-      var playButtonElement = playButtonElements[0];
-      var errorElement = errorElements[0];
-      playerNameElement.addEventListener('keyup', function validate(event) {
-        if ([KeyCode.ENTER, KeyCode.MAC_ENTER].indexOf(event.keyCode) !== -1) {
-          startGame();
-        }
-        if (event && event.target) {
-          var pattern = /^[a-zA-Z0-9 ]{0,25}$/;
-          if (event.target.value.match(pattern)) {
-            errorElement.style.display = 'none';
-            playButtonElement.disabled = false;
-          } else {
-            errorElement.style.display = 'block';
-            playButtonElement.disabled = true;
-          }
-        }
-      });
-      playButtonElement.addEventListener('mouseup', startGame);
-  }
+  var playerNameElement = new DomElement('.js-player-name');
+  var playButtonElement = new DomElement('.js-play-button');
+  var errorElement = new DomElement('.js-error');
+  
+  playButtonElement.on('mouseup', startGame);
+  playerNameElement.on('keyup', function validate(event) {
+    if (!~[KeyCode.ENTER, KeyCode.MAC_ENTER].indexOf(event.keyCode)) {
+      startGame();
+    } else {
+      var pattern = /^[a-zA-Z0-9 ]{0,25}$/;
+      if (event.target.value.match(pattern)) {
+        errorElement.htmlElement.style.display = 'none';
+        playButtonElement.htmlElement.disabled = false;
+      } else {
+        errorElement.htmlElement.style.display = 'block';
+        playButtonElement.htmlElement.disabled = true;
+      }
+    }
+  });
 
   function animationLoop(timestamp) {
     animLoopHandle = window.requestAnimationFrame(animationLoop);
@@ -65,9 +57,8 @@ var OPCode = require('../../opCode');
   function gameLoop(deltaT) {
     graph
       .clear()
-      .updateOffset(scroll)
+      .updateOffset(scrollDirection)
       .drawGrid()
-      // .drawBorder()
       .drawArena()
       .drawSpells(spellList)
       .drawPlayers(playerList)
@@ -76,7 +67,6 @@ var OPCode = require('../../opCode');
     playerList.forEach(player => player.calculateNextPosition(deltaT));
     spellList.forEach(spell => spell.calculateNextPosition(deltaT));
     
-
     spellList.forEach((spell, spellIndex) => {
       playerList.forEach(player => {
         if (spell.ownerId !== player.ownerId) {
@@ -93,53 +83,47 @@ var OPCode = require('../../opCode');
   }
 
   function startGame () {
-    var playerName = playerNameElement.value;
-    var startMenuElements = document.getElementsByClassName('js-start-menu');
-    if (startMenuElements && startMenuElements.length > 0) {
-      startMenuElements[0].style.display = 'none';
-    }
+    var playerName = playerNameElement.htmlElement.value;
+    new DomElement('.js-start-menu').htmlElement.style.display = 'none';
     
     ws = new WSController();
 
     ws.on('open', function startGame() {
       
-      canvas.addEventListener('mousemove', function (event) {
+      ws.spawn(playerName);
+      
+      canvas.on('contextmenu', event => event.preventDefault());
+      
+      canvas.on('mousemove', function (event) {
         var westBreakpoint = graph.screenWidth / 10,
             eastBreakpoint = graph.screenWidth * 9 / 10,
             northBreakpoint = graph.screenHeight / 10,
             southBreakpoint = graph.screenHeight * 9 / 10;
+            
         if (event.x < westBreakpoint && event.y < northBreakpoint) {
-          scroll = OPCode.DIRECTION_NWEST;
+          scrollDirection = OPCode.DIRECTION_NWEST;
         } else if (event.x > eastBreakpoint && event.y < northBreakpoint) {
-          scroll = OPCode.DIRECTION_NEAST;
+          scrollDirection = OPCode.DIRECTION_NEAST;
         } else if (event.x < westBreakpoint && event.y > southBreakpoint) {
-          scroll = OPCode.DIRECTION_SWEST;
+          scrollDirection = OPCode.DIRECTION_SWEST;
         } else if (event.x > eastBreakpoint && event.y > southBreakpoint) {
-          scroll = OPCode.DIRECTION_SEAST;
+          scrollDirection = OPCode.DIRECTION_SEAST;
         } else if (event.x < westBreakpoint) {
-          scroll = OPCode.DIRECTION_WEST;
+          scrollDirection = OPCode.DIRECTION_WEST;
         } else if (event.x > eastBreakpoint) {
-          scroll = OPCode.DIRECTION_EAST;
+          scrollDirection = OPCode.DIRECTION_EAST;
         } else if (event.y < northBreakpoint) {
-          scroll = OPCode.DIRECTION_NORTH;
+          scrollDirection = OPCode.DIRECTION_NORTH;
         } else if (event.y > southBreakpoint) {
-          scroll = OPCode.DIRECTION_SOUTH;
+          scrollDirection = OPCode.DIRECTION_SOUTH;
         } else {
-          scroll = null;
+          scrollDirection = null;
         }
-        // mouse.x = -(graph.screenWidth / 2 - currentPlayer.position.x - event.x);
-        // mouse.y = -(graph.screenHeight / 2 - currentPlayer.position.y - event.y);
         mouse.x = event.x;
         mouse.y = event.y;
-        // console.log('screen', graph.screenWidth, graph.screenHeight);
-        // console.log('player', currentPlayer.position.x, currentPlayer.position.y);
-        // console.log('mouse', mouse.x, mouse.y);
-        // console.log('estimate', 
-        //   graph.screenWidth / 2 - currentPlayer.position.x - mouse.x,
-        //   graph.screenHeight / 2 - currentPlayer.position.y - mouse.y);
       });
       
-      canvas.addEventListener('mousedown', function (event) {
+      canvas.on('mousedown', function (event) {
         if (currentPlayer && event.button === 2) {
           event.preventDefault();
           event.stopPropagation();
@@ -170,11 +154,6 @@ var OPCode = require('../../opCode');
         }
       });
       
-      canvas.addEventListener('contextmenu', function (event) {
-        event.preventDefault();
-      });
-      
-      ws.spawn(playerName);
       
       ws.on('addPlayer', function (node) {
         currentPlayer = new Models.Player(node);
@@ -182,26 +161,26 @@ var OPCode = require('../../opCode');
         playerList.push(currentPlayer);
       });
       
-      ws.on('updatePlayers', function (nodes) {
-        var updatedNodes = nodes.updatedNodes;
-        if (updatedNodes && updatedNodes.length > 0) {
-          updatedNodes.forEach(function (updatedNode) {
-            var found = playerList.filter(player=> player.id === updatedNode.id);
+      ws.on('updatePlayers', function (players) {
+        var updatedPlayers = players.updatedPlayers;
+        if (updatedPlayers && updatedPlayers.length > 0) {
+          updatedPlayers.forEach(function (updatedPlayer) {
+            var found = playerList.filter(player=> player.id === updatedPlayer.id);
             if (found.length === 0) {
-              var player = new Models.Player(updatedNode);
+              var player = new Models.Player(updatedPlayer);
               playerList.splice(0, 0, player);
             } else {
-              found[0].setTarget(updatedNode.targetX, updatedNode.targetY);
+              found[0].setTarget(updatedPlayer.targetX, updatedPlayer.targetY);
             }
           });
         }
         
-        var destroyedNodes = nodes.destroyedNodes;
-        if (destroyedNodes && destroyedNodes.length > 0) {
-          destroyedNodes.forEach(function (destroyedNode) {
+        var destroyedPlayers = players.destroyedPlayers;
+        if (destroyedPlayers && destroyedPlayers.length > 0) {
+          destroyedPlayers.forEach(function (destroyedPlayer) {
             var index = -1;
             for (var i = 0; i < playerList.length; i++) {
-              if (playerList[i].id === destroyedNode) {
+              if (playerList[i].id === destroyedPlayer) {
                 index = i;
               }
             }

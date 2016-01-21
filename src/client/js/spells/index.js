@@ -1,10 +1,8 @@
 var OPCode = require('../../../opCode');
 
-module.exports = {
-  Primary: require('./Primary')
-}
+export { default as Primary } from './Primary';
 
-module.exports.get = function (code) {
+export function get(code) {
   var spell = null;
   
   switch (code) {

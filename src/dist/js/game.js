@@ -224,20 +224,44 @@ BufferCodec.prototype.float64be = function (value) {
   return this;
 }
 
-BufferCodec.prototype.parse = function (template) {
+BufferCodec.prototype.parse = function (template, transform) {
   if (this.buffer && template) {
     var data = new DataView(this.buffer);
-    var result = {};
-
-    if (template.constructor === Array) {
-      template.forEach(function (element) {
-        parseItem.call(this, element, result)
-      }, this);
-    } else {
-      parseItem.call(this, template, result);
+    var result = {}, element = {};
+    
+    if (template.constructor === Object) {
+      for (var propertyName in template) {
+        element = {
+          name: propertyName
+        };
+        
+        if (template[propertyName].constructor === Array) {
+          element.type = 'array'
+          element.itemTemplate = template[propertyName][0];
+        } else if (template[propertyName].constructor === String) {
+          element.type = template[propertyName];
+        } else if (template[propertyName].constructor === Object) {
+          for (var innerPropertyName in template[propertyName]) {
+            element[innerPropertyName] = template[propertyName][innerPropertyName];
+          }
+        }
+        
+        parseItem.call(this, element, result);
+      }
+    } else if (template.constructor === Array) {
+      element = {
+        type: 'array',
+        itemTemplate: template[0]
+      };
+      
+      parseItem.call(this, element, result);
     }
-
-    return result;
+    
+    if (transform) {
+      return transform(result);
+    } else {
+      return result;
+    }
   }
 
   function parseArray(data, template) {
@@ -338,6 +362,8 @@ BufferCodec.prototype.parse = function (template) {
       case 'array':
         templateResult = parseArray.call(this, data, element.itemTemplate);
         break;
+      default:
+        console.error('Type ' + element.type + ' is not supported.');
     }
 
     if (element.name) {
@@ -350,312 +376,330 @@ BufferCodec.prototype.parse = function (template) {
 
 module.exports = BufferCodec;
 },{}],2:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var DomElement = function () {
+  function DomElement(query, elementClass) {
+    _classCallCheck(this, DomElement);
+
+    this.htmlElement = null;
+    this.instance = null;
+    this._eventHandlers = [];
+
+    if (query) {
+      this.htmlElement = window.document.querySelector(query);
+
+      if (this.htmlElement && elementClass) {
+        this.instance = new elementClass(this.htmlElement);
+      }
+    }
+  }
+
+  _createClass(DomElement, [{
+    key: "on",
+    value: function on(name, listener) {
+      if (!(name in this._eventHandlers) || !(this._eventHandlers[name] instanceof Array)) {
+        this._eventHandlers[name] = [];
+      }
+      if (! ~this._eventHandlers[name].indexOf(listener)) {
+        this._eventHandlers[name].push(listener);
+
+        this.htmlElement.addEventListener(name, listener);
+      }
+
+      return this;
+    }
+  }]);
+
+  return DomElement;
+}();
+
+exports.default = DomElement;
+
+},{}],3:[function(require,module,exports){
 'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var OPCode = require('../../opCode');
 
-function Graph(canvas, options) {
-  this._canvas = canvas;
-  this._context = this._canvas.getContext('2d');
+var Graph = function () {
+  function Graph(canvas) {
+    _classCallCheck(this, Graph);
 
-  options = options || {};
-  this.screenWidth = this._canvas.width = options.screenWidth || getDefaultWidth();
-  this.screenHeight = this._canvas.height = options.screenHeight || getDefaultHeight();
-  this.xOffset = 0;
-  this.yOffset = 0;
-  this._borderColor = '#666';
-  this._gridColor = '#ececec';
-  this._globalAlpha = options.globalAlpha || 0.15;
-  this._gameWidth = 1000;
-  this._gameHeight = 1000;
-  this._arenaSize = 500;
-  this.__scrollSpeed = 4;
+    this._canvas = canvas;
+    this._context = this._canvas.getContext('2d');
 
-  window.addEventListener('resize', onResize.bind(this));
+    this.screenWidth = this._canvas.width = getDefaultWidth();
+    this.screenHeight = this._canvas.height = getDefaultHeight();
+    this.xOffset = 0;
+    this.yOffset = 0;
+    this._borderColor = '#666';
+    this._gridColor = '#ececec';
+    this._globalAlpha = 0.15;
+    this._gameWidth = 1000;
+    this._gameHeight = 1000;
+    this._arenaSize = 500;
+    this.__scrollSpeed = 4;
 
-  this.player = {
-    id: -1,
-    position: {
-      x: this.screenWidth / 2,
-      y: this.screenHeight / 2
+    window.addEventListener('resize', onResize.bind(this));
+
+    this.player = {
+      id: -1,
+      position: {
+        x: this.screenWidth / 2,
+        y: this.screenHeight / 2
+      }
+    };
+
+    this._playerOptions = {
+      border: 6,
+      borderColor: '#CCCCCC',
+      textColor: '#FFFFFF',
+      textBorder: '#000000',
+      textBorderSize: 3,
+      fontSize: 12,
+      defaultSize: 30
+    };
+  }
+
+  _createClass(Graph, [{
+    key: 'clear',
+    value: function clear() {
+      this._context.fillStyle = 'rgb(255, 255, 255)';
+      this._context.fillRect(0, 0, this.screenWidth, this.screenHeight);
+
+      return this;
     }
-  };
+  }, {
+    key: 'updateOffset',
+    value: function updateOffset(scroll) {
+      switch (scroll) {
+        case OPCode.DIRECTION_NWEST:
+          this.xOffset -= this.__scrollSpeed;
+          this.yOffset -= this.__scrollSpeed;
+          break;
+        case OPCode.DIRECTION_NEAST:
+          this.xOffset += this.__scrollSpeed;
+          this.yOffset -= this.__scrollSpeed;
+          break;
+        case OPCode.DIRECTION_SWEST:
+          this.xOffset -= this.__scrollSpeed;
+          this.yOffset += this.__scrollSpeed;
+          break;
+        case OPCode.DIRECTION_SEAST:
+          this.xOffset += this.__scrollSpeed;
+          this.yOffset += this.__scrollSpeed;
+          break;
+        case OPCode.DIRECTION_WEST:
+          this.xOffset -= this.__scrollSpeed;
+          break;
+        case OPCode.DIRECTION_EAST:
+          this.xOffset += this.__scrollSpeed;
+          break;
+        case OPCode.DIRECTION_NORTH:
+          this.yOffset -= this.__scrollSpeed;
+          break;
+        case OPCode.DIRECTION_SOUTH:
+          this.yOffset += this.__scrollSpeed;
+          break;
+      }
 
-  this._playerOptions = {
-    border: 6,
-    borderColor: '#CCCCCC',
-    textColor: '#FFFFFF',
-    textBorder: '#000000',
-    textBorderSize: 3,
-    fontSize: 12,
-    defaultSize: 30
-  };
-}
+      this.xOffset = Math.max(this.xOffset, 0);
+      this.xOffset = Math.min(this.xOffset, (this._gameWidth - this._arenaSize) / 2);
+      this.yOffset = Math.max(this.yOffset, 0);
+      this.yOffset = Math.min(this.yOffset, (this._gameHeight - this._arenaSize) / 2);
 
-Graph.prototype.clear = function () {
-  this._context.fillStyle = 'rgb(255, 255, 255)';
-  this._context.fillRect(0, 0, this.screenWidth, this.screenHeight);
-
-  return this;
-};
-
-Graph.prototype.updateOffset = function (scroll) {
-  switch (scroll) {
-    case OPCode.DIRECTION_NWEST:
-      this.xOffset -= this.__scrollSpeed;
-      this.yOffset -= this.__scrollSpeed;
-      break;
-    case OPCode.DIRECTION_NEAST:
-      this.xOffset += this.__scrollSpeed;
-      this.yOffset -= this.__scrollSpeed;
-      break;
-    case OPCode.DIRECTION_SWEST:
-      this.xOffset -= this.__scrollSpeed;
-      this.yOffset += this.__scrollSpeed;
-      break;
-    case OPCode.DIRECTION_SEAST:
-      this.xOffset += this.__scrollSpeed;
-      this.yOffset += this.__scrollSpeed;
-      break;
-    case OPCode.DIRECTION_WEST:
-      this.xOffset -= this.__scrollSpeed;
-      break;
-    case OPCode.DIRECTION_EAST:
-      this.xOffset += this.__scrollSpeed;
-      break;
-    case OPCode.DIRECTION_NORTH:
-      this.yOffset -= this.__scrollSpeed;
-      break;
-    case OPCode.DIRECTION_SOUTH:
-      this.yOffset += this.__scrollSpeed;
-      break;
-  }
-
-  this.xOffset = Math.max(this.xOffset, 0);
-  this.xOffset = Math.min(this.xOffset, (this._gameWidth - this._arenaSize) / 2);
-  this.yOffset = Math.max(this.yOffset, 0);
-  this.yOffset = Math.min(this.yOffset, (this._gameHeight - this._arenaSize) / 2);
-
-  return this;
-};
-
-Graph.prototype.drawDebug = function () {
-  if (this.player.id !== -1) {
-    // COORDINATES
-    var posX = this.player.position.x;
-    var posY = this.player.position.y;
-    var coordinates = 'Coordinates: ' + Math.round(posX) + ' ' + Math.round(posY);
-    this.drawText(coordinates, 50, 50);
-
-    // OFFSET
-    var offset = 'Offset: ' + Math.round(this.xOffset) + ' ' + Math.round(this.yOffset);
-    this.drawText(offset, 50, 70);
-
-    // VELOCITY
-    var velocity = 'Velocity: ' + Math.round(this.player.velocity.x) + ' ' + Math.round(this.player.velocity.y);
-    this.drawText(velocity, 50, 30);
-  }
-
-  return this;
-};
-
-Graph.prototype.drawArena = function () {
-  this._context.lineWidth = 2;
-  this._context.beginPath();
-
-  var startX = (this._gameWidth - this._arenaSize) / 2 - this.xOffset;
-  var startY = (this._gameHeight - this._arenaSize) / 2 - this.yOffset;
-
-  this._context.moveTo(startX, startY);
-  this._context.lineTo(startX, startY + this._arenaSize);
-  this._context.lineTo(startX + this._arenaSize, startY + this._arenaSize);
-  this._context.lineTo(startX + this._arenaSize, startY);
-  this._context.lineTo(startX, startY);
-
-  this._context.strokeStyle = '#000';
-  this._context.stroke();
-  this._context.fillStyle = '#eee';
-  this._context.fill();
-
-  this._context.closePath();
-
-  return this;
-};
-
-Graph.prototype.drawGrid = function () {
-  this._context.lineWidth = 1;
-  this._context.strokeStyle = this._gridColor;
-  this._context.beginPath();
-
-  for (var x = -this.xOffset; x < this.screenWidth + this.xOffset; x += 40) {
-    x = Math.round(x) + 0.5;
-    this._context.moveTo(x, 0);
-    this._context.lineTo(x, this.screenHeight);
-  }
-
-  for (var y = -this.yOffset; y < this.screenHeight + this.yOffset; y += 40) {
-    x = Math.round(y) + 0.5;
-    this._context.moveTo(0, y);
-    this._context.lineTo(this.screenWidth, y);
-  }
-
-  this._context.stroke();
-
-  return this;
-};
-
-Graph.prototype.drawCircle = function (centerX, centerY, radius, sides) {
-  var theta = 0;
-  var x = 0;
-  var y = 0;
-
-  this._context.beginPath();
-
-  for (var i = 0; i < sides; i++) {
-    theta = i / sides * 2 * Math.PI;
-    x = centerX + radius * Math.sin(theta);
-    y = centerY + radius * Math.cos(theta);
-    this._context.lineTo(x, y);
-  }
-
-  this._context.closePath();
-  this._context.stroke();
-  this._context.fill();
-
-  return this;
-};
-
-Graph.prototype.drawBorder = function () {
-
-  this._context.lineWidth = 1;
-  this._context.strokeStyle = this._playerOptions.borderColor;
-
-  // Left-vertical.
-  if (this.player.position.x <= this.screenWidth / 2) {
-    this._context.beginPath();
-    this._context.moveTo(this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
-    this._context.lineTo(this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
-    this._context.strokeStyle = this._borderColor;
-    this._context.stroke();
-  }
-
-  // Top-horizontal.
-  if (this.player.position.y <= this.screenHeight / 2) {
-    this._context.beginPath();
-    this._context.moveTo(this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
-    this._context.lineTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
-    this._context.strokeStyle = this._borderColor;
-    this._context.stroke();
-  }
-
-  // Right-vertical.
-  if (this._gameWidth - this.player.position.x <= this.screenWidth / 2) {
-    this._context.beginPath();
-    this._context.moveTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this.screenHeight / 2 - this.player.position.y);
-    this._context.lineTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
-    this._context.strokeStyle = this._borderColor;
-    this._context.stroke();
-  }
-
-  // Bottom-horizontal.
-  if (this._gameHeight - this.player.position.y <= this.screenHeight / 2) {
-    this._context.beginPath();
-    this._context.moveTo(this._gameWidth + this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
-    this._context.lineTo(this.screenWidth / 2 - this.player.position.x, this._gameHeight + this.screenHeight / 2 - this.player.position.y);
-    this._context.strokeStyle = this._borderColor;
-    this._context.stroke();
-  }
-
-  return this;
-};
-
-Graph.prototype.drawText = function (text, x, y, fontSize) {
-  var hasStroke = arguments.length <= 4 || arguments[4] === undefined ? true : arguments[4];
-
-  if (typeof fontSize === 'undefined') {
-    fontSize = this._playerOptions.fontSize;
-  }
-  this._context.lineWidth = this._playerOptions.textBorderSize;
-  this._context.fillStyle = this._playerOptions.textColor;
-  this._context.strokeStyle = this._playerOptions.textBorder;
-  this._context.font = 'bold ' + fontSize + 'px sans-serif';
-  this._context.miterLimit = 1;
-  this._context.lineJoin = 'round';
-  this._context.textBaseline = 'middle';
-  if (hasStroke) {
-    this._context.strokeText(text, x, y);
-  }
-  this._context.fillText(text, x, y);
-};
-
-Graph.prototype.drawPlayer = function (player) {
-  var posX = player.position.x - this.xOffset;
-  var posY = player.position.y - this.yOffset;
-
-  var arcLength = 2 * (player.health / player.maxHealth) * Math.PI;
-  var deficit = (2 * Math.PI - arcLength) / 2;
-  var arcStart = player.rotation + deficit;
-  var arcEnd = arcLength + player.rotation + deficit;
-
-  this._context.beginPath();
-  this._context.arc(posX, posY, player.radius, 0, 2 * Math.PI);
-  this._context.fillStyle = getColorInRGB(player.color);
-  this._context.fill();
-  this._context.closePath();
-
-  this._context.beginPath();
-  this._context.arc(posX, posY, player.radius - 3, arcStart, arcEnd);
-  this._context.lineWidth = 6;
-  this._context.strokeStyle = getHealthColor(player.health, player.maxHealth);
-  this._context.stroke();
-  this._context.closePath();
-
-  this._context.textAlign = 'center';
-  this.drawText(player.name, posX, posY - 40, 14);
-  this._context.textAlign = 'left';
-};
-
-Graph.prototype.drawPlayers = function (playerList) {
-  var _this = this;
-
-  if (playerList.length > 0) {
-    var currentPlayer = playerList.find(function (player) {
-      return player.id === _this.player.id;
-    });
-    if (currentPlayer) {
-      this.player.position.x = currentPlayer.position.x;
-      this.player.position.y = currentPlayer.position.y;
+      return this;
     }
-    playerList.forEach(function (player) {
-      return _this.drawPlayer(player);
-    });
-  }
+  }, {
+    key: 'drawDebug',
+    value: function drawDebug() {
+      if (this.player.id !== -1) {
+        // COORDINATES
+        var posX = this.player.position.x;
+        var posY = this.player.position.y;
+        var coordinates = 'Coordinates: ' + Math.round(posX) + ' ' + Math.round(posY);
+        this.drawText(coordinates, 50, 50);
 
-  return this;
-};
+        // OFFSET
+        var offset = 'Offset: ' + Math.round(this.xOffset) + ' ' + Math.round(this.yOffset);
+        this.drawText(offset, 50, 70);
 
-Graph.prototype.drawSpells = function (spellList) {
-  var _this2 = this;
+        // VELOCITY
+        var velocity = 'Velocity: ' + Math.round(this.player.velocity.x) + ' ' + Math.round(this.player.velocity.y);
+        this.drawText(velocity, 50, 30);
+      }
 
-  if (spellList && spellList.length > 0) {
-    spellList.forEach(function (spell) {
-      return drawSpell.call(_this2, spell);
-    });
-  }
+      return this;
+    }
+  }, {
+    key: 'drawArena',
+    value: function drawArena() {
+      this._context.lineWidth = 2;
+      this._context.beginPath();
 
-  return this;
-};
+      var startX = (this._gameWidth - this._arenaSize) / 2 - this.xOffset;
+      var startY = (this._gameHeight - this._arenaSize) / 2 - this.yOffset;
 
-function drawSpell(spell) {
-  var posX = spell.position.x - this.xOffset;
-  var posY = spell.position.y - this.yOffset;
+      this._context.moveTo(startX, startY);
+      this._context.lineTo(startX, startY + this._arenaSize);
+      this._context.lineTo(startX + this._arenaSize, startY + this._arenaSize);
+      this._context.lineTo(startX + this._arenaSize, startY);
+      this._context.lineTo(startX, startY);
 
-  this._context.beginPath();
-  this._context.arc(posX, posY, spell.radius, 0, 2 * Math.PI);
-  this._context.fillStyle = getColorInRGB(spell.color);
-  this._context.fill();
-  this._context.closePath();
-}
+      this._context.strokeStyle = '#000';
+      this._context.stroke();
+      this._context.fillStyle = '#eee';
+      this._context.fill();
+
+      this._context.closePath();
+
+      return this;
+    }
+  }, {
+    key: 'drawGrid',
+    value: function drawGrid() {
+      this._context.lineWidth = 1;
+      this._context.strokeStyle = this._gridColor;
+      this._context.beginPath();
+
+      for (var x = -this.xOffset; x < this.screenWidth + this.xOffset; x += 40) {
+        x = Math.round(x) + 0.5;
+        this._context.moveTo(x, 0);
+        this._context.lineTo(x, this.screenHeight);
+      }
+
+      for (var y = -this.yOffset; y < this.screenHeight + this.yOffset; y += 40) {
+        x = Math.round(y) + 0.5;
+        this._context.moveTo(0, y);
+        this._context.lineTo(this.screenWidth, y);
+      }
+
+      this._context.stroke();
+
+      return this;
+    }
+  }, {
+    key: 'drawText',
+    value: function drawText(text, x, y, fontSize) {
+      var hasStroke = arguments.length <= 4 || arguments[4] === undefined ? true : arguments[4];
+
+      if (typeof fontSize === 'undefined') {
+        fontSize = this._playerOptions.fontSize;
+      }
+      this._context.lineWidth = this._playerOptions.textBorderSize;
+      this._context.fillStyle = this._playerOptions.textColor;
+      this._context.strokeStyle = this._playerOptions.textBorder;
+      this._context.font = 'bold ' + fontSize + 'px sans-serif';
+      this._context.miterLimit = 1;
+      this._context.lineJoin = 'round';
+      this._context.textBaseline = 'middle';
+      if (hasStroke) {
+        this._context.strokeText(text, x, y);
+      }
+      this._context.fillText(text, x, y);
+
+      return this;
+    }
+  }, {
+    key: 'drawPlayer',
+    value: function drawPlayer(player) {
+      var posX = player.position.x - this.xOffset;
+      var posY = player.position.y - this.yOffset;
+
+      var arcLength = 2 * (player.health / player.maxHealth) * Math.PI;
+      var deficit = (2 * Math.PI - arcLength) / 2;
+      var arcStart = player.rotation + deficit;
+      var arcEnd = arcLength + player.rotation + deficit;
+
+      this._context.beginPath();
+      this._context.arc(posX, posY, player.radius, 0, 2 * Math.PI);
+      this._context.fillStyle = getColorInRGB(player.color);
+      this._context.fill();
+      this._context.closePath();
+
+      this._context.beginPath();
+      this._context.arc(posX, posY, player.radius - 3, arcStart, arcEnd);
+      this._context.lineWidth = 6;
+      this._context.strokeStyle = getHealthColor(player.health, player.maxHealth);
+      this._context.stroke();
+      this._context.closePath();
+
+      this._context.textAlign = 'center';
+      this.drawText(player.name, posX, posY - 40, 14);
+      this._context.textAlign = 'left';
+
+      return this;
+    }
+  }, {
+    key: 'drawPlayers',
+    value: function drawPlayers() {
+      var _this = this;
+
+      var playerList = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+
+      var currentPlayer = playerList.find(function (player) {
+        return player.id === _this.player.id;
+      });
+      if (currentPlayer) {
+        this.player.position.x = currentPlayer.position.x;
+        this.player.position.y = currentPlayer.position.y;
+      }
+      playerList.forEach(function (player) {
+        return _this.drawPlayer(player);
+      });
+
+      return this;
+    }
+  }, {
+    key: 'drawSpell',
+    value: function drawSpell(spell) {
+      var posX = spell.position.x - this.xOffset;
+      var posY = spell.position.y - this.yOffset;
+
+      this._context.beginPath();
+      this._context.arc(posX, posY, spell.radius, 0, 2 * Math.PI);
+      this._context.fillStyle = getColorInRGB(spell.color);
+      this._context.fill();
+      this._context.closePath();
+
+      return this;
+    }
+  }, {
+    key: 'drawSpells',
+    value: function drawSpells() {
+      var _this2 = this;
+
+      var spellList = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+
+      spellList.forEach(function (spell) {
+        return _this2.drawSpell(spell);
+      });
+
+      return this;
+    }
+  }]);
+
+  return Graph;
+}();
+
+exports.default = Graph;
+;
 
 function getColorInRGB(color, lightenPct) {
   if (color) {
@@ -695,12 +739,13 @@ function getDefaultHeight() {
   return window.innerHeight && document.documentElement.clientHeight ? Math.min(window.innerHeight, document.documentElement.clientHeight) : window.innerHeight || document.documentElement.clientHeight || document.getElementsByTagName('body')[0].clientHeight;
 }
 
-module.exports = Graph;
-
-},{"../../opCode":11}],3:[function(require,module,exports){
+},{"../../opCode":16}],4:[function(require,module,exports){
 "use strict";
 
-module.exports = {
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
   MAC_ENTER: 3,
   BACKSPACE: 8,
   TAB: 9,
@@ -791,225 +836,154 @@ module.exports = {
   F12: 123
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _index = require('./packets/index');
+
+var Packets = _interopRequireWildcard(_index);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var BufferCodec = require('buffercodec');
 var OPCode = require('../../opCode');
 
-function WSController() {
-  this.__uri = 'ws://192.168.2.116:3000';
-  this.__acknoledged = false;
-  this.__socket = null;
-  this.__eventHandlers = [];
+var WSController = function () {
+  function WSController() {
+    _classCallCheck(this, WSController);
 
-  setupSocket.call(this);
-}
+    this._uri = 'ws://192.168.2.116:3000';
+    this._socket = null;
+    this._eventHandlers = [];
 
-WSController.prototype.spawn = function (playerName) {
-  var buffer = BufferCodec().uint8(OPCode.SPAWN_PLAYER).uint8(playerName.length).string(playerName).result();
-  this.__socket.send(buffer);
-};
-
-WSController.prototype.move = function (player) {
-  var buffer = BufferCodec().uint8(OPCode.PLAYER_MOVE).uint16le(player.target.x).uint16le(player.target.y).result();
-
-  this.__socket.send(buffer);
-};
-
-WSController.prototype.cast = function (opcode, options) {
-  var buffer = BufferCodec().uint8(opcode).uint16le(options.playerX).uint16le(options.playerY).uint16le(options.x).uint16le(options.y).result();
-
-  this.__socket.send(buffer);
-};
-
-WSController.prototype.on = function (name, listener) {
-  if (!(name in this.__eventHandlers) || !(this.__eventHandlers[name] instanceof Array)) {
-    this.__eventHandlers[name] = [];
+    this._setupSocket();
   }
-  this.__eventHandlers[name].push(listener);
-};
 
-function fire(name, options) {
-  if (name in this.__eventHandlers && this.__eventHandlers[name].length > 0) {
-    this.__eventHandlers[name].forEach(function (handler) {
-      return handler(options);
-    });
-  }
-}
+  _createClass(WSController, [{
+    key: 'spawn',
+    value: function spawn(playerName) {
+      var buffer = BufferCodec().uint8(OPCode.SPAWN_PLAYER).uint8(playerName.length).string(playerName).result();
 
-function setupSocket() {
-  this.__socket = new WebSocket(this.__uri);
-  this.__socket.binaryType = 'arraybuffer';
+      this._socket.send(buffer);
+    }
+  }, {
+    key: 'move',
+    value: function move(player) {
+      var buffer = BufferCodec().uint8(OPCode.PLAYER_MOVE).uint16le(player.target.x).uint16le(player.target.y).result();
 
-  this.__socket.onopen = function (event) {
-    fire.call(this, 'open');
+      this._socket.send(buffer);
+    }
+  }, {
+    key: 'cast',
+    value: function cast(opcode, options) {
+      var buffer = BufferCodec().uint8(opcode).uint16le(options.playerX).uint16le(options.playerY).uint16le(options.x).uint16le(options.y).result();
 
-    this.__socket.onmessage = function handleMessage(message) {
-      var codec = BufferCodec(message.data);
-      var code = codec.parse({ type: 'uint8' });
-
-      switch (code) {
-        case OPCode.ADD_PLAYER:
-          var node = codec.parse([{
-            name: 'id',
-            length: 32,
-            type: 'string'
-          }, {
-            name: 'ownerId',
-            length: 32,
-            type: 'string'
-          }, {
-            name: 'name',
-            type: 'string'
-          }, {
-            name: 'health',
-            type: 'uint16le'
-          }, {
-            name: 'maxHealth',
-            type: 'uint16le'
-          }, {
-            name: 'x',
-            type: 'float32le'
-          }, {
-            name: 'y',
-            type: 'float32le'
-          }, {
-            name: 'r',
-            type: 'uint8'
-          }, {
-            name: 'g',
-            type: 'uint8'
-          }, {
-            name: 'b',
-            type: 'uint8'
-          }]);
-          fire.call(this, 'addPlayer', node);
-          break;
-        case OPCode.UPDATE_PLAYERS:
-          var updatedNodes = codec.parse({
-            type: 'array',
-            itemTemplate: [{
-              name: 'id',
-              length: 32,
-              type: 'string'
-            }, {
-              name: 'ownerId',
-              length: 32,
-              type: 'string'
-            }, {
-              name: 'name',
-              type: 'string'
-            }, {
-              name: 'health',
-              type: 'uint16le'
-            }, {
-              name: 'maxHealth',
-              type: 'uint16le'
-            }, {
-              name: 'x',
-              type: 'float32le'
-            }, {
-              name: 'y',
-              type: 'float32le'
-            }, {
-              name: 'targetX',
-              type: 'float32le'
-            }, {
-              name: 'targetY',
-              type: 'float32le'
-            }, {
-              name: 'r',
-              type: 'uint8'
-            }, {
-              name: 'g',
-              type: 'uint8'
-            }, {
-              name: 'b',
-              type: 'uint8'
-            }]
-          });
-          var destroyedNodes = codec.parse({
-            type: 'array',
-            itemTemplate: { type: 'string', length: 32 }
-          });
-          fire.call(this, 'updatePlayers', {
-            destroyedNodes: destroyedNodes,
-            updatedNodes: updatedNodes
-          });
-          break;
-        case OPCode.UPDATE_SPELLS:
-          var updatedSpells = codec.parse({
-            type: 'array',
-            itemTemplate: [{
-              name: 'id',
-              length: 32,
-              type: 'string'
-            }, {
-              name: 'ownerId',
-              length: 32,
-              type: 'string'
-            }, {
-              name: 'type',
-              type: 'uint8'
-            }, {
-              name: 'mass',
-              type: 'uint8'
-            }, {
-              name: 'power',
-              type: 'uint8'
-            }, {
-              name: 'x',
-              type: 'float32le'
-            }, {
-              name: 'y',
-              type: 'float32le'
-            }, {
-              name: 'targetX',
-              type: 'float32le'
-            }, {
-              name: 'targetY',
-              type: 'float32le'
-            }, {
-              name: 'r',
-              type: 'uint8'
-            }, {
-              name: 'g',
-              type: 'uint8'
-            }, {
-              name: 'b',
-              type: 'uint8'
-            }]
-          });
-          var destroyedSpells = codec.parse({
-            type: 'array',
-            itemTemplate: { type: 'string', length: 32 }
-          });
-          fire.call(this, 'updateSpells', {
-            destroyedSpells: destroyedSpells,
-            updatedSpells: updatedSpells
-          });
-          break;
-        default:
-          console.warn("Undefined opcode");
-          break;
+      this._socket.send(buffer);
+    }
+  }, {
+    key: 'on',
+    value: function on(name, listener) {
+      if (!(name in this._eventHandlers) || !(this._eventHandlers[name] instanceof Array)) {
+        this._eventHandlers[name] = [];
       }
-    }.bind(this);
-  }.bind(this);
-}
+      this._eventHandlers[name].push(listener);
+    }
+  }, {
+    key: '_fire',
+    value: function _fire(name, options) {
+      if (name in this._eventHandlers && this._eventHandlers[name].length > 0) {
+        this._eventHandlers[name].forEach(function (handler) {
+          return handler(options);
+        });
+      }
+    }
+  }, {
+    key: '_setupSocket',
+    value: function _setupSocket() {
+      this._socket = new WebSocket(this._uri);
+      this._socket.binaryType = 'arraybuffer';
 
-module.exports = WSController;
+      this._socket.onopen = function (event) {
+        this._fire('open');
 
-},{"../../opCode":11,"buffercodec":1}],5:[function(require,module,exports){
+        this._socket.onmessage = function handleMessage(message) {
+          var codec = BufferCodec(message.data);
+          var code = this._getOpCode(codec);
+
+          switch (code) {
+            case OPCode.ADD_PLAYER:
+              this._fire('addPlayer', this._parse(codec, Packets.AddPlayer));
+              break;
+            case OPCode.UPDATE_PLAYERS:
+              this._fire('updatePlayers', this._parse(codec, Packets.UpdatePlayers));
+              break;
+            case OPCode.UPDATE_SPELLS:
+              this._fire('updateSpells', this._parse(codec, Packets.UpdateSpells));
+              break;
+            default:
+              console.warn("Undefined opcode");
+              break;
+          }
+        }.bind(this);
+      }.bind(this);
+    }
+  }, {
+    key: '_parse',
+    value: function _parse(codec, packet) {
+      return codec.parse(packet.mapping, packet.transform);
+    }
+  }, {
+    key: '_getOpCode',
+    value: function _getOpCode(codec) {
+      return codec.parse({ code: 'uint8' }, function (obj) {
+        return obj.code;
+      });
+    }
+  }]);
+
+  return WSController;
+}();
+
+exports.default = WSController;
+
+},{"../../opCode":16,"./packets/index":12,"buffercodec":1}],6:[function(require,module,exports){
 'use strict';
+
+var _KeyCode = require('./KeyCode');
+
+var _KeyCode2 = _interopRequireDefault(_KeyCode);
+
+var _Graph = require('./Graph');
+
+var _Graph2 = _interopRequireDefault(_Graph);
+
+var _WSController = require('./WSController');
+
+var _WSController2 = _interopRequireDefault(_WSController);
+
+var _DomElement = require('./DomElement');
+
+var _DomElement2 = _interopRequireDefault(_DomElement);
+
+var _spells = require('./spells');
+
+var Spells = _interopRequireWildcard(_spells);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 require('./polyfills');
 
-var Graph = require('./Graph');
-var WSController = require('./WSController');
-var KeyCode = require('./KeyCode');
 var Models = require('./models');
-var Spells = require('./spells');
 var OPCode = require('../../opCode');
 
 (function () {
@@ -1021,42 +995,34 @@ var OPCode = require('../../opCode');
   var moveTick = performance.now();
   var targetTick = performance.now();
   var mouse = { x: 0, y: 0 };
-  var scroll = null;
+  var scrollDirection = null;
 
   var playerList = [];
   var spellList = [];
   var currentPlayer = null;
 
-  var canvasElements = document.getElementsByClassName('js-canvas');
-  if (canvasElements && canvasElements.length > 0) {
-    var canvas = canvasElements[0];
-    graph = new Graph(canvasElements[0]);
-  }
+  var canvas = new _DomElement2.default('.js-canvas', _Graph2.default);
+  graph = canvas.instance;
 
-  var playerNameElements = document.getElementsByClassName('js-player-name');
-  var playButtonElements = document.getElementsByClassName('js-play-button');
-  var errorElements = document.getElementsByClassName('js-error');
-  if (playerNameElements && playerNameElements.length > 0 && playButtonElements && playButtonElements.length > 0 && errorElements && errorElements.length > 0) {
-    var playerNameElement = playerNameElements[0];
-    var playButtonElement = playButtonElements[0];
-    var errorElement = errorElements[0];
-    playerNameElement.addEventListener('keyup', function validate(event) {
-      if ([KeyCode.ENTER, KeyCode.MAC_ENTER].indexOf(event.keyCode) !== -1) {
-        startGame();
+  var playerNameElement = new _DomElement2.default('.js-player-name');
+  var playButtonElement = new _DomElement2.default('.js-play-button');
+  var errorElement = new _DomElement2.default('.js-error');
+
+  playButtonElement.on('mouseup', startGame);
+  playerNameElement.on('keyup', function validate(event) {
+    if (! ~[_KeyCode2.default.ENTER, _KeyCode2.default.MAC_ENTER].indexOf(event.keyCode)) {
+      startGame();
+    } else {
+      var pattern = /^[a-zA-Z0-9 ]{0,25}$/;
+      if (event.target.value.match(pattern)) {
+        errorElement.htmlElement.style.display = 'none';
+        playButtonElement.htmlElement.disabled = false;
+      } else {
+        errorElement.htmlElement.style.display = 'block';
+        playButtonElement.htmlElement.disabled = true;
       }
-      if (event && event.target) {
-        var pattern = /^[a-zA-Z0-9 ]{0,25}$/;
-        if (event.target.value.match(pattern)) {
-          errorElement.style.display = 'none';
-          playButtonElement.disabled = false;
-        } else {
-          errorElement.style.display = 'block';
-          playButtonElement.disabled = true;
-        }
-      }
-    });
-    playButtonElement.addEventListener('mouseup', startGame);
-  }
+    }
+  });
 
   function animationLoop(timestamp) {
     animLoopHandle = window.requestAnimationFrame(animationLoop);
@@ -1066,9 +1032,7 @@ var OPCode = require('../../opCode');
   }
 
   function gameLoop(deltaT) {
-    graph.clear().updateOffset(scroll).drawGrid()
-    // .drawBorder()
-    .drawArena().drawSpells(spellList).drawPlayers(playerList).drawDebug();
+    graph.clear().updateOffset(scrollDirection).drawGrid().drawArena().drawSpells(spellList).drawPlayers(playerList).drawDebug();
 
     playerList.forEach(function (player) {
       return player.calculateNextPosition(deltaT);
@@ -1093,53 +1057,49 @@ var OPCode = require('../../opCode');
   }
 
   function startGame() {
-    var playerName = playerNameElement.value;
-    var startMenuElements = document.getElementsByClassName('js-start-menu');
-    if (startMenuElements && startMenuElements.length > 0) {
-      startMenuElements[0].style.display = 'none';
-    }
+    var playerName = playerNameElement.htmlElement.value;
+    new _DomElement2.default('.js-start-menu').htmlElement.style.display = 'none';
 
-    ws = new WSController();
+    ws = new _WSController2.default();
 
     ws.on('open', function startGame() {
 
-      canvas.addEventListener('mousemove', function (event) {
+      ws.spawn(playerName);
+
+      canvas.on('contextmenu', function (event) {
+        return event.preventDefault();
+      });
+
+      canvas.on('mousemove', function (event) {
         var westBreakpoint = graph.screenWidth / 10,
             eastBreakpoint = graph.screenWidth * 9 / 10,
             northBreakpoint = graph.screenHeight / 10,
             southBreakpoint = graph.screenHeight * 9 / 10;
+
         if (event.x < westBreakpoint && event.y < northBreakpoint) {
-          scroll = OPCode.DIRECTION_NWEST;
+          scrollDirection = OPCode.DIRECTION_NWEST;
         } else if (event.x > eastBreakpoint && event.y < northBreakpoint) {
-          scroll = OPCode.DIRECTION_NEAST;
+          scrollDirection = OPCode.DIRECTION_NEAST;
         } else if (event.x < westBreakpoint && event.y > southBreakpoint) {
-          scroll = OPCode.DIRECTION_SWEST;
+          scrollDirection = OPCode.DIRECTION_SWEST;
         } else if (event.x > eastBreakpoint && event.y > southBreakpoint) {
-          scroll = OPCode.DIRECTION_SEAST;
+          scrollDirection = OPCode.DIRECTION_SEAST;
         } else if (event.x < westBreakpoint) {
-          scroll = OPCode.DIRECTION_WEST;
+          scrollDirection = OPCode.DIRECTION_WEST;
         } else if (event.x > eastBreakpoint) {
-          scroll = OPCode.DIRECTION_EAST;
+          scrollDirection = OPCode.DIRECTION_EAST;
         } else if (event.y < northBreakpoint) {
-          scroll = OPCode.DIRECTION_NORTH;
+          scrollDirection = OPCode.DIRECTION_NORTH;
         } else if (event.y > southBreakpoint) {
-          scroll = OPCode.DIRECTION_SOUTH;
+          scrollDirection = OPCode.DIRECTION_SOUTH;
         } else {
-          scroll = null;
+          scrollDirection = null;
         }
-        // mouse.x = -(graph.screenWidth / 2 - currentPlayer.position.x - event.x);
-        // mouse.y = -(graph.screenHeight / 2 - currentPlayer.position.y - event.y);
         mouse.x = event.x;
         mouse.y = event.y;
-        // console.log('screen', graph.screenWidth, graph.screenHeight);
-        // console.log('player', currentPlayer.position.x, currentPlayer.position.y);
-        // console.log('mouse', mouse.x, mouse.y);
-        // console.log('estimate',
-        //   graph.screenWidth / 2 - currentPlayer.position.x - mouse.x,
-        //   graph.screenHeight / 2 - currentPlayer.position.y - mouse.y);
       });
 
-      canvas.addEventListener('mousedown', function (event) {
+      canvas.on('mousedown', function (event) {
         if (currentPlayer && event.button === 2) {
           event.preventDefault();
           event.stopPropagation();
@@ -1159,7 +1119,7 @@ var OPCode = require('../../opCode');
 
       window.document.addEventListener('keydown', function (event) {
         switch (event.keyCode) {
-          case KeyCode.Q:
+          case _KeyCode2.default.Q:
             ws.cast(OPCode.CAST_PRIMARY, {
               playerX: currentPlayer.position.x,
               playerY: currentPlayer.position.y,
@@ -1170,40 +1130,34 @@ var OPCode = require('../../opCode');
         }
       });
 
-      canvas.addEventListener('contextmenu', function (event) {
-        event.preventDefault();
-      });
-
-      ws.spawn(playerName);
-
       ws.on('addPlayer', function (node) {
         currentPlayer = new Models.Player(node);
         graph.player = currentPlayer;
         playerList.push(currentPlayer);
       });
 
-      ws.on('updatePlayers', function (nodes) {
-        var updatedNodes = nodes.updatedNodes;
-        if (updatedNodes && updatedNodes.length > 0) {
-          updatedNodes.forEach(function (updatedNode) {
+      ws.on('updatePlayers', function (players) {
+        var updatedPlayers = players.updatedPlayers;
+        if (updatedPlayers && updatedPlayers.length > 0) {
+          updatedPlayers.forEach(function (updatedPlayer) {
             var found = playerList.filter(function (player) {
-              return player.id === updatedNode.id;
+              return player.id === updatedPlayer.id;
             });
             if (found.length === 0) {
-              var player = new Models.Player(updatedNode);
+              var player = new Models.Player(updatedPlayer);
               playerList.splice(0, 0, player);
             } else {
-              found[0].setTarget(updatedNode.targetX, updatedNode.targetY);
+              found[0].setTarget(updatedPlayer.targetX, updatedPlayer.targetY);
             }
           });
         }
 
-        var destroyedNodes = nodes.destroyedNodes;
-        if (destroyedNodes && destroyedNodes.length > 0) {
-          destroyedNodes.forEach(function (destroyedNode) {
+        var destroyedPlayers = players.destroyedPlayers;
+        if (destroyedPlayers && destroyedPlayers.length > 0) {
+          destroyedPlayers.forEach(function (destroyedPlayer) {
             var index = -1;
             for (var i = 0; i < playerList.length; i++) {
-              if (playerList[i].id === destroyedNode) {
+              if (playerList[i].id === destroyedPlayer) {
                 index = i;
               }
             }
@@ -1251,193 +1205,393 @@ var OPCode = require('../../opCode');
   }
 })();
 
-},{"../../opCode":11,"./Graph":2,"./KeyCode":3,"./WSController":4,"./models":7,"./polyfills":8,"./spells":10}],6:[function(require,module,exports){
+},{"../../opCode":16,"./DomElement":2,"./Graph":3,"./KeyCode":4,"./WSController":5,"./models":8,"./polyfills":13,"./spells":15}],7:[function(require,module,exports){
 'use strict';
 
-function Player(playerModel) {
-  playerModel = playerModel || {};
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  this.id = playerModel.id || -1;
-  this.ownerId = playerModel.ownerId || -1;
-  this.name = playerModel.name;
-  this.health = playerModel.health;
-  this.maxHealth = playerModel.maxHealth;
-  this.speed = 3;
-  this.acceleration = 0.1;
-  this.rotation = 0;
-  this.targetRotation = 0;
-  this.radius = 20;
-  this.mass = 20;
-  this.velocity = { x: 0, y: 0 };
-  this.stunned = 0;
-  this._baseFriction = 0.2;
-  this._baseRotationTicks = 10;
-  this._baseCastTicks = 10;
-  this._baseRadius = this.radius;
-  this.__maxRadius = 25;
-  this.__rotationTicks = this._baseRotationTicks;
-  this.__castTicks = this._baseCastTicks;
-  this.__friction = this._baseFriction;
-  this.__animateCast = false;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-  this.color = {
-    r: playerModel.r || 0,
-    g: playerModel.g | 0,
-    b: playerModel.b || 0
-  };
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-  this.position = {
-    x: playerModel.x || 0,
-    y: playerModel.y || 0
-  };
+var Player = function () {
+  function Player(playerModel) {
+    _classCallCheck(this, Player);
 
-  this.target = {
-    x: playerModel.targetX || playerModel.x || 0,
-    y: playerModel.targetY || playerModel.y || 0
-  };
-}
+    playerModel = playerModel || {};
 
-Player.prototype.calculateNextPosition = function (deltaT) {
-  if (typeof this.target.x !== 'undefined' && typeof this.target.y !== 'undefined') {
-    calculatePosition.call(this, deltaT);
-  }
-  if (typeof this.targetRotation !== 'undefined') {
-    calculateRotation.call(this, deltaT);
-  }
-  if (this.__animateCast) {
-    updateAnimation.call(this);
-  }
-};
-
-Player.prototype.onCast = function (spell) {
-  this.__animateCast = true;
-  this.targetRotation = Math.atan2(spell.target.y - this.position.y, spell.target.x - this.position.x);
-};
-
-Player.prototype.setTarget = function (x, y) {
-  this.targetRotation = Math.atan2(y - this.position.y, x - this.position.x);
-  var diff = Math.abs(this.targetRotation - this.rotation);
-
-  if (diff > Math.PI / 2) {
-    this.__friction = this._baseFriction;
-  }
-
-  this.target.x = x;
-  this.target.y = y;
-};
-
-module.exports = Player;
-
-function calculatePosition(deltaT) {
-  if (!arePositionsApproximatelyEqual(this.position, this.target) || this.stunned) {
-    if (this.__friction < 1) {
-      this.__friction += this.acceleration;
-    }
-
-    var speed = this.speed * this.__friction;
-    var velX = this.velocity.x;
-    var velY = this.velocity.y;
-    var velocity = 0,
-        fn;
-
-    if (!this.stunned) {
-      var vX = this.target.x - this.position.x;
-      var vY = this.target.y - this.position.y;
-      var distance = getHypotenuseLength(vX, vY);
-
-      velX = vX / distance * speed;
-      velY = vY / distance * speed;
-    }
-
-    if (Math.abs(this.velocity.x - velX) > this.acceleration) {
-      velocity = this.acceleration * Math.sign(velX);
-      fn = Math.sign(velX) !== 1 ? Math.max : Math.min;
-      this.velocity.x = fn(this.velocity.x + velocity, Math.sign(velX) * speed);
-    } else {
-      this.velocity.x = velX;
-    }
-
-    if (Math.abs(this.velocity.y - velY) > this.acceleration) {
-      velocity = this.acceleration * Math.sign(velY);
-      fn = Math.sign(velY) !== 1 ? Math.max : Math.min;
-      this.velocity.y = fn(this.velocity.y + velocity, Math.sign(velY) * speed);
-    } else {
-      this.velocity.y = velY;
-    }
-
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
-
-    if (this.stunned) {
-      this.velocity.x *= 1 - this.acceleration;
-      this.velocity.y *= 1 - this.acceleration;
-      this.target.x = this.position.x;
-      this.target.y = this.position.y;
-      this.stunned--;
-    }
-  } else {
-    this.__friction = this._baseFriction;
+    this.id = playerModel.id || -1;
+    this.ownerId = playerModel.ownerId || -1;
+    this.name = playerModel.name;
+    this.health = playerModel.health;
+    this.maxHealth = playerModel.maxHealth;
+    this.speed = 3;
+    this.acceleration = 0.1;
+    this.rotation = 0;
+    this.targetRotation = 0;
+    this.radius = 20;
+    this.mass = 20;
     this.velocity = { x: 0, y: 0 };
-  }
-}
+    this.stunned = 0;
+    this._baseFriction = 0.2;
+    this._baseRotationTicks = 10;
+    this._baseCastTicks = 10;
+    this._baseRadius = this.radius;
+    this.__maxRadius = 25;
+    this.__rotationTicks = this._baseRotationTicks;
+    this.__castTicks = this._baseCastTicks;
+    this.__friction = this._baseFriction;
+    this.__animateCast = false;
 
-function calculateRotation() {
-  if (Math.abs(this.rotation - this.targetRotation) > 1e-5) {
-    if (this.__rotationTicks > 0) {
-      if (this.rotation > Math.PI) {
-        this.rotation = -Math.PI - (Math.PI - Math.abs(this.rotation));
-      } else if (this.rotation < -Math.PI) {
-        this.rotation = Math.PI + (Math.PI - Math.abs(this.rotation));
+    this.color = {
+      r: playerModel.color.r || 0,
+      g: playerModel.color.g | 0,
+      b: playerModel.color.b || 0
+    };
+
+    this.position = {
+      x: playerModel.position.x || 0,
+      y: playerModel.position.y || 0
+    };
+
+    this.target = {
+      x: (playerModel.target ? playerModel.target.x : null) || playerModel.position.x || 0,
+      y: (playerModel.target ? playerModel.target.y : null) || playerModel.position.y || 0
+    };
+  }
+
+  _createClass(Player, [{
+    key: 'calculateNextPosition',
+    value: function calculateNextPosition(deltaT) {
+      if (typeof this.target.x !== 'undefined' && typeof this.target.y !== 'undefined') {
+        this._calculatePosition(deltaT);
       }
-      if (Math.abs(this.targetRotation - this.rotation) > Math.PI) {
-        var diffA = Math.PI - Math.abs(this.rotation);
-        var diffB = Math.PI - Math.abs(this.targetRotation);
-        var diff = diffA + diffB;
-        if (this.rotation > 0) {
-          this.rotation += diff / this.__rotationTicks;
+      if (typeof this.targetRotation !== 'undefined') {
+        this._calculateRotation(deltaT);
+      }
+      if (this.__animateCast) {
+        this._updateAnimation();
+      }
+    }
+  }, {
+    key: 'setTarget',
+    value: function setTarget(target) {
+      this.target = {
+        x: target.x,
+        y: target.y
+      };
+
+      this.targetRotation = Math.atan2(target.y - this.position.y, target.x - this.position.x);
+      var diff = Math.abs(this.targetRotation - this.rotation);
+
+      if (diff > Math.PI / 2) {
+        this.__friction = this._baseFriction;
+      }
+    }
+  }, {
+    key: 'onCast',
+    value: function onCast(spell) {
+      this.__animateCast = true;
+      this.targetRotation = Math.atan2(spell.target.y - this.position.y, spell.target.x - this.position.x);
+    }
+  }, {
+    key: '_calculatePosition',
+    value: function _calculatePosition(deltaT) {
+      if (!this._arePositionsApproximatelyEqual(this.position, this.target) || this.stunned) {
+        if (this.__friction < 1) {
+          this.__friction += this.acceleration;
+        }
+
+        var speed = this.speed * this.__friction;
+        var velX = this.velocity.x;
+        var velY = this.velocity.y;
+        var velocity = 0,
+            fn;
+
+        if (!this.stunned) {
+          var vX = this.target.x - this.position.x;
+          var vY = this.target.y - this.position.y;
+          var distance = this._getHypotenuseLength(vX, vY);
+
+          velX = vX / distance * speed;
+          velY = vY / distance * speed;
+        }
+
+        if (Math.abs(this.velocity.x - velX) > this.acceleration) {
+          velocity = this.acceleration * Math.sign(velX);
+          fn = Math.sign(velX) !== 1 ? Math.max : Math.min;
+          this.velocity.x = fn(this.velocity.x + velocity, Math.sign(velX) * speed);
         } else {
-          this.rotation -= diff / this.__rotationTicks;
+          this.velocity.x = velX;
+        }
+
+        if (Math.abs(this.velocity.y - velY) > this.acceleration) {
+          velocity = this.acceleration * Math.sign(velY);
+          fn = Math.sign(velY) !== 1 ? Math.max : Math.min;
+          this.velocity.y = fn(this.velocity.y + velocity, Math.sign(velY) * speed);
+        } else {
+          this.velocity.y = velY;
+        }
+
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+
+        if (this.stunned) {
+          this.velocity.x *= 1 - this.acceleration;
+          this.velocity.y *= 1 - this.acceleration;
+          this.target.x = this.position.x;
+          this.target.y = this.position.y;
+          this.stunned--;
         }
       } else {
-        this.rotation += (this.targetRotation - this.rotation) / this.__rotationTicks;
+        this.__friction = this._baseFriction;
+        this.velocity = { x: 0, y: 0 };
       }
-    } else {
-      this.rotation = this.targetRotation;
-      this.__rotationTicks = this._baseRotationTicks;
     }
-  }
-}
+  }, {
+    key: '_calculateRotation',
+    value: function _calculateRotation(deltaT) {
+      if (Math.abs(this.rotation - this.targetRotation) > 1e-5) {
+        if (this.__rotationTicks > 0) {
+          if (this.rotation > Math.PI) {
+            this.rotation = -Math.PI - (Math.PI - Math.abs(this.rotation));
+          } else if (this.rotation < -Math.PI) {
+            this.rotation = Math.PI + (Math.PI - Math.abs(this.rotation));
+          }
+          if (Math.abs(this.targetRotation - this.rotation) > Math.PI) {
+            var diffA = Math.PI - Math.abs(this.rotation);
+            var diffB = Math.PI - Math.abs(this.targetRotation);
+            var diff = diffA + diffB;
+            if (this.rotation > 0) {
+              this.rotation += diff / this.__rotationTicks;
+            } else {
+              this.rotation -= diff / this.__rotationTicks;
+            }
+          } else {
+            this.rotation += (this.targetRotation - this.rotation) / this.__rotationTicks;
+          }
+        } else {
+          this.rotation = this.targetRotation;
+          this.__rotationTicks = this._baseRotationTicks;
+        }
+      }
+    }
+  }, {
+    key: '_updateAnimation',
+    value: function _updateAnimation() {
+      if (this.__castTicks > 0) {
+        var sign = Math.sign(this.__castTicks - this._baseCastTicks / 2);
+        this.radius += sign * (this.__maxRadius - this.radius) / 4;
+        this.__castTicks--;
+      } else {
+        this.radius = this._baseRadius;
+        this.__castTicks = this._baseCastTicks;
+        this.__animateCast = false;
+        this.targetRotation = Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
+      }
+    }
+  }, {
+    key: '_getHypotenuseLength',
+    value: function _getHypotenuseLength(x, y) {
+      return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+    }
+  }, {
+    key: '_arePositionsApproximatelyEqual',
+    value: function _arePositionsApproximatelyEqual(positionA, positionB) {
+      var errorMargin = 5;
+      return Math.abs(positionA.x - positionB.x) < errorMargin && Math.abs(positionA.y - positionB.y) < errorMargin;
+    }
+  }]);
 
-function updateAnimation() {
-  if (this.__castTicks > 0) {
-    var sign = Math.sign(this.__castTicks - this._baseCastTicks / 2);
-    this.radius += sign * (this.__maxRadius - this.radius) / 4;
-    this.__castTicks--;
-  } else {
-    this.radius = this._baseRadius;
-    this.__castTicks = this._baseCastTicks;
-    this.__animateCast = false;
-    this.targetRotation = Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
-  }
-}
+  return Player;
+}();
 
-function getHypotenuseLength(x, y) {
-  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-}
+exports.default = Player;
 
-function arePositionsApproximatelyEqual(positionA, positionB) {
-  var errorMargin = 5;
-  return Math.abs(positionA.x - positionB.x) < errorMargin && Math.abs(positionA.y - positionB.y) < errorMargin;
-}
-
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
-module.exports = {
-  Player: require('./Player.js')
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _Player = require('./Player');
+
+Object.defineProperty(exports, 'Player', {
+  enumerable: true,
+  get: function get() {
+    return _Player.default;
+  }
+});
+
+},{"./Player":7}],9:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  mapping: {
+    id: { type: 'string', length: 32 },
+    ownerId: { type: 'string', length: 32 },
+    name: 'string',
+    health: 'uint16le',
+    maxHealth: 'uint16le',
+    x: 'float32le',
+    y: 'float32le',
+    r: 'uint8',
+    g: 'uint8',
+    b: 'uint8'
+  },
+  transform: function transform(player) {
+    return {
+      id: player.id,
+      ownerId: player.ownerId,
+      name: player.name,
+      health: player.health,
+      maxHealth: player.maxHealth,
+      position: { x: player.x, y: player.y },
+      color: { r: player.r, g: player.g, b: player.b }
+    };
+  }
 };
 
-},{"./Player.js":6}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  mapping: {
+    updatedPlayers: [{
+      id: { type: 'string', length: 32 },
+      ownerId: { type: 'string', length: 32 },
+      name: 'string',
+      health: 'unint16le',
+      maxHealth: 'uint16le',
+      x: 'float32le',
+      y: 'float32le',
+      targetX: 'float32le',
+      targetY: 'float32le',
+      r: 'uint8',
+      g: 'uint8',
+      b: 'uint8'
+    }],
+    destroyedPlayers: [{
+      id: { type: 'string', length: 32 }
+    }]
+  },
+  transform: function transform(object) {
+    var updatedPlayers = object.updatedPlayers.map(function (player) {
+      return {
+        id: player.id,
+        ownerId: player.ownerId,
+        name: player.health,
+        maxHealth: player.maxHealth,
+        position: { x: player.x, y: player.y },
+        target: { x: player.targetX, y: player.targetY },
+        color: { r: player.r, g: player.g, b: player.b }
+      };
+    });
+    var destroyedPlayers = object.destroyedPlayers.map(function (player) {
+      return player.id;
+    });
+
+    return {
+      updatedPlayers: updatedPlayers,
+      destroyedPlayers: destroyedPlayers
+    };
+  }
+};
+
+},{}],11:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  mapping: {
+    updatedSpells: [{
+      id: { type: 'string', length: 32 },
+      ownerId: { type: 'string', length: 32 },
+      type: 'uint8',
+      mass: 'uint8',
+      power: 'uint8',
+      x: 'float32le',
+      y: 'float32le',
+      targetX: 'float32le',
+      targetY: 'float32le',
+      r: 'uint8',
+      g: 'uint8',
+      b: 'uint8'
+    }],
+    destroyedSpells: [{
+      id: { type: 'string', length: 32 }
+    }]
+  },
+  transform: function transform(object) {
+    var updatedSpells = object.updatedSpells.map(function (spell) {
+      return {
+        id: spell.id,
+        ownerId: spell.ownerId,
+        type: spell.type,
+        mass: spell.mass,
+        power: spell.power,
+        position: { x: spell.x, y: spell.y },
+        target: { x: spell.targetX, y: spell.targetY },
+        color: { r: spell.r, g: spell.g, b: spell.b }
+      };
+    });
+    var destroyedSpells = object.destroyedSpells.map(function (spell) {
+      return spell.id;
+    });
+
+    return {
+      updatedSpells: updatedSpells,
+      destroyedSpells: destroyedSpells
+    };
+  }
+};
+
+},{}],12:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _AddPlayer = require('./AddPlayer');
+
+Object.defineProperty(exports, 'AddPlayer', {
+  enumerable: true,
+  get: function get() {
+    return _AddPlayer.default;
+  }
+});
+
+var _UpdatePlayers = require('./UpdatePlayers');
+
+Object.defineProperty(exports, 'UpdatePlayers', {
+  enumerable: true,
+  get: function get() {
+    return _UpdatePlayers.default;
+  }
+});
+
+var _UpdateSpells = require('./UpdateSpells');
+
+Object.defineProperty(exports, 'UpdateSpells', {
+  enumerable: true,
+  get: function get() {
+    return _UpdateSpells.default;
+  }
+});
+
+},{"./AddPlayer":9,"./UpdatePlayers":10,"./UpdateSpells":11}],13:[function(require,module,exports){
 'use strict';
 
 if (!Array.prototype.find) {
@@ -1492,88 +1646,114 @@ if (!Date.now) {
   }
 })();
 
-},{}],9:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
-function Primary(spellModel) {
-  this.id = spellModel.id;
-  this.ownerId = spellModel.ownerId;
-  this.type = spellModel.type;
-  this.mass = spellModel.mass;
-  this.power = spellModel.power;
-  this.velocity = { x: 0, y: 0 };
-  this.speed = 5;
-  this.radius = 10;
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  this.position = {
-    x: spellModel.x,
-    y: spellModel.y
-  };
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-  this.color = {
-    r: spellModel.r,
-    g: spellModel.g,
-    b: spellModel.b
-  };
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-  setTarget.call(this, spellModel.targetX, spellModel.targetY);
-}
+var Primary = function () {
+  function Primary(spellModel) {
+    _classCallCheck(this, Primary);
 
-Primary.prototype.calculateNextPosition = function () {
-  if (typeof this.velocity.x !== 'undefined' && typeof this.velocity.y !== 'undefined') {
-    calculatePosition.call(this);
+    this.id = spellModel.id;
+    this.ownerId = spellModel.ownerId;
+    this.type = spellModel.type;
+    this.mass = spellModel.mass;
+    this.power = spellModel.power;
+    this.velocity = { x: 0, y: 0 };
+    this.speed = 5;
+    this.radius = 10;
+
+    this.color = spellModel.color || { r: 0, g: 0, b: 0 };
+    this.position = spellModel.position || { x: 0, y: 0 };
+
+    this.setTarget(spellModel.target);
   }
-};
 
-Primary.prototype.onAdd = function (owner) {
-  owner.onCast(this);
-};
+  _createClass(Primary, [{
+    key: 'calculateNextPosition',
+    value: function calculateNextPosition() {
+      if (typeof this.velocity.x !== 'undefined' && typeof this.velocity.y !== 'undefined') {
+        this._calculatePosition.call(this);
+      }
+    }
+  }, {
+    key: 'onAdd',
+    value: function onAdd(owner) {
+      owner.onCast(this);
+    }
+  }, {
+    key: 'onCollision',
+    value: function onCollision(model) {
+      model.health -= this.power;
 
-Primary.prototype.onCollision = function (model) {
-  model.health -= 10;
+      model.velocity.x += this.power * this.mass * this.velocity.x / model.mass;
+      model.velocity.y += this.power * this.mass * this.velocity.y / model.mass;
 
-  model.velocity.x += this.power * this.mass * this.velocity.x / model.mass;
-  model.velocity.y += this.power * this.mass * this.velocity.y / model.mass;
+      model.stunned = 50;
+    }
+  }, {
+    key: 'setTarget',
+    value: function setTarget(target) {
+      this.target = {
+        x: target.x,
+        y: target.y
+      };
 
-  model.stunned = 50;
-};
+      var vX = this.target.x - this.position.x;
+      var vY = this.target.y - this.position.y;
+      var distance = this._getHypotenuseLength(vX, vY);
 
-module.exports = Primary;
+      this.velocity = {
+        x: vX / distance,
+        y: vY / distance
+      };
+    }
+  }, {
+    key: '_calculatePosition',
+    value: function _calculatePosition() {
+      this.position = {
+        x: this.position.x + this.velocity.x * this.speed,
+        y: this.position.y + this.velocity.y * this.speed
+      };
+    }
+  }, {
+    key: '_getHypotenuseLength',
+    value: function _getHypotenuseLength(x, y) {
+      return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+    }
+  }]);
 
-function calculatePosition() {
-  this.position = {
-    x: this.position.x + this.velocity.x * this.speed,
-    y: this.position.y + this.velocity.y * this.speed
-  };
-}
+  return Primary;
+}();
 
-function getHypotenuseLength(x, y) {
-  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-}
+exports.default = Primary;
 
-function setTarget(x, y) {
-  this.target = { x: x, y: y };
-
-  var vX = this.target.x - this.position.x;
-  var vY = this.target.y - this.position.y;
-  var distance = getHypotenuseLength(vX, vY);
-
-  this.velocity = {
-    x: vX / distance,
-    y: vY / distance
-  };
-}
-
-},{}],10:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _Primary = require('./Primary');
+
+Object.defineProperty(exports, 'Primary', {
+  enumerable: true,
+  get: function get() {
+    return _Primary.default;
+  }
+});
+exports.get = get;
 var OPCode = require('../../../opCode');
 
-module.exports = {
-  Primary: require('./Primary')
-};
-
-module.exports.get = function (code) {
+function get(code) {
   var spell = null;
 
   switch (code) {
@@ -1583,9 +1763,9 @@ module.exports.get = function (code) {
   }
 
   return spell;
-};
+}
 
-},{"../../../opCode":11,"./Primary":9}],11:[function(require,module,exports){
+},{"../../../opCode":16,"./Primary":14}],16:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -1615,7 +1795,7 @@ module.exports = {
   "DIRECTION_SEAST": 0X1B
 };
 
-},{}]},{},[5])
+},{}]},{},[6])
 
 
 //# sourceMappingURL=game.js.map

@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   MAC_ENTER: 3,
   BACKSPACE: 8,
   TAB: 9,

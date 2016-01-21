@@ -1,6 +1,6 @@
 const uuid = require('node-uuid');
 const OPCode = require('../opCode');
-const Packet = require('./packet');
+const Packets = require('./packets');
 const Spells = require('./spells');
 
 function PlayerController(gameServer, socket) {
@@ -60,14 +60,14 @@ PlayerController.prototype.cast = function (type, options) {
 
 PlayerController.prototype.update = function () {
   if (this.nodeAdditionQueue.length > 0 || this.nodeDestroyQueue.length > 0) {
-    this.socket.sendPacket(new Packet.UpdatePlayers(this.nodeDestroyQueue, this.nodeAdditionQueue));
+    this.socket.sendPacket(new Packets.UpdatePlayers(this.nodeDestroyQueue, this.nodeAdditionQueue));
   }
   
   this.nodeDestroyQueue = [];
   this.nodeAdditionQueue = [];
   
   if (this.spellAdditionQueue.length > 0 || this.spellDestroyQueue.length > 0) {
-    this.socket.sendPacket(new Packet.UpdateSpells(this.spellDestroyQueue, this.spellAdditionQueue));
+    this.socket.sendPacket(new Packets.UpdateSpells(this.spellDestroyQueue, this.spellAdditionQueue));
   }
   
   this.spellAdditionQueue = [];
