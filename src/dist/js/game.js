@@ -739,7 +739,7 @@ function getDefaultHeight() {
   return window.innerHeight && document.documentElement.clientHeight ? Math.min(window.innerHeight, document.documentElement.clientHeight) : window.innerHeight || document.documentElement.clientHeight || document.getElementsByTagName('body')[0].clientHeight;
 }
 
-},{"../../opCode":16}],4:[function(require,module,exports){
+},{"../../opCode":17}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -954,7 +954,7 @@ var WSController = function () {
 
 exports.default = WSController;
 
-},{"../../opCode":16,"./packets/index":12,"buffercodec":1}],6:[function(require,module,exports){
+},{"../../opCode":17,"./packets/index":12,"buffercodec":1}],6:[function(require,module,exports){
 'use strict';
 
 var _KeyCode = require('./KeyCode');
@@ -972,6 +972,10 @@ var _WSController2 = _interopRequireDefault(_WSController);
 var _DomElement = require('./DomElement');
 
 var _DomElement2 = _interopRequireDefault(_DomElement);
+
+var _SmartMap = require('./util/SmartMap');
+
+var _SmartMap2 = _interopRequireDefault(_SmartMap);
 
 var _spells = require('./spells');
 
@@ -997,6 +1001,7 @@ var OPCode = require('../../opCode');
   var mouse = { x: 0, y: 0 };
   var scrollDirection = null;
 
+  var _playerList = new _SmartMap2.default();
   var playerList = [];
   var spellList = [];
   var currentPlayer = null;
@@ -1147,7 +1152,7 @@ var OPCode = require('../../opCode');
               var player = new Models.Player(updatedPlayer);
               playerList.splice(0, 0, player);
             } else {
-              found[0].setTarget(updatedPlayer.targetX, updatedPlayer.targetY);
+              found[0].setTarget(updatedPlayer.target);
             }
           });
         }
@@ -1205,7 +1210,7 @@ var OPCode = require('../../opCode');
   }
 })();
 
-},{"../../opCode":16,"./DomElement":2,"./Graph":3,"./KeyCode":4,"./WSController":5,"./models":8,"./polyfills":13,"./spells":15}],7:[function(require,module,exports){
+},{"../../opCode":17,"./DomElement":2,"./Graph":3,"./KeyCode":4,"./WSController":5,"./models":8,"./polyfills":13,"./spells":15,"./util/SmartMap":16}],7:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1765,7 +1770,96 @@ function get(code) {
   return spell;
 }
 
-},{"../../../opCode":16,"./Primary":14}],16:[function(require,module,exports){
+},{"../../../opCode":17,"./Primary":14}],16:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var SmartMap = function () {
+  function SmartMap() {
+    _classCallCheck(this, SmartMap);
+
+    this._head = null;
+    this._tail = null;
+    this._position = null;
+    this._keys = {};
+    this.length = 0;
+  }
+
+  _createClass(SmartMap, [{
+    key: "set",
+    value: function set(key, value) {
+      if (!this._keys[key]) {
+        var node = { v: value };
+
+        if (this.length === 0) {
+          this._head = this._tail = node;
+          this.rwd();
+        } else {
+          node.p = this._tail;
+          this._tail.n = node;
+          this._tail = node;
+        }
+
+        this._keys[key] = node;
+
+        this.len++;
+      }
+    }
+  }, {
+    key: "delete",
+    value: function _delete(key) {
+      var v;
+      var node = this._keys[key];
+
+      if (node) {
+        v = node.v;
+
+        if (node.p) node.p.n = node.n;
+        if (node.n) node.n.p = node.p;
+
+        this._keys[key] = null;
+        this.len--;
+      }
+
+      return v;
+    }
+  }, {
+    key: "get",
+    value: function get(key) {
+      return this._keys[key];
+    }
+  }, {
+    key: "itr",
+    value: function itr() {
+      return this._position = this._position.n;
+    }
+  }, {
+    key: "rwd",
+    value: function rwd() {
+      this._position = { n: this._head };
+    }
+  }, {
+    key: "empty",
+    value: function empty() {
+      this._keys = {};
+      this._head = this._tail = this._position = null;
+      this.length = 0;
+    }
+  }]);
+
+  return SmartMap;
+}();
+
+exports.default = SmartMap;
+
+},{}],17:[function(require,module,exports){
 "use strict";
 
 module.exports = {

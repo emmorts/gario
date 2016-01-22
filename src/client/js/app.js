@@ -7,6 +7,7 @@ import KeyCode from './KeyCode';
 import Graph from './Graph';
 import WSController from './WSController';
 import DomElement from './DomElement';
+import SmartMap from './util/SmartMap';
 import * as Spells from './spells';
 
 (function () {
@@ -20,6 +21,7 @@ import * as Spells from './spells';
   var mouse = { x: 0, y: 0 };
   var scrollDirection = null;
 
+  var _playerList = new SmartMap();
   var playerList = [];
   var spellList = [];
   var currentPlayer = null;
@@ -170,7 +172,7 @@ import * as Spells from './spells';
               var player = new Models.Player(updatedPlayer);
               playerList.splice(0, 0, player);
             } else {
-              found[0].setTarget(updatedPlayer.targetX, updatedPlayer.targetY);
+              found[0].setTarget(updatedPlayer.target);
             }
           });
         }
