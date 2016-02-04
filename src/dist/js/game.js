@@ -376,6 +376,157 @@ BufferCodec.prototype.parse = function (template, transform) {
 
 module.exports = BufferCodec;
 },{}],2:[function(require,module,exports){
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global.Immutable = factory());
+})(this, function () {
+  var SmartMap = function () {
+    if (arguments.length === 0) {
+      _warn("Unable to initialize SmartMap, no indices provided.");
+      return;
+    }
+    this.indices = Array.prototype.slice.call(arguments);
+    this.length = 0;
+    this._head = null;
+    this._tail = null;
+    this._position = null;
+    this._keys = {};
+    this._debug = true;
+  }
+  
+  SmartMap.prototype.add = function (object) {
+    if (this.indices.length > 0) {
+      var node = { v: Object.seal(object) };
+      
+      this.indices.forEach(function (index) {
+        if (!(index in this._keys)) {
+          this._keys[index] = {};
+        }
+        
+        if (index in object) {
+          var key = object[index];
+          
+          if (this.length === 0) {
+            this._head = this._tail = node;
+            this.reset();
+          } else {
+            node.p = this._tail;
+            this._tail.n = node;
+            this._tail = node;
+          }
+          
+          this._keys[index][key] = node;
+          
+        } else {
+          _warn("Index `" + index + "` doesn't exist in given object.");
+        }
+      }.bind(this));
+      
+      this.length++;
+    }
+  }
+  
+  SmartMap.prototype.get = function (key, index) {
+    if (index in this._keys) {
+      if (key in this._keys[index]) {
+        return this._keys[index][key].v;
+      } else {
+        _warn("Undefined key `" + key + "` in index `" + index + "`.");
+      }
+    } else {
+      _warn("Undefined index `" + index + "`.");
+    }
+    
+    return undefined;
+  }
+  
+  SmartMap.prototype.delete = function (key, index) {
+    if (index in this._keys && key in this._keys[index]) {
+      var object;
+      var node = this._keys[index][key];
+
+      if (node) {
+        object = node.v;
+
+        if (node.p) node.p.n = node.n;
+        if (node.n) node.n.p = node.p;
+
+        this._keys[index][key] = null;
+        this.length--;
+      }
+
+      return object;
+    }
+    
+    return undefined;
+  }
+  
+  SmartMap.prototype.reset = function () {
+    this._position = { n: this._head };
+  }
+  
+  SmartMap.prototype.empty = function () {
+    this._keys = {};
+    this._head = this._tail = this._position = null;
+    this.length = 0;
+  };
+  
+  SmartMap.prototype.forEach = function (fn, thisArg) {
+    var tmp, index = 0;
+    
+    if (this.length) {
+      while (tmp = _next.call(this)) {
+        if (thisArg) {
+          fn.call(thisArg, tmp.v, index);
+        } else {
+          fn(tmp.v, index);
+        }
+        index++;
+      }
+      
+      this.reset();
+    }
+  }
+  
+  SmartMap.prototype.find = function (predicate, thisArg) {
+    var tmp, result;
+    
+    if (this.length) {
+      while (tmp = _next.call(this)) {
+        var passes = thisArg ? predicate.call(this, tmp.v) : predicate(tmp.v);
+        if (passes) {
+          result = tmp.v;
+          this.reset();
+          break;
+        }
+      }
+    }
+    
+    return result;
+  }
+  
+  return SmartMap;
+  
+  function _validateObject(object) {
+    var validatedProperties = 0;
+    for (var property in object) {
+      if (~this.indices.indexOf(property)) validatedProperties++;
+    }
+    return validatedProperties === this.indices.length;
+  }
+  
+  function _next() {
+    return this._position = this._position.n;
+  }
+  
+  function _warn(message) {
+    if (this._debug) {
+      console.warn(message);
+    }
+  }
+});
+},{}],3:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -424,7 +575,7 @@ var DomElement = function () {
 
 exports.default = DomElement;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -648,14 +799,10 @@ var Graph = function () {
     }
   }, {
     key: 'drawPlayers',
-    value: function drawPlayers() {
+    value: function drawPlayers(playerList) {
       var _this = this;
 
-      var playerList = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
-
-      var currentPlayer = playerList.find(function (player) {
-        return player.id === _this.player.id;
-      });
+      var currentPlayer = playerList.get(this.player.id);
       if (currentPlayer) {
         this.player.position.x = currentPlayer.position.x;
         this.player.position.y = currentPlayer.position.y;
@@ -739,7 +886,7 @@ function getDefaultHeight() {
   return window.innerHeight && document.documentElement.clientHeight ? Math.min(window.innerHeight, document.documentElement.clientHeight) : window.innerHeight || document.documentElement.clientHeight || document.getElementsByTagName('body')[0].clientHeight;
 }
 
-},{"../../opCode":17}],4:[function(require,module,exports){
+},{"../../opCode":17}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -836,7 +983,7 @@ exports.default = {
   F12: 123
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -954,8 +1101,12 @@ var WSController = function () {
 
 exports.default = WSController;
 
-},{"../../opCode":17,"./packets/index":12,"buffercodec":1}],6:[function(require,module,exports){
+},{"../../opCode":17,"./packets/index":13,"buffercodec":1}],7:[function(require,module,exports){
 'use strict';
+
+var _smartmap = require('smartmap');
+
+var _smartmap2 = _interopRequireDefault(_smartmap);
 
 var _KeyCode = require('./KeyCode');
 
@@ -972,10 +1123,6 @@ var _WSController2 = _interopRequireDefault(_WSController);
 var _DomElement = require('./DomElement');
 
 var _DomElement2 = _interopRequireDefault(_DomElement);
-
-var _SmartMap = require('./util/SmartMap');
-
-var _SmartMap2 = _interopRequireDefault(_SmartMap);
 
 var _spells = require('./spells');
 
@@ -1001,9 +1148,8 @@ var OPCode = require('../../opCode');
   var mouse = { x: 0, y: 0 };
   var scrollDirection = null;
 
-  var _playerList = new _SmartMap2.default();
-  var playerList = [];
-  var spellList = [];
+  var playerList = new _smartmap2.default('id', 'ownerId');
+  var spellList = new _smartmap2.default('id');
   var currentPlayer = null;
 
   var canvas = new _DomElement2.default('.js-canvas', _Graph2.default);
@@ -1115,7 +1261,7 @@ var OPCode = require('../../opCode');
             var targetY = mouse.y + graph.yOffset;
             targetX = Math.min(Math.max(targetX, 0), graph._gameWidth);
             targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
-            currentPlayer.setTarget(targetX, targetY);
+            currentPlayer.setTarget({ x: targetX, y: targetY });
             targetTick = now;
             ws.move(currentPlayer);
           }
@@ -1138,21 +1284,19 @@ var OPCode = require('../../opCode');
       ws.on('addPlayer', function (node) {
         currentPlayer = new Models.Player(node);
         graph.player = currentPlayer;
-        playerList.push(currentPlayer);
+        playerList.add(currentPlayer);
       });
 
       ws.on('updatePlayers', function (players) {
         var updatedPlayers = players.updatedPlayers;
         if (updatedPlayers && updatedPlayers.length > 0) {
           updatedPlayers.forEach(function (updatedPlayer) {
-            var found = playerList.filter(function (player) {
-              return player.id === updatedPlayer.id;
-            });
-            if (found.length === 0) {
-              var player = new Models.Player(updatedPlayer);
-              playerList.splice(0, 0, player);
+            var foundPlayer = playerList.get(updatedPlayer.id, 'id');
+            if (foundPlayer) {
+              foundPlayer.setTarget(updatedPlayer.target);
             } else {
-              found[0].setTarget(updatedPlayer.target);
+              var player = new Models.Player(updatedPlayer);
+              playerList.add(player);
             }
           });
         }
@@ -1160,15 +1304,7 @@ var OPCode = require('../../opCode');
         var destroyedPlayers = players.destroyedPlayers;
         if (destroyedPlayers && destroyedPlayers.length > 0) {
           destroyedPlayers.forEach(function (destroyedPlayer) {
-            var index = -1;
-            for (var i = 0; i < playerList.length; i++) {
-              if (playerList[i].id === destroyedPlayer) {
-                index = i;
-              }
-            }
-            if (index !== -1) {
-              playerList.splice(index, 1);
-            }
+            return playerList.delete(destroyedPlayer);
           });
         }
       });
@@ -1179,25 +1315,15 @@ var OPCode = require('../../opCode');
           updatedSpells.forEach(function (updatedSpell) {
             var SpellClass = Spells.get(updatedSpell.type);
             var spell = new SpellClass(updatedSpell);
-            spell.onAdd(playerList.find(function (p) {
-              return p.ownerId === spell.ownerId;
-            }));
-            spellList.splice(0, 0, spell);
+            spell.onAdd(playerList.get(spell.ownerId, 'ownerId'));
+            spellList.add(spell);
           });
         }
 
         var destroyedSpells = spells.destroyedSpells;
         if (destroyedSpells && destroyedSpells.length > 0) {
           destroyedSpells.forEach(function (destroyedSpell) {
-            var index = -1;
-            for (var i = 0; i < spellList.length; i++) {
-              if (spellList[i].id === destroyedSpell) {
-                index = i;
-              }
-            }
-            if (index !== -1) {
-              spellList.splice(index, 1);
-            }
+            return spellList.delete(destroyedSpell);
           });
         }
       });
@@ -1210,7 +1336,7 @@ var OPCode = require('../../opCode');
   }
 })();
 
-},{"../../opCode":17,"./DomElement":2,"./Graph":3,"./KeyCode":4,"./WSController":5,"./models":8,"./polyfills":13,"./spells":15,"./util/SmartMap":16}],7:[function(require,module,exports){
+},{"../../opCode":17,"./DomElement":3,"./Graph":4,"./KeyCode":5,"./WSController":6,"./models":9,"./polyfills":14,"./spells":16,"smartmap":2}],8:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1415,7 +1541,7 @@ var Player = function () {
 
 exports.default = Player;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1431,7 +1557,7 @@ Object.defineProperty(exports, 'Player', {
   }
 });
 
-},{"./Player":7}],9:[function(require,module,exports){
+},{"./Player":8}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1463,7 +1589,7 @@ exports.default = {
   }
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1512,7 +1638,7 @@ exports.default = {
   }
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1562,7 +1688,7 @@ exports.default = {
   }
 };
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1596,7 +1722,7 @@ Object.defineProperty(exports, 'UpdateSpells', {
   }
 });
 
-},{"./AddPlayer":9,"./UpdatePlayers":10,"./UpdateSpells":11}],13:[function(require,module,exports){
+},{"./AddPlayer":10,"./UpdatePlayers":11,"./UpdateSpells":12}],14:[function(require,module,exports){
 'use strict';
 
 if (!Array.prototype.find) {
@@ -1651,7 +1777,7 @@ if (!Date.now) {
   }
 })();
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1740,7 +1866,7 @@ var Primary = function () {
 
 exports.default = Primary;
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1770,96 +1896,7 @@ function get(code) {
   return spell;
 }
 
-},{"../../../opCode":17,"./Primary":14}],16:[function(require,module,exports){
-"use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var SmartMap = function () {
-  function SmartMap() {
-    _classCallCheck(this, SmartMap);
-
-    this._head = null;
-    this._tail = null;
-    this._position = null;
-    this._keys = {};
-    this.length = 0;
-  }
-
-  _createClass(SmartMap, [{
-    key: "set",
-    value: function set(key, value) {
-      if (!this._keys[key]) {
-        var node = { v: value };
-
-        if (this.length === 0) {
-          this._head = this._tail = node;
-          this.rwd();
-        } else {
-          node.p = this._tail;
-          this._tail.n = node;
-          this._tail = node;
-        }
-
-        this._keys[key] = node;
-
-        this.len++;
-      }
-    }
-  }, {
-    key: "delete",
-    value: function _delete(key) {
-      var v;
-      var node = this._keys[key];
-
-      if (node) {
-        v = node.v;
-
-        if (node.p) node.p.n = node.n;
-        if (node.n) node.n.p = node.p;
-
-        this._keys[key] = null;
-        this.len--;
-      }
-
-      return v;
-    }
-  }, {
-    key: "get",
-    value: function get(key) {
-      return this._keys[key];
-    }
-  }, {
-    key: "itr",
-    value: function itr() {
-      return this._position = this._position.n;
-    }
-  }, {
-    key: "rwd",
-    value: function rwd() {
-      this._position = { n: this._head };
-    }
-  }, {
-    key: "empty",
-    value: function empty() {
-      this._keys = {};
-      this._head = this._tail = this._position = null;
-      this.length = 0;
-    }
-  }]);
-
-  return SmartMap;
-}();
-
-exports.default = SmartMap;
-
-},{}],17:[function(require,module,exports){
+},{"../../../opCode":17,"./Primary":15}],17:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -1889,7 +1926,7 @@ module.exports = {
   "DIRECTION_SEAST": 0X1B
 };
 
-},{}]},{},[6])
+},{}]},{},[7])
 
 
 //# sourceMappingURL=game.js.map

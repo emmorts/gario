@@ -198,8 +198,8 @@ export default class Graph {
     return this;
   }
   
-  drawPlayers(playerList = []) {
-    var currentPlayer = playerList.find(player => player.id === this.player.id);
+  drawPlayers(playerList) {
+    var currentPlayer = playerList.get(this.player.id, 'id');
     if (currentPlayer) {
       this.player.position.x = currentPlayer.position.x;
       this.player.position.y = currentPlayer.position.y;

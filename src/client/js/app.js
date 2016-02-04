@@ -3,11 +3,11 @@ require('./polyfills');
 var Models = require('./models');
 var OPCode = require('../../opCode');
 
+import SmartMap from 'smartmap';
 import KeyCode from './KeyCode';
 import Graph from './Graph';
 import WSController from './WSController';
 import DomElement from './DomElement';
-import SmartMap from './util/SmartMap';
 import * as Spells from './spells';
 
 (function () {
@@ -21,9 +21,8 @@ import * as Spells from './spells';
   var mouse = { x: 0, y: 0 };
   var scrollDirection = null;
 
-  var _playerList = new SmartMap();
-  var playerList = [];
-  var spellList = [];
+  var playerList = new SmartMap('id', 'ownerId');
+  var spellList = new SmartMap('id');
   var currentPlayer = null;
 
   var canvas = new DomElement('.js-canvas', Graph);
@@ -136,7 +135,7 @@ import * as Spells from './spells';
             var targetY = mouse.y + graph.yOffset;
             targetX = Math.min(Math.max(targetX, 0), graph._gameWidth);
             targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
-            currentPlayer.setTarget(targetX, targetY);
+            currentPlayer.setTarget({ x: targetX, y: targetY});
             targetTick = now;
             ws.move(currentPlayer);
           }
@@ -160,36 +159,26 @@ import * as Spells from './spells';
       ws.on('addPlayer', function (node) {
         currentPlayer = new Models.Player(node);
         graph.player = currentPlayer;
-        playerList.push(currentPlayer);
+        playerList.add(currentPlayer);
       });
       
       ws.on('updatePlayers', function (players) {
         var updatedPlayers = players.updatedPlayers;
         if (updatedPlayers && updatedPlayers.length > 0) {
-          updatedPlayers.forEach(function (updatedPlayer) {
-            var found = playerList.filter(player=> player.id === updatedPlayer.id);
-            if (found.length === 0) {
-              var player = new Models.Player(updatedPlayer);
-              playerList.splice(0, 0, player);
+          updatedPlayers.forEach(updatedPlayer => {
+            var foundPlayer = playerList.get(updatedPlayer.id, 'id');
+            if (foundPlayer) {
+              foundPlayer.setTarget(updatedPlayer.target);
             } else {
-              found[0].setTarget(updatedPlayer.target);
+              var player = new Models.Player(updatedPlayer);
+              playerList.add(player);
             }
           });
         }
         
         var destroyedPlayers = players.destroyedPlayers;
         if (destroyedPlayers && destroyedPlayers.length > 0) {
-          destroyedPlayers.forEach(function (destroyedPlayer) {
-            var index = -1;
-            for (var i = 0; i < playerList.length; i++) {
-              if (playerList[i].id === destroyedPlayer) {
-                index = i;
-              }
-            }
-            if (index !== -1) {
-              playerList.splice(index, 1);
-            }
-          });
+          destroyedPlayers.forEach(destroyedPlayer => playerList.delete(destroyedPlayer));
         }
       });
       
@@ -199,24 +188,14 @@ import * as Spells from './spells';
           updatedSpells.forEach(function (updatedSpell) {
             var SpellClass = Spells.get(updatedSpell.type);
             var spell = new SpellClass(updatedSpell);
-            spell.onAdd(playerList.find(p => p.ownerId === spell.ownerId));
-            spellList.splice(0, 0, spell);
+            spell.onAdd(playerList.get(spell.ownerId, 'ownerId'));
+            spellList.add(spell);
           });
         }
         
         var destroyedSpells = spells.destroyedSpells;
         if (destroyedSpells && destroyedSpells.length > 0) {
-          destroyedSpells.forEach(function (destroyedSpell) {
-            var index = -1;
-            for (var i = 0; i < spellList.length; i++) {
-              if (spellList[i].id === destroyedSpell) {
-                index = i;
-              }
-            }
-            if (index !== -1) {
-              spellList.splice(index, 1);
-            }
-          });
+          destroyedSpells.forEach(destroyedSpell => spellList.delete(destroyedSpell));
         }
       });
       

@@ -1,18 +1,24 @@
 {
   "name": "gario",
   "version": "1.0.0",
-  "description": "",
+  "description": "Experimental game with binary WebSockets",
   "main": "index.js",
   "scripts": {
     "start": "nodemon --watch src/server --use-strict src/server/server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emmorts/gario.git"
+  },
+  "homepage": "https://github.com/emmorts/gario#readme",
   "author": "Tomas Stropus",
   "license": "ISC",
   "dependencies": {
     "buffercodec": "*.*.*",
     "express": "^4.13.3",
     "node-uuid": "^1.4.7",
+    "smartmap": "*.*.*",
     "ws": "^0.8.1"
   },
   "devDependencies": {

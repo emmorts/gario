@@ -7,13 +7,17 @@ export default class SmartMap {
     this.length = 0;
   }
 
+  get(key) {
+    return this._keys[key] ? this._keys[key].v : undefined;
+  }
+
   set(key, value) {
     if (!this._keys[key]) {
       var node = { v: value };
 
       if (this.length === 0) {
         this._head = this._tail = node;
-        this.rwd();
+        this.reset();
       } else {
         node.p = this._tail;
         this._tail.n = node;
@@ -22,7 +26,7 @@ export default class SmartMap {
       
       this._keys[key] = node;
 
-      this.len++;
+      this.length++;
     }
   }
   
@@ -37,21 +41,33 @@ export default class SmartMap {
       if (node.n) node.n.p = node.p;
 
       this._keys[key] = null;
-      this.len--;
+      this.length--;
     }
 
     return v;
   }
+  
+  forEach(fn, thisArg) {
+    var tmp, index = 0;
+    if (this.length) {
+      while (tmp = this.iterate()) {
+        if (thisArg) {
+          fn(tmp.v, index).bind(thisArg);
+        } else {
+          fn(tmp.v, index);
+        }
+        index++;
+      }
+      
+      this.reset();
+    }
+  }
 
-  get(key) {
-    return this._keys[key];
-  };
-
-  itr() {
+  iterate() {
     return this._position = this._position.n;
-  };
+  }
 
-  rwd() {
+  reset() {
     this._position = { n: this._head };
   }
 
