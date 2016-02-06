@@ -1,5 +1,5 @@
-let OPCode = require('../opCode');
-let BufferCodec = require('buffercodec');
+const OPCode = require('../opCode');
+const BufferCodec = require('buffercodec');
 
 function PacketHandler (gameServer, socket) {
   this.gameServer = gameServer;

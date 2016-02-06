@@ -1,20 +1,20 @@
 const Mode = require('./Mode');
 
-function FFA() {
-  Mode.apply(this, Array.prototype.slice.call(arguments));
+class FFA extends Mode {
+  constructor(gameServer) {
+    super(gameServer);
+    
+    this.name = "Free For All";
+    this.baseHealth = 100;
+    this.friction = 0.1;
+  }
+  
+  onPlayerSpawn(player) {
+    player.color = this.gameServer.getRandomColor();
+    player.maxHealth = player.health = this.baseHealth;
 
-  this.id = 0;
-  this.name = "Free For All";
-  this.baseHealth = 100;
-  this.friction = 0.1;
+    this.gameServer.spawnPlayer.call(this.gameServer, player);
+  }
 }
 
 module.exports = FFA;
-
-FFA.prototype = new Mode();
-
-FFA.prototype.onPlayerSpawn = function (gameServer, player) {
-  player.color = gameServer.getRandomColor();
-
-  gameServer.spawnPlayer.call(gameServer, player);
-}

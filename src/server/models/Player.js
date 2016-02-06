@@ -10,7 +10,7 @@ function Player(gameServer, owner) {
   this.ownerId = owner.pId;
   this.position = getRandomPosition();
   this.gameServer = gameServer;
-  this.health = this.maxHealth = gameServer.gameMode.baseHealth;
+  this.health = this.maxHealth = 100;
   this.radius = 30;
   this.speed = 3;
   this.acceleration = 0.01;

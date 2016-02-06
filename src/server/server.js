@@ -1,4 +1,3 @@
-/* global Buffer */
 /* global __dirname */
 
 const GameServer = require('./GameServer');

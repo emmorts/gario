@@ -1,20 +1,17 @@
 const OPCode = require('../../opCode');
+const uuid = require('node-uuid');
 
-function Spell() {
-  this.id = -1;
-  this.ownerId = -1;
-  this.type = OPCode.TYPE_SPELL;
-  this.mass = 0;
-  this.power = 0;
-  this.duration = 0;
+class Spell {
+  constructor() {
+    this.id = uuid.v4().replace(/-/g, '');
+    this.type = OPCode.TYPE_SPELL;
+    this.mass = 0;
+    this.power = 0;
+    this.duration = 0;
+  }
+  
+  onAdd() {}
+  onCollision(model) {}
 }
 
 module.exports = Spell;
-
-Spell.prototype.onAdd = function () {
-  // override
-}
-
-Spell.prototype.onCollision = function (model) {
-  model.health -= 10;
-}

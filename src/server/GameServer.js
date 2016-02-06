@@ -1,18 +1,18 @@
-let server = require('http').createServer();
-let WebSocket = require('ws');
-let config = require('./config');
-let PacketHandler = require('./PacketHandler');
-let PlayerController = require('./PlayerController');
-let GameMode = require('./gamemodes');
-let Model = require('./models');
-let WebSocketServer = WebSocket.Server;
-let Packets = require('./packets');
+const server = require('http').createServer();
+const WebSocket = require('ws');
+const config = require('./config');
+const PacketHandler = require('./PacketHandler');
+const PlayerController = require('./PlayerController');
+const GameMode = require('./gamemodes');
+const Model = require('./models');
+const Packets = require('./packets');
+const Maps = require('./maps');
+const WebSocketServer = WebSocket.Server;
 
 function GameServer(server) {
-  this.run = true;
   this.debug = process.env.DEVELOPMENT ? true : false;
-  this.clients = [];
   
+  this.clients = [];
   this.players = [];
   this.spells = [];
 
@@ -21,17 +21,19 @@ function GameServer(server) {
   this.tick = 0;
   this.tickMain = 0;
   this.updateRate = 1000 / 60;
-  this.options = server
+  
+  this.gameMode = GameMode.get(config.defaultGameMode);
+  
+  this._socketServerOptions = server
     ? { server: server }
     : { port: config.port, perMessageDeflate: false };
     
-  this.gameMode = GameMode.get(config.defaultGameMode);
 }
 
 GameServer.prototype.start = function () {
   this.gameMode.onServerInit(this);
 
-  this.socketServer = new WebSocketServer(this.options);
+  this.socketServer = new WebSocketServer(this._socketServerOptions);
 
   setInterval(this.gameLoop.bind(this), this.updateRate);
 
@@ -80,15 +82,12 @@ GameServer.prototype.start = function () {
 }
 
 GameServer.prototype.gameLoop = function () {
-  let local = Date.now();
+  const local = Date.now();
   this.tick += (local - this.time);
   this.time = local;
 
   if (this.tick > 50) {
-    if (this.run) {
-      setTimeout(this.movementTick.bind(this), 0);
-    }
-
+    this.movementTick();
     this.updateClients();
 
     this.tick = 0;
@@ -119,7 +118,7 @@ GameServer.prototype.updateClients = function () {
 }
 
 GameServer.prototype.onTargetUpdated = function (socket) {
-  const node = this.players.find(node => node.ownerId === socket.playerController.pId);
+  const node = this.players.find(node => node.owner.id === socket.playerController.pId);
   
   if (node) {
     this.clients.forEach(function (client) {
@@ -145,7 +144,7 @@ GameServer.prototype.onCast = function (spell) {
 }
 
 GameServer.prototype.spawnPlayer = function (player) {
-  var playerModel = new Model.Player(this, player);
+  const playerModel = new Model.Player(this, player);
   
   player.target = {
     x: playerModel.position.x,
@@ -158,7 +157,7 @@ GameServer.prototype.spawnPlayer = function (player) {
 }
 
 GameServer.prototype.getRandomColor = function () {
-  var rand = Math.floor(Math.random() * 3);
+  const rand = Math.floor(Math.random() * 3);
   if (rand === 0) {
     return {
 	     r: 255,
@@ -181,12 +180,8 @@ GameServer.prototype.getRandomColor = function () {
 }
 
 WebSocket.prototype.sendPacket = function (packet) {
-  if (process.env.DEVELOPMENT) {
-    console.log(packet);
-  }
-
   if (this.readyState == WebSocket.OPEN && packet.build) {
-    let buffer = packet.build();
+    const buffer = packet.build();
     this.send(buffer, { binary: true });
   } else {
     this.readyState = WebSocket.CLOSED;
