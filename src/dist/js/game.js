@@ -527,7 +527,7 @@ module.exports = BufferCodec;
   }
 });
 },{}],3:[function(require,module,exports){
-"use strict";
+'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -535,47 +535,165 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _smartmap = require('smartmap');
+
+var _smartmap2 = _interopRequireDefault(_smartmap);
+
+var _WSController = require('./WSController');
+
+var _WSController2 = _interopRequireDefault(_WSController);
+
+var _EventEmitter2 = require('./util/EventEmitter');
+
+var _EventEmitter3 = _interopRequireDefault(_EventEmitter2);
+
+var _spells = require('./spells');
+
+var Spells = _interopRequireWildcard(_spells);
+
+var _models = require('./models');
+
+var Models = _interopRequireWildcard(_models);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var DomElement = function () {
-  function DomElement(query, elementClass) {
-    _classCallCheck(this, DomElement);
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-    this.htmlElement = null;
-    this.instance = null;
-    this._eventHandlers = [];
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-    if (query) {
-      this.htmlElement = window.document.querySelector(query);
+var Game = function (_EventEmitter) {
+  _inherits(Game, _EventEmitter);
 
-      if (this.htmlElement && elementClass) {
-        this.instance = new elementClass(this.htmlElement);
-      }
-    }
+  function Game() {
+    _classCallCheck(this, Game);
+
+    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Game).call(this));
+
+    _this.started = false;
+    _this.currentPlayer = null;
+    _this.controller = null;
+    _this.playerList = new _smartmap2.default('id', 'ownerId');
+    _this.spellList = new _smartmap2.default('id');
+    return _this;
   }
 
-  _createClass(DomElement, [{
-    key: "on",
-    value: function on(name, listener) {
-      if (!(name in this._eventHandlers) || !(this._eventHandlers[name] instanceof Array)) {
-        this._eventHandlers[name] = [];
-      }
-      if (! ~this._eventHandlers[name].indexOf(listener)) {
-        this._eventHandlers[name].push(listener);
+  _createClass(Game, [{
+    key: 'startGame',
+    value: function startGame(playerName, onConnection) {
+      this.controller = new _WSController2.default();
 
-        this.htmlElement.addEventListener(name, listener);
+      this.controller.on('open', function startGame() {
+
+        this.controller.on('addPlayer', this._handleAddPlayer.bind(this));
+        this.controller.on('updatePlayers', this._handleUpdatePlayers.bind(this));
+        this.controller.on('updateSpells', this._handleUpdateSpells.bind(this));
+
+        this.controller.spawn(playerName);
+
+        this.onStart(onConnection);
+      }.bind(this));
+    }
+  }, {
+    key: 'update',
+    value: function update(deltaT) {
+      var _this2 = this;
+
+      this.playerList.forEach(function (player) {
+        return player.calculateNextPosition(deltaT);
+      });
+      this.spellList.forEach(function (spell) {
+        return spell.calculateNextPosition(deltaT);
+      });
+
+      this.spellList.forEach(function (spell, spellIndex) {
+        _this2.playerList.forEach(function (player) {
+          if (spell.ownerId !== player.ownerId) {
+            var distanceX = player.position.x - spell.position.x;
+            var distanceY = player.position.y - spell.position.y;
+            var distance = distanceX * distanceX + distanceY * distanceY;
+            if (distance < Math.pow(spell.radius + player.radius, 2)) {
+              spell.onCollision(player);
+              _this2.spellList.splice(spellIndex, 1);
+            }
+          }
+        });
+      });
+    }
+  }, {
+    key: 'onStart',
+    value: function onStart(callback) {
+      this.started = true;
+
+      if (callback) {
+        callback();
+      }
+    }
+  }, {
+    key: '_handleAddPlayer',
+    value: function _handleAddPlayer(player) {
+      this.currentPlayer = new Models.Player(player);
+      this._fire('addPlayer');
+      this.playerList.add(this.currentPlayer);
+    }
+  }, {
+    key: '_handleUpdatePlayers',
+    value: function _handleUpdatePlayers(players) {
+      var _this3 = this;
+
+      var updatedPlayers = players.updatedPlayers;
+      if (updatedPlayers && updatedPlayers.length > 0) {
+        updatedPlayers.forEach(function (updatedPlayer) {
+          var foundPlayer = _this3.playerList.get(updatedPlayer.id, 'id');
+          if (foundPlayer) {
+            foundPlayer.setTarget(updatedPlayer.target);
+          } else {
+            var player = new Models.Player(updatedPlayer);
+            _this3.playerList.add(player);
+          }
+        });
       }
 
-      return this;
+      var destroyedPlayers = players.destroyedPlayers;
+      if (destroyedPlayers && destroyedPlayers.length > 0) {
+        destroyedPlayers.forEach(function (destroyedPlayer) {
+          return _this3.playerList.delete(destroyedPlayer);
+        });
+      }
+    }
+  }, {
+    key: '_handleUpdateSpells',
+    value: function _handleUpdateSpells(spells) {
+      var _this4 = this;
+
+      var updatedSpells = spells.updatedSpells;
+      if (updatedSpells && updatedSpells.length > 0) {
+        updatedSpells.forEach(function (updatedSpell) {
+          var SpellClass = Spells.get(updatedSpell.type);
+          var spell = new SpellClass(updatedSpell);
+          spell.onAdd(_this4.playerList.get(spell.ownerId, 'ownerId'));
+          _this4.spellList.add(spell);
+        });
+      }
+
+      var destroyedSpells = spells.destroyedSpells;
+      if (destroyedSpells && destroyedSpells.length > 0) {
+        destroyedSpells.forEach(function (destroyedSpell) {
+          return _this4.spellList.delete(destroyedSpell);
+        });
+      }
     }
   }]);
 
-  return DomElement;
-}();
+  return Game;
+}(_EventEmitter3.default);
 
-exports.default = DomElement;
+exports.default = Game;
 
-},{}],4:[function(require,module,exports){
+},{"./WSController":5,"./models":8,"./spells":14,"./util/EventEmitter":16,"smartmap":2}],4:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -802,7 +920,7 @@ var Graph = function () {
     value: function drawPlayers(playerList) {
       var _this = this;
 
-      var currentPlayer = playerList.get(this.player.id);
+      var currentPlayer = playerList.get(this.player.id, 'id');
       if (currentPlayer) {
         this.player.position.x = currentPlayer.position.x;
         this.player.position.y = currentPlayer.position.y;
@@ -886,104 +1004,7 @@ function getDefaultHeight() {
   return window.innerHeight && document.documentElement.clientHeight ? Math.min(window.innerHeight, document.documentElement.clientHeight) : window.innerHeight || document.documentElement.clientHeight || document.getElementsByTagName('body')[0].clientHeight;
 }
 
-},{"../../opCode":17}],5:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = {
-  MAC_ENTER: 3,
-  BACKSPACE: 8,
-  TAB: 9,
-  NUM_CENTER: 12,
-  ENTER: 13,
-  SHIFT: 16,
-  CTRL: 17,
-  ALT: 18,
-  PAUSE: 19,
-  CAPS_LOCK: 20,
-  ESC: 27,
-  SPACE: 32,
-  PAGE_UP: 33,
-  PAGE_DOWN: 34,
-  END: 35,
-  HOME: 36,
-  LEFT: 37,
-  UP: 38,
-  RIGHT: 39,
-  DOWN: 40,
-  PRINT_SCREEN: 44,
-  INSERT: 45,
-  DELETE: 46,
-  ZERO: 48,
-  ONE: 49,
-  TWO: 50,
-  THREE: 51,
-  FOUR: 52,
-  FIVE: 53,
-  SIX: 54,
-  SEVEN: 55,
-  EIGHT: 56,
-  NINE: 57,
-  A: 65,
-  B: 66,
-  C: 67,
-  D: 68,
-  E: 69,
-  F: 70,
-  G: 71,
-  H: 72,
-  I: 73,
-  J: 74,
-  K: 75,
-  L: 76,
-  M: 77,
-  N: 78,
-  O: 79,
-  P: 80,
-  Q: 81,
-  R: 82,
-  S: 83,
-  T: 84,
-  U: 85,
-  V: 86,
-  W: 87,
-  X: 88,
-  Y: 89,
-  Z: 90,
-  META: 91,
-  CONTEXT_MENU: 93,
-  NUM_ZERO: 96,
-  NUM_ONE: 97,
-  NUM_TWO: 98,
-  NUM_THREE: 99,
-  NUM_FOUR: 100,
-  NUM_FIVE: 101,
-  NUM_SIX: 102,
-  NUM_SEVEN: 103,
-  NUM_EIGHT: 104,
-  NUM_NINE: 105,
-  NUM_MULTIPLY: 106,
-  NUM_PLUS: 107,
-  NUM_MINUS: 109,
-  NUM_PERIOD: 110,
-  NUM_DIVISION: 111,
-  F1: 112,
-  F2: 113,
-  F3: 114,
-  F4: 115,
-  F5: 116,
-  F6: 117,
-  F7: 118,
-  F8: 119,
-  F9: 120,
-  F10: 121,
-  F11: 122,
-  F12: 123
-};
-
-},{}],6:[function(require,module,exports){
+},{"../../opCode":19}],5:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -992,26 +1013,40 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _EventEmitter2 = require('./util/EventEmitter');
+
+var _EventEmitter3 = _interopRequireDefault(_EventEmitter2);
+
 var _index = require('./packets/index');
 
 var Packets = _interopRequireWildcard(_index);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var BufferCodec = require('buffercodec');
 var OPCode = require('../../opCode');
 
-var WSController = function () {
+var WSController = function (_EventEmitter) {
+  _inherits(WSController, _EventEmitter);
+
   function WSController() {
     _classCallCheck(this, WSController);
 
-    this._uri = 'ws://192.168.2.116:3000';
-    this._socket = null;
-    this._eventHandlers = [];
+    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(WSController).call(this));
 
-    this._setupSocket();
+    _this._uri = 'ws://192.168.2.116:3000';
+    _this._socket = null;
+
+    _this._setupSocket();
+    return _this;
   }
 
   _createClass(WSController, [{
@@ -1036,29 +1071,12 @@ var WSController = function () {
       this._socket.send(buffer);
     }
   }, {
-    key: 'on',
-    value: function on(name, listener) {
-      if (!(name in this._eventHandlers) || !(this._eventHandlers[name] instanceof Array)) {
-        this._eventHandlers[name] = [];
-      }
-      this._eventHandlers[name].push(listener);
-    }
-  }, {
-    key: '_fire',
-    value: function _fire(name, options) {
-      if (name in this._eventHandlers && this._eventHandlers[name].length > 0) {
-        this._eventHandlers[name].forEach(function (handler) {
-          return handler(options);
-        });
-      }
-    }
-  }, {
     key: '_setupSocket',
     value: function _setupSocket() {
       this._socket = new WebSocket(this._uri);
       this._socket.binaryType = 'arraybuffer';
 
-      this._socket.onopen = function (event) {
+      this._socket.onopen = function onConnectionEstablished(event) {
         this._fire('open');
 
         this._socket.onmessage = function handleMessage(message) {
@@ -1097,246 +1115,169 @@ var WSController = function () {
   }]);
 
   return WSController;
-}();
+}(_EventEmitter3.default);
 
 exports.default = WSController;
 
-},{"../../opCode":17,"./packets/index":13,"buffercodec":1}],7:[function(require,module,exports){
+},{"../../opCode":19,"./packets/index":12,"./util/EventEmitter":16,"buffercodec":1}],6:[function(require,module,exports){
 'use strict';
 
-var _smartmap = require('smartmap');
-
-var _smartmap2 = _interopRequireDefault(_smartmap);
-
-var _KeyCode = require('./KeyCode');
+var _KeyCode = require('./util/KeyCode');
 
 var _KeyCode2 = _interopRequireDefault(_KeyCode);
+
+var _DomElement = require('./util/DomElement');
+
+var _DomElement2 = _interopRequireDefault(_DomElement);
 
 var _Graph = require('./Graph');
 
 var _Graph2 = _interopRequireDefault(_Graph);
 
-var _WSController = require('./WSController');
+var _Game = require('./Game');
 
-var _WSController2 = _interopRequireDefault(_WSController);
-
-var _DomElement = require('./DomElement');
-
-var _DomElement2 = _interopRequireDefault(_DomElement);
-
-var _spells = require('./spells');
-
-var Spells = _interopRequireWildcard(_spells);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+var _Game2 = _interopRequireDefault(_Game);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-require('./polyfills');
+require('./util/polyfills');
 
-var Models = require('./models');
 var OPCode = require('../../opCode');
 
-(function () {
+var animationLoopHandle;
+var lastUpdate;
+var targetTick = performance.now();
+var mouse = { x: 0, y: 0 };
+var scrollDirection = null;
+var game = new _Game2.default();
 
-  var graph;
-  var ws;
-  var animLoopHandle;
-  var lastUpdate;
-  var moveTick = performance.now();
-  var targetTick = performance.now();
-  var mouse = { x: 0, y: 0 };
-  var scrollDirection = null;
+var canvas = new _DomElement2.default('.js-canvas', _Graph2.default);
+var graph = canvas.instance;
 
-  var playerList = new _smartmap2.default('id', 'ownerId');
-  var spellList = new _smartmap2.default('id');
-  var currentPlayer = null;
+var playerNameElement = new _DomElement2.default('.js-player-name');
+var playButtonElement = new _DomElement2.default('.js-play-button');
+var errorElement = new _DomElement2.default('.js-error');
 
-  var canvas = new _DomElement2.default('.js-canvas', _Graph2.default);
-  graph = canvas.instance;
-
-  var playerNameElement = new _DomElement2.default('.js-player-name');
-  var playButtonElement = new _DomElement2.default('.js-play-button');
-  var errorElement = new _DomElement2.default('.js-error');
-
+if (playButtonElement.htmlElement) {
   playButtonElement.on('mouseup', startGame);
-  playerNameElement.on('keyup', function validate(event) {
-    if (! ~[_KeyCode2.default.ENTER, _KeyCode2.default.MAC_ENTER].indexOf(event.keyCode)) {
-      startGame();
+}
+
+if (playerNameElement.htmlElement) {
+  playerNameElement.on('keyup', validate);
+}
+
+function validate(event) {
+  if (~[_KeyCode2.default.ENTER, _KeyCode2.default.MAC_ENTER].indexOf(event.keyCode)) {
+    startGame();
+  } else {
+    var pattern = /^[a-zA-Z0-9 ]{0,25}$/;
+    if (event.target.value.match(pattern)) {
+      errorElement.htmlElement.style.display = 'none';
+      playButtonElement.htmlElement.disabled = false;
     } else {
-      var pattern = /^[a-zA-Z0-9 ]{0,25}$/;
-      if (event.target.value.match(pattern)) {
-        errorElement.htmlElement.style.display = 'none';
-        playButtonElement.htmlElement.disabled = false;
-      } else {
-        errorElement.htmlElement.style.display = 'block';
-        playButtonElement.htmlElement.disabled = true;
-      }
+      errorElement.htmlElement.style.display = 'block';
+      playButtonElement.htmlElement.disabled = true;
     }
+  }
+}
+
+function animationLoop(timestamp) {
+  animationLoopHandle = window.requestAnimationFrame(animationLoop);
+
+  gameLoop(timestamp - lastUpdate);
+  lastUpdate = timestamp;
+}
+
+function gameLoop(deltaT) {
+  graph.clear().updateOffset(scrollDirection).drawGrid().drawArena().drawSpells(game.spellList).drawPlayers(game.playerList).drawDebug();
+
+  game.update();
+}
+
+function startGame() {
+  new _DomElement2.default('.js-start-menu').htmlElement.style.display = 'none';
+
+  game.startGame(playerNameElement.htmlElement.value, function () {
+    window.document.addEventListener('keydown', wHandleKeyDown);
+
+    canvas.on('contextmenu', function (event) {
+      return event.preventDefault();
+    });
+    canvas.on('mousemove', cHandleMouseMove);
+    canvas.on('mousedown', cHandleMouseDown);
   });
 
-  function animationLoop(timestamp) {
-    animLoopHandle = window.requestAnimationFrame(animationLoop);
+  game.on('addPlayer', function () {
+    return graph.player = game.currentPlayer;
+  });
 
-    gameLoop(timestamp - lastUpdate);
-    lastUpdate = timestamp;
+  if (!animationLoopHandle) {
+    lastUpdate = Date.now();
+    animationLoop(lastUpdate);
   }
 
-  function gameLoop(deltaT) {
-    graph.clear().updateOffset(scrollDirection).drawGrid().drawArena().drawSpells(spellList).drawPlayers(playerList).drawDebug();
+  function cHandleMouseMove(event) {
+    var westBreakpoint = graph.screenWidth / 10,
+        eastBreakpoint = graph.screenWidth * 9 / 10,
+        northBreakpoint = graph.screenHeight / 10,
+        southBreakpoint = graph.screenHeight * 9 / 10;
 
-    playerList.forEach(function (player) {
-      return player.calculateNextPosition(deltaT);
-    });
-    spellList.forEach(function (spell) {
-      return spell.calculateNextPosition(deltaT);
-    });
-
-    spellList.forEach(function (spell, spellIndex) {
-      playerList.forEach(function (player) {
-        if (spell.ownerId !== player.ownerId) {
-          var distanceX = player.position.x - spell.position.x;
-          var distanceY = player.position.y - spell.position.y;
-          var distance = distanceX * distanceX + distanceY * distanceY;
-          if (distance < Math.pow(spell.radius + player.radius, 2)) {
-            spell.onCollision(player);
-            spellList.splice(spellIndex, 1);
-          }
-        }
-      });
-    });
+    if (event.x < westBreakpoint && event.y < northBreakpoint) {
+      scrollDirection = OPCode.DIRECTION_NWEST;
+    } else if (event.x > eastBreakpoint && event.y < northBreakpoint) {
+      scrollDirection = OPCode.DIRECTION_NEAST;
+    } else if (event.x < westBreakpoint && event.y > southBreakpoint) {
+      scrollDirection = OPCode.DIRECTION_SWEST;
+    } else if (event.x > eastBreakpoint && event.y > southBreakpoint) {
+      scrollDirection = OPCode.DIRECTION_SEAST;
+    } else if (event.x < westBreakpoint) {
+      scrollDirection = OPCode.DIRECTION_WEST;
+    } else if (event.x > eastBreakpoint) {
+      scrollDirection = OPCode.DIRECTION_EAST;
+    } else if (event.y < northBreakpoint) {
+      scrollDirection = OPCode.DIRECTION_NORTH;
+    } else if (event.y > southBreakpoint) {
+      scrollDirection = OPCode.DIRECTION_SOUTH;
+    } else {
+      scrollDirection = null;
+    }
+    mouse.x = event.x;
+    mouse.y = event.y;
   }
 
-  function startGame() {
-    var playerName = playerNameElement.htmlElement.value;
-    new _DomElement2.default('.js-start-menu').htmlElement.style.display = 'none';
-
-    ws = new _WSController2.default();
-
-    ws.on('open', function startGame() {
-
-      ws.spawn(playerName);
-
-      canvas.on('contextmenu', function (event) {
-        return event.preventDefault();
-      });
-
-      canvas.on('mousemove', function (event) {
-        var westBreakpoint = graph.screenWidth / 10,
-            eastBreakpoint = graph.screenWidth * 9 / 10,
-            northBreakpoint = graph.screenHeight / 10,
-            southBreakpoint = graph.screenHeight * 9 / 10;
-
-        if (event.x < westBreakpoint && event.y < northBreakpoint) {
-          scrollDirection = OPCode.DIRECTION_NWEST;
-        } else if (event.x > eastBreakpoint && event.y < northBreakpoint) {
-          scrollDirection = OPCode.DIRECTION_NEAST;
-        } else if (event.x < westBreakpoint && event.y > southBreakpoint) {
-          scrollDirection = OPCode.DIRECTION_SWEST;
-        } else if (event.x > eastBreakpoint && event.y > southBreakpoint) {
-          scrollDirection = OPCode.DIRECTION_SEAST;
-        } else if (event.x < westBreakpoint) {
-          scrollDirection = OPCode.DIRECTION_WEST;
-        } else if (event.x > eastBreakpoint) {
-          scrollDirection = OPCode.DIRECTION_EAST;
-        } else if (event.y < northBreakpoint) {
-          scrollDirection = OPCode.DIRECTION_NORTH;
-        } else if (event.y > southBreakpoint) {
-          scrollDirection = OPCode.DIRECTION_SOUTH;
-        } else {
-          scrollDirection = null;
-        }
-        mouse.x = event.x;
-        mouse.y = event.y;
-      });
-
-      canvas.on('mousedown', function (event) {
-        if (currentPlayer && event.button === 2) {
-          event.preventDefault();
-          event.stopPropagation();
-          var now = performance.now();
-          var diff = now - targetTick;
-          if (diff > 100) {
-            var targetX = mouse.x + graph.xOffset;
-            var targetY = mouse.y + graph.yOffset;
-            targetX = Math.min(Math.max(targetX, 0), graph._gameWidth);
-            targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
-            currentPlayer.setTarget({ x: targetX, y: targetY });
-            targetTick = now;
-            ws.move(currentPlayer);
-          }
-        }
-      });
-
-      window.document.addEventListener('keydown', function (event) {
-        switch (event.keyCode) {
-          case _KeyCode2.default.Q:
-            ws.cast(OPCode.CAST_PRIMARY, {
-              playerX: currentPlayer.position.x,
-              playerY: currentPlayer.position.y,
-              x: mouse.x + graph.xOffset,
-              y: mouse.y + graph.yOffset
-            });
-            break;
-        }
-      });
-
-      ws.on('addPlayer', function (node) {
-        currentPlayer = new Models.Player(node);
-        graph.player = currentPlayer;
-        playerList.add(currentPlayer);
-      });
-
-      ws.on('updatePlayers', function (players) {
-        var updatedPlayers = players.updatedPlayers;
-        if (updatedPlayers && updatedPlayers.length > 0) {
-          updatedPlayers.forEach(function (updatedPlayer) {
-            var foundPlayer = playerList.get(updatedPlayer.id, 'id');
-            if (foundPlayer) {
-              foundPlayer.setTarget(updatedPlayer.target);
-            } else {
-              var player = new Models.Player(updatedPlayer);
-              playerList.add(player);
-            }
-          });
-        }
-
-        var destroyedPlayers = players.destroyedPlayers;
-        if (destroyedPlayers && destroyedPlayers.length > 0) {
-          destroyedPlayers.forEach(function (destroyedPlayer) {
-            return playerList.delete(destroyedPlayer);
-          });
-        }
-      });
-
-      ws.on('updateSpells', function (spells) {
-        var updatedSpells = spells.updatedSpells;
-        if (updatedSpells && updatedSpells.length > 0) {
-          updatedSpells.forEach(function (updatedSpell) {
-            var SpellClass = Spells.get(updatedSpell.type);
-            var spell = new SpellClass(updatedSpell);
-            spell.onAdd(playerList.get(spell.ownerId, 'ownerId'));
-            spellList.add(spell);
-          });
-        }
-
-        var destroyedSpells = spells.destroyedSpells;
-        if (destroyedSpells && destroyedSpells.length > 0) {
-          destroyedSpells.forEach(function (destroyedSpell) {
-            return spellList.delete(destroyedSpell);
-          });
-        }
-      });
-    });
-
-    if (!animLoopHandle) {
-      lastUpdate = Date.now();
-      animationLoop(lastUpdate);
+  function cHandleMouseDown(event) {
+    if (game.currentPlayer && event.button === _KeyCode2.default.MOUSE2) {
+      event.preventDefault();
+      event.stopPropagation();
+      var now = performance.now();
+      var diff = now - targetTick;
+      if (diff > 100) {
+        var targetX = mouse.x + graph.xOffset;
+        var targetY = mouse.y + graph.yOffset;
+        targetX = Math.min(Math.max(targetX, 0), graph._gameWidth);
+        targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
+        game.currentPlayer.setTarget({ x: targetX, y: targetY });
+        targetTick = now;
+        game.controller.move(game.currentPlayer);
+      }
     }
   }
-})();
 
-},{"../../opCode":17,"./DomElement":3,"./Graph":4,"./KeyCode":5,"./WSController":6,"./models":9,"./polyfills":14,"./spells":16,"smartmap":2}],8:[function(require,module,exports){
+  function wHandleKeyDown(event) {
+    switch (event.keyCode) {
+      case _KeyCode2.default.Q:
+        game.controller.cast(OPCode.CAST_PRIMARY, {
+          playerX: game.currentPlayer.position.x,
+          playerY: game.currentPlayer.position.y,
+          x: mouse.x + graph.xOffset,
+          y: mouse.y + graph.yOffset
+        });
+        break;
+    }
+  }
+}
+
+},{"../../opCode":19,"./Game":3,"./Graph":4,"./util/DomElement":15,"./util/KeyCode":17,"./util/polyfills":18}],7:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1541,7 +1482,7 @@ var Player = function () {
 
 exports.default = Player;
 
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1557,7 +1498,7 @@ Object.defineProperty(exports, 'Player', {
   }
 });
 
-},{"./Player":8}],10:[function(require,module,exports){
+},{"./Player":7}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1589,7 +1530,7 @@ exports.default = {
   }
 };
 
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1638,7 +1579,7 @@ exports.default = {
   }
 };
 
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1688,7 +1629,7 @@ exports.default = {
   }
 };
 
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1722,62 +1663,7 @@ Object.defineProperty(exports, 'UpdateSpells', {
   }
 });
 
-},{"./AddPlayer":10,"./UpdatePlayers":11,"./UpdateSpells":12}],14:[function(require,module,exports){
-'use strict';
-
-if (!Array.prototype.find) {
-  Array.prototype.find = function (predicate) {
-    if (this === null) {
-      throw new TypeError('Array.prototype.find called on null or undefined');
-    }
-    if (typeof predicate !== 'function') {
-      throw new TypeError('predicate must be a function');
-    }
-    var list = Object(this);
-    var length = list.length >>> 0;
-    var thisArg = arguments[1];
-    var value;
-
-    for (var i = 0; i < length; i++) {
-      value = list[i];
-      if (predicate.call(thisArg, value, i, list)) {
-        return value;
-      }
-    }
-    return undefined;
-  };
-}
-
-if (!Date.now) {
-  Date.now = function () {
-    return new Date().getTime();
-  };
-}
-
-(function () {
-  'use strict';
-
-  var vendors = ['webkit', 'moz'];
-  for (var i = 0; i < vendors.length && !window.requestAnimationFrame; ++i) {
-    var vp = vendors[i];
-    window.requestAnimationFrame = window[vp + 'RequestAnimationFrame'];
-    window.cancelAnimationFrame = window[vp + 'CancelAnimationFrame'] || window[vp + 'CancelRequestAnimationFrame'];
-  }
-  if (/iP(ad|hone|od).*OS 6/.test(window.navigator.userAgent) // iOS6 is buggy
-   || !window.requestAnimationFrame || !window.cancelAnimationFrame) {
-    var lastTime = 0;
-    window.requestAnimationFrame = function (callback) {
-      var now = Date.now();
-      var nextTime = Math.max(lastTime + 16, now);
-      return setTimeout(function () {
-        callback(lastTime = nextTime);
-      }, nextTime - now);
-    };
-    window.cancelAnimationFrame = clearTimeout;
-  }
-})();
-
-},{}],15:[function(require,module,exports){
+},{"./AddPlayer":9,"./UpdatePlayers":10,"./UpdateSpells":11}],13:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1866,7 +1752,7 @@ var Primary = function () {
 
 exports.default = Primary;
 
-},{}],16:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1896,7 +1782,251 @@ function get(code) {
   return spell;
 }
 
-},{"../../../opCode":17,"./Primary":15}],17:[function(require,module,exports){
+},{"../../../opCode":19,"./Primary":13}],15:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var DomElement = function () {
+  function DomElement(query, elementClass) {
+    _classCallCheck(this, DomElement);
+
+    this.htmlElement = null;
+    this.instance = null;
+    this._eventHandlers = [];
+
+    if (query) {
+      this.htmlElement = window.document.querySelector(query);
+
+      if (this.htmlElement && elementClass) {
+        this.instance = new elementClass(this.htmlElement);
+      }
+    }
+  }
+
+  _createClass(DomElement, [{
+    key: "on",
+    value: function on(name, listener) {
+      if (!(name in this._eventHandlers) || !(this._eventHandlers[name] instanceof Array)) {
+        this._eventHandlers[name] = [];
+      }
+      if (! ~this._eventHandlers[name].indexOf(listener)) {
+        this._eventHandlers[name].push(listener);
+
+        this.htmlElement.addEventListener(name, listener);
+      }
+
+      return this;
+    }
+  }]);
+
+  return DomElement;
+}();
+
+exports.default = DomElement;
+
+},{}],16:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var EventEmitter = function () {
+  function EventEmitter() {
+    _classCallCheck(this, EventEmitter);
+
+    this._eventHandlers = [];
+  }
+
+  _createClass(EventEmitter, [{
+    key: "on",
+    value: function on(name, listener) {
+      if (!(name in this._eventHandlers) || !(this._eventHandlers[name] instanceof Array)) {
+        this._eventHandlers[name] = [];
+      }
+      this._eventHandlers[name].push(listener);
+    }
+  }, {
+    key: "_fire",
+    value: function _fire(name, options) {
+      if (name in this._eventHandlers && this._eventHandlers[name].length > 0) {
+        this._eventHandlers[name].forEach(function (handler) {
+          return handler(options);
+        });
+      }
+    }
+  }]);
+
+  return EventEmitter;
+}();
+
+exports.default = EventEmitter;
+
+},{}],17:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  MOUSE2: 2,
+  MAC_ENTER: 3,
+  BACKSPACE: 8,
+  TAB: 9,
+  NUM_CENTER: 12,
+  ENTER: 13,
+  SHIFT: 16,
+  CTRL: 17,
+  ALT: 18,
+  PAUSE: 19,
+  CAPS_LOCK: 20,
+  ESC: 27,
+  SPACE: 32,
+  PAGE_UP: 33,
+  PAGE_DOWN: 34,
+  END: 35,
+  HOME: 36,
+  LEFT: 37,
+  UP: 38,
+  RIGHT: 39,
+  DOWN: 40,
+  PRINT_SCREEN: 44,
+  INSERT: 45,
+  DELETE: 46,
+  ZERO: 48,
+  ONE: 49,
+  TWO: 50,
+  THREE: 51,
+  FOUR: 52,
+  FIVE: 53,
+  SIX: 54,
+  SEVEN: 55,
+  EIGHT: 56,
+  NINE: 57,
+  A: 65,
+  B: 66,
+  C: 67,
+  D: 68,
+  E: 69,
+  F: 70,
+  G: 71,
+  H: 72,
+  I: 73,
+  J: 74,
+  K: 75,
+  L: 76,
+  M: 77,
+  N: 78,
+  O: 79,
+  P: 80,
+  Q: 81,
+  R: 82,
+  S: 83,
+  T: 84,
+  U: 85,
+  V: 86,
+  W: 87,
+  X: 88,
+  Y: 89,
+  Z: 90,
+  META: 91,
+  CONTEXT_MENU: 93,
+  NUM_ZERO: 96,
+  NUM_ONE: 97,
+  NUM_TWO: 98,
+  NUM_THREE: 99,
+  NUM_FOUR: 100,
+  NUM_FIVE: 101,
+  NUM_SIX: 102,
+  NUM_SEVEN: 103,
+  NUM_EIGHT: 104,
+  NUM_NINE: 105,
+  NUM_MULTIPLY: 106,
+  NUM_PLUS: 107,
+  NUM_MINUS: 109,
+  NUM_PERIOD: 110,
+  NUM_DIVISION: 111,
+  F1: 112,
+  F2: 113,
+  F3: 114,
+  F4: 115,
+  F5: 116,
+  F6: 117,
+  F7: 118,
+  F8: 119,
+  F9: 120,
+  F10: 121,
+  F11: 122,
+  F12: 123
+};
+
+},{}],18:[function(require,module,exports){
+'use strict';
+
+if (!Array.prototype.find) {
+  Array.prototype.find = function (predicate) {
+    if (this === null) {
+      throw new TypeError('Array.prototype.find called on null or undefined');
+    }
+    if (typeof predicate !== 'function') {
+      throw new TypeError('predicate must be a function');
+    }
+    var list = Object(this);
+    var length = list.length >>> 0;
+    var thisArg = arguments[1];
+    var value;
+
+    for (var i = 0; i < length; i++) {
+      value = list[i];
+      if (predicate.call(thisArg, value, i, list)) {
+        return value;
+      }
+    }
+    return undefined;
+  };
+}
+
+if (!Date.now) {
+  Date.now = function () {
+    return new Date().getTime();
+  };
+}
+
+(function () {
+  'use strict';
+
+  var vendors = ['webkit', 'moz'];
+  for (var i = 0; i < vendors.length && !window.requestAnimationFrame; ++i) {
+    var vp = vendors[i];
+    window.requestAnimationFrame = window[vp + 'RequestAnimationFrame'];
+    window.cancelAnimationFrame = window[vp + 'CancelAnimationFrame'] || window[vp + 'CancelRequestAnimationFrame'];
+  }
+  if (/iP(ad|hone|od).*OS 6/.test(window.navigator.userAgent) // iOS6 is buggy
+   || !window.requestAnimationFrame || !window.cancelAnimationFrame) {
+    var lastTime = 0;
+    window.requestAnimationFrame = function (callback) {
+      var now = Date.now();
+      var nextTime = Math.max(lastTime + 16, now);
+      return setTimeout(function () {
+        callback(lastTime = nextTime);
+      }, nextTime - now);
+    };
+    window.cancelAnimationFrame = clearTimeout;
+  }
+})();
+
+},{}],19:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -1926,7 +2056,7 @@ module.exports = {
   "DIRECTION_SEAST": 0X1B
 };
 
-},{}]},{},[7])
+},{}]},{},[6])
 
 
 //# sourceMappingURL=game.js.map

@@ -1,13 +1,15 @@
 var BufferCodec = require('buffercodec');
 var OPCode = require('../../opCode');
 
+import EventEmitter from './util/EventEmitter';
 import * as Packets from './packets/index';
 
-export default class WSController {
+export default class WSController extends EventEmitter {
   constructor() {
+    super();
+    
     this._uri = 'ws://192.168.2.116:3000';
     this._socket = null;
-    this._eventHandlers = [];
 
     this._setupSocket();
   }
@@ -44,24 +46,11 @@ export default class WSController {
     this._socket.send(buffer);
   }
   
-  on(name, listener) {
-    if (!(name in this._eventHandlers) || !(this._eventHandlers[name] instanceof Array)) {
-      this._eventHandlers[name] = [];
-    }
-    this._eventHandlers[name].push(listener);
-  }
-  
-  _fire(name, options) {
-    if (name in this._eventHandlers && this._eventHandlers[name].length > 0) {
-      this._eventHandlers[name].forEach(handler => handler(options));
-    }
-  }
-  
   _setupSocket() {
     this._socket = new WebSocket(this._uri);
     this._socket.binaryType = 'arraybuffer';
 
-    this._socket.onopen = function (event) {
+    this._socket.onopen = function onConnectionEstablished(event) {
       this._fire('open');
 
       this._socket.onmessage = function handleMessage(message) {
