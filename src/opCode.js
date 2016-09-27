@@ -12,6 +12,9 @@ const operations = [
   
   // spells
   "SPELL_PRIMARY",
+
+  // models
+  "MODEL_PLAYER",
   
   // direction
   "DIRECTION_WEST",

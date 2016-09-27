@@ -569,6 +569,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var instance = null;
+
 var Game = function (_EventEmitter) {
   _inherits(Game, _EventEmitter);
 
@@ -688,6 +690,15 @@ var Game = function (_EventEmitter) {
         destroyedSpells.forEach(function (destroyedSpell) {
           return _this4.spellList.delete(destroyedSpell);
         });
+      }
+    }
+  }], [{
+    key: 'getInstance',
+    value: function getInstance() {
+      if (instance) {
+        return instance;
+      } else {
+        return new Game();
       }
     }
   }]);
@@ -1153,7 +1164,7 @@ var lastUpdate;
 var targetTick = performance.now();
 var mouse = { x: 0, y: 0 };
 var scrollDirection = null;
-var game = new _Game2.default();
+var game = _Game2.default.getInstance();
 
 var canvas = new _DomElement2.default('.js-canvas', _Graph2.default);
 var graph = canvas.instance;
@@ -2047,6 +2058,9 @@ var operations = ["PING", "PONG", "SPAWN_PLAYER", "ADD_PLAYER", "UPDATE_PLAYERS"
 
 // spells
 "SPELL_PRIMARY",
+
+// models
+"MODEL_PLAYER",
 
 // direction
 "DIRECTION_WEST", "DIRECTION_EAST", "DIRECTION_NORTH", "DIRECTION_SOUTH", "DIRECTION_NWEST", "DIRECTION_NEAST", "DIRECTION_SWEST", "DIRECTION_SEAST",

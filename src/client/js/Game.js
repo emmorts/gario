@@ -4,6 +4,8 @@ import EventEmitter from './util/EventEmitter';
 import * as Spells from './spells';
 import * as Models from './models';
 
+let instance = null;
+
 export default class Game extends EventEmitter {
   constructor() {
     super();
@@ -13,6 +15,14 @@ export default class Game extends EventEmitter {
     this.controller = null;
     this.playerList = new SmartMap('id', 'ownerId');
     this.spellList = new SmartMap('id');
+  }
+
+  static getInstance() {
+    if (instance) {
+      return instance;
+    } else {
+      return new Game();
+    }
   }
   
   startGame(playerName, onConnection) {

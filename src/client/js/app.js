@@ -12,7 +12,7 @@ var lastUpdate;
 var targetTick = performance.now();
 var mouse = { x: 0, y: 0 };
 var scrollDirection = null;
-var game = new Game();
+var game = Game.getInstance();
 
 var canvas = new DomElement('.js-canvas', Graph);
 var graph = canvas.instance;

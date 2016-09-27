@@ -1,3 +1,5 @@
+const OPCode = require('../../opCode');
+
 module.exports = {
-  Player: require('./Player.js')
+  [OPCode.MODEL_PLAYER]: require('./Player')
 };

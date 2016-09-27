@@ -3,10 +3,12 @@ const WebSocket = require('ws');
 const config = require('./config');
 const PacketHandler = require('./PacketHandler');
 const PlayerController = require('./PlayerController');
+const Factory = require('./Factory');
 const GameMode = require('./gamemodes');
 const Model = require('./models');
 const Packets = require('./packets');
 const Maps = require('./maps');
+const OPCode = require('../opCode');
 const WebSocketServer = WebSocket.Server;
 
 function GameServer(server) {
@@ -144,7 +146,12 @@ GameServer.prototype.onCast = function (spell) {
 }
 
 GameServer.prototype.spawnPlayer = function (player) {
-  const playerModel = new Model.Player(this, player);
+  const playerModel = Factory.instantiate(
+    OPCode.TYPE_MODEL, 
+    OPCode.MODEL_PLAYER,
+    this,
+    player
+  );
   
   player.target = {
     x: playerModel.position.x,
