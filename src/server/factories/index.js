@@ -1,5 +1,5 @@
 const OPCode = require('../../opCode');
 
 module.exports = {
-  [OPCode.SPELL_PRIMARY]: require('./Primary')
+  [OPCode.TYPE_SPELL]: require('./SpellFactory')
 };

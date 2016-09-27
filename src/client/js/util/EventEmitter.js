@@ -1,6 +1,6 @@
 export default class EventEmitter {
   constructor() {
-    this._eventHandlers = [];
+    this._eventHandlers = {};
   }
   
   on(name, listener) {

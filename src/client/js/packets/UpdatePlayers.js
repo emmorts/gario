@@ -19,7 +19,7 @@ export default {
     }]
   },
   transform: (object) => {
-    var updatedPlayers = object.updatedPlayers.map(player => {
+    const updatedPlayers = object.updatedPlayers.map(player => {
       return {
         id: player.id,
         ownerId: player.ownerId,
@@ -28,9 +28,9 @@ export default {
         position: { x: player.x, y: player.y },
         target: { x: player.targetX, y: player.targetY },
         color: { r: player.r, g: player.g, b: player.b }
-      }
+      };
     });
-    var destroyedPlayers = object.destroyedPlayers.map(player => player.id);
+    const destroyedPlayers = object.destroyedPlayers.map(player => player.id);
     
     return {
       updatedPlayers,

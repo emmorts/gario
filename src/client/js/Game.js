@@ -37,9 +37,9 @@ export default class Game extends EventEmitter {
     this.spellList.forEach((spell, spellIndex) => {
       this.playerList.forEach(player => {
         if (spell.ownerId !== player.ownerId) {
-          var distanceX = player.position.x - spell.position.x;
-          var distanceY = player.position.y - spell.position.y;
-          var distance = distanceX * distanceX + distanceY * distanceY;
+          const distanceX = player.position.x - spell.position.x;
+          const distanceY = player.position.y - spell.position.y;
+          const distance = distanceX * distanceX + distanceY * distanceY;
           if (distance < Math.pow(spell.radius + player.radius, 2)) {
             spell.onCollision(player);
             this.spellList.splice(spellIndex, 1);
@@ -64,37 +64,37 @@ export default class Game extends EventEmitter {
   }
   
   _handleUpdatePlayers (players) {
-    var updatedPlayers = players.updatedPlayers;
+    const updatedPlayers = players.updatedPlayers;
     if (updatedPlayers && updatedPlayers.length > 0) {
       updatedPlayers.forEach(updatedPlayer => {
-        var foundPlayer = this.playerList.get(updatedPlayer.id, 'id');
+        const foundPlayer = this.playerList.get(updatedPlayer.id, 'id');
         if (foundPlayer) {
           foundPlayer.setTarget(updatedPlayer.target);
         } else {
-          var player = new Models.Player(updatedPlayer);
+          const player = new Models.Player(updatedPlayer);
           this.playerList.add(player);
         }
       });
     }
     
-    var destroyedPlayers = players.destroyedPlayers;
+    const destroyedPlayers = players.destroyedPlayers;
     if (destroyedPlayers && destroyedPlayers.length > 0) {
       destroyedPlayers.forEach(destroyedPlayer => this.playerList.delete(destroyedPlayer));
     }
   }
   
   _handleUpdateSpells (spells) {
-    var updatedSpells = spells.updatedSpells;
+    const updatedSpells = spells.updatedSpells;
     if (updatedSpells && updatedSpells.length > 0) {
       updatedSpells.forEach(updatedSpell => {
-        var SpellClass = Spells.get(updatedSpell.type);
-        var spell = new SpellClass(updatedSpell);
+        const SpellClass = Spells.get(updatedSpell.type);
+        const spell = new SpellClass(updatedSpell);
         spell.onAdd(this.playerList.get(spell.ownerId, 'ownerId'));
         this.spellList.add(spell);
       });
     }
     
-    var destroyedSpells = spells.destroyedSpells;
+    const destroyedSpells = spells.destroyedSpells;
     if (destroyedSpells && destroyedSpells.length > 0) {
       destroyedSpells.forEach(destroyedSpell => this.spellList.delete(destroyedSpell));
     }

@@ -1,26 +1,37 @@
-module.exports = {
-  // actions
-  "PING": 0x01,
-  "PONG": 0x02,
-  "SPAWN_PLAYER": 0x03,
-  "ADD_PLAYER": 0x04,
-  "UPDATE_PLAYERS": 0x05,
-  "UPDATE_SPELLS": 0x06,
-  "PLAYER_MOVE": 0x07,
+const operations = [
+  "PING",
+  "PONG",
+  "SPAWN_PLAYER",
+  "ADD_PLAYER",
+  "UPDATE_PLAYERS",
+  "UPDATE_SPELLS",
+  "PLAYER_MOVE",
   
   // cast
-  "CAST_PRIMARY": 0x08,
+  "CAST_PRIMARY",
   
-  // types
-  "SPELL_PRIMARY": 0x0A,
+  // spells
+  "SPELL_PRIMARY",
   
   // direction
-  "DIRECTION_WEST": 0X14,
-  "DIRECTION_EAST": 0X15,
-  "DIRECTION_NORTH": 0X16,
-  "DIRECTION_SOUTH": 0X17,
-  "DIRECTION_NWEST": 0X18,
-  "DIRECTION_NEAST": 0X19,
-  "DIRECTION_SWEST": 0X1A,
-  "DIRECTION_SEAST": 0X1B
-};
+  "DIRECTION_WEST",
+  "DIRECTION_EAST",
+  "DIRECTION_NORTH",
+  "DIRECTION_SOUTH",
+  "DIRECTION_NWEST",
+  "DIRECTION_NEAST",
+  "DIRECTION_SWEST",
+  "DIRECTION_SEAST",
+
+  // types
+  "TYPE_SPELL",
+  "TYPE_MODEL",
+  "TYPE_GAMEMODE",
+  "TYPE_MAP"
+];
+
+const opCodes = {};
+
+operations.forEach((op, index) => opCodes[op] = ++index);
+
+module.exports = opCodes;

@@ -19,7 +19,7 @@ export default {
     }]
   },
   transform: (object) => {
-    var updatedSpells = object.updatedSpells.map(spell => {
+    const updatedSpells = object.updatedSpells.map(spell => {
       return {
         id: spell.id,
         ownerId: spell.ownerId,
@@ -29,9 +29,9 @@ export default {
         position: { x: spell.x, y: spell.y },
         target: { x: spell.targetX, y: spell.targetY },
         color: { r: spell.r, g: spell.g, b: spell.b }
-      }
+      };
     });
-    var destroyedSpells = object.destroyedSpells.map(spell => spell.id);
+    const destroyedSpells = object.destroyedSpells.map(spell => spell.id);
     
     return {
       updatedSpells,

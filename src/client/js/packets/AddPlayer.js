@@ -20,6 +20,6 @@ export default {
       maxHealth: player.maxHealth,
       position: { x: player.x, y: player.y },
       color: { r: player.r, g: player.g, b: player.b }
-    }
+    };
   }
 };
