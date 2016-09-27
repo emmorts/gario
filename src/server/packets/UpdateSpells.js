@@ -16,7 +16,7 @@ UpdateSpells.prototype.build = function () {
   this.updateQueue.forEach(function (node) {
     buffer
       .string(node.id)
-      .string(node.ownerId)
+      .string(node.owner.pId)
       .uint8(node.type)
       .uint8(node.mass)
       .uint8(node.power)

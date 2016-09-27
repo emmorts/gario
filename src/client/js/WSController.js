@@ -8,7 +8,7 @@ export default class WSController extends EventEmitter {
   constructor() {
     super();
     
-    this._uri = 'ws://192.168.2.116:3000';
+    this._uri = 'ws://127.0.0.1:3000';
     this._socket = null;
 
     this._setupSocket();

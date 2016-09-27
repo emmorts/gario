@@ -22,7 +22,7 @@ function GameServer(server) {
   this.tickMain = 0;
   this.updateRate = 1000 / 60;
   
-  this.gameMode = GameMode.get(config.defaultGameMode);
+  this.gameMode = GameMode.get.call(this, config.defaultGameMode);
   
   this._socketServerOptions = server
     ? { server: server }

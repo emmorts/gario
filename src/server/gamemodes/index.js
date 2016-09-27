@@ -7,7 +7,7 @@ module.exports.get = function (id) {
   
   switch (id) {
     default:
-      mode = new module.exports.FFA();
+      mode = new module.exports.FFA(this);
       break;
   }
   
