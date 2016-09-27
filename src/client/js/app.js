@@ -1,6 +1,6 @@
 require('./util/polyfills');
 
-var OPCode = require('../../opCode');
+const OPCode = require('../../opCode');
 
 import KeyCode from './util/KeyCode';
 import DomElement from './util/DomElement';

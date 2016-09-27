@@ -23,13 +23,13 @@ function PlayerController(gameServer, socket) {
 
 PlayerController.prototype.setName = function (value) {
   this.name = value;
-}
+};
 
 PlayerController.prototype.setTarget = function (target) {
   this.target = target;
   
   this.gameServer.onTargetUpdated(this.socket);
-}
+};
 
 PlayerController.prototype.cast = function (type, options) {
   let spell = null;
@@ -56,7 +56,7 @@ PlayerController.prototype.cast = function (type, options) {
   if (spell) {
     this.gameServer.onCast(spell);
   }
-}
+};
 
 PlayerController.prototype.update = function () {
   if (this.nodeAdditionQueue.length > 0 || this.nodeDestroyQueue.length > 0) {
@@ -72,6 +72,6 @@ PlayerController.prototype.update = function () {
   
   this.spellAdditionQueue = [];
   this.spellDestroyQueue = [];
-}
+};
 
 module.exports = PlayerController;
