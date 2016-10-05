@@ -6,6 +6,7 @@ import KeyCode from './util/KeyCode';
 import DomElement from './util/DomElement';
 import Graph from './Graph';
 import Game from './Game';
+import Score from './statistics';
 
 var animationLoopHandle;
 var lastUpdate;
@@ -138,6 +139,10 @@ function startGame () {
           x: mouse.x + graph.xOffset,
           y: mouse.y + graph.yOffset
         });
+        //For testing purposes only
+        Score.getInstance().add();
+        console.log(Score.getInstance().currentScore());
+        console.log("THIS IS HERE");
         break;
     }
   }

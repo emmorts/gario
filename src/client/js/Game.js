@@ -3,6 +3,7 @@ import WSController from './WSController';
 import EventEmitter from './util/EventEmitter';
 import * as Spells from './spells';
 import * as Models from './models';
+import Score from './statistics';
 
 let instance = null;
 
@@ -52,6 +53,7 @@ export default class Game extends EventEmitter {
           const distance = distanceX * distanceX + distanceY * distanceY;
           if (distance < Math.pow(spell.radius + player.radius, 2)) {
             spell.onCollision(player);
+            Score.getInstance.add(1)
             this.spellList.splice(spellIndex, 1);
           }
         }

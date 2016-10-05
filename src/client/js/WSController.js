@@ -35,6 +35,7 @@ export default class WSController extends EventEmitter {
   }
   
   cast(opcode, options) {
+    console.log("CASTING");
     var buffer = BufferCodec()
       .uint8(opcode)
       .uint16le(options.playerX)
