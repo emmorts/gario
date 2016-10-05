@@ -106,6 +106,12 @@ GameServer.prototype.addPlayer = function (player) {
   if (player.owner) {
     player.setColor(player.owner.color);
     player.owner.socket.sendPacket(new Packets.AddPlayer(player));
+    
+    // this.clients.forEach(function (client) {
+    //   if (client !== player.owner.socket) {
+    //     client.sendPacket(new Packets.UpdatePlayers([], [ player ]));
+    //   }
+    // }, this);
   }
 
   player.onAdd();
@@ -120,7 +126,7 @@ GameServer.prototype.updateClients = function () {
 }
 
 GameServer.prototype.onTargetUpdated = function (socket) {
-  const node = this.players.find(node => node.owner.id === socket.playerController.pId);
+  const node = this.players.find(node => node.owner.pId === socket.playerController.pId);
   
   if (node) {
     this.clients.forEach(function (client) {
@@ -159,6 +165,8 @@ GameServer.prototype.spawnPlayer = function (player) {
   };
 
   player.model = playerModel;
+  
+  this.gameMode.onPlayerSpawn(player);
   
   this.addPlayer(playerModel);
 }

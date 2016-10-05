@@ -36,8 +36,7 @@ class PacketHandler {
       name: { type: 'string', encoding: 'utf8' }
     }, obj => obj.name || '');
     
-    this.socket.playerController.setName(playerName);
-    this.gameServer.gameMode.onPlayerSpawn(this.socket.playerController);
+    this.socket.playerController.spawn(playerName);
   }
 
   _movePlayer(codec) {

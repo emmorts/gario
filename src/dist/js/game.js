@@ -392,9 +392,9 @@ if (typeof module !== 'undefined' && module.exports) {
     }
     this.indices = Array.prototype.slice.call(arguments);
     this.length = 0;
-    this._head = null;
-    this._tail = null;
-    this._position = null;
+    this._head = {};
+    this._tail = {};
+    this._position = {};
     this._keys = {};
     this._debug = true;
   }
@@ -412,12 +412,14 @@ if (typeof module !== 'undefined' && module.exports) {
           var key = object[index];
           
           if (this.length === 0) {
-            this._head = this._tail = node;
+            this._head[index] = this._tail[index] = node;
+            node.p = node.n = null;
             this.reset();
           } else {
-            node.p = this._tail;
-            this._tail.n = node;
-            this._tail = node;
+            node.p = this._tail[index];
+            node.n = null;
+            this._tail[index].n = node;
+            this._tail[index] = node;
           }
           
           this._keys[index][key] = node;
@@ -467,20 +469,29 @@ if (typeof module !== 'undefined' && module.exports) {
   }
   
   SmartMap.prototype.reset = function () {
-    this._position = { n: this._head };
+    this._position = this.indices.reduce(function (pos, index) {
+      if (index in this._head) {
+        pos[index] = { n: this._head[index] };
+      } else {
+        pos[index] = { n : null };
+      }
+      return pos;
+    }.bind(this), {});
   }
   
   SmartMap.prototype.empty = function () {
     this._keys = {};
-    this._head = this._tail = this._position = null;
+    this._head = this._tail = {};
     this.length = 0;
+    this.reset();
   };
   
   SmartMap.prototype.forEach = function (fn, thisArg) {
     var tmp, index = 0;
     
     if (this.length) {
-      while (tmp = _next.call(this)) {
+      var iterateBy = this.indices[0];
+      while (tmp = _next.call(this, iterateBy)) {
         if (thisArg) {
           fn.call(thisArg, tmp.v, index);
         } else {
@@ -497,7 +508,8 @@ if (typeof module !== 'undefined' && module.exports) {
     var tmp, result;
     
     if (this.length) {
-      while (tmp = _next.call(this)) {
+      var iterateBy = this.indices[0];
+      while (tmp = _next.call(this, iterateBy)) {
         var passes = thisArg ? predicate.call(this, tmp.v) : predicate(tmp.v);
         if (passes) {
           result = tmp.v;
@@ -520,8 +532,8 @@ if (typeof module !== 'undefined' && module.exports) {
     return validatedProperties === this.indices.length;
   }
   
-  function _next() {
-    return this._position = this._position.n;
+  function _next(index) {
+    return this._position[index] = this._position[index].n;
   }
   
   function _warn(message) {
@@ -660,14 +672,14 @@ var Game = function (_EventEmitter) {
             var player = new Models.Player(updatedPlayer);
             _this3.playerList.add(player);
           }
-        });
+        }, this);
       }
 
       var destroyedPlayers = players.destroyedPlayers;
       if (destroyedPlayers && destroyedPlayers.length > 0) {
         destroyedPlayers.forEach(function (destroyedPlayer) {
           return _this3.playerList.delete(destroyedPlayer);
-        });
+        }, this);
       }
     }
   }, {
@@ -682,14 +694,14 @@ var Game = function (_EventEmitter) {
           var spell = new SpellClass(updatedSpell);
           spell.onAdd(_this4.playerList.get(spell.ownerId, 'ownerId'));
           _this4.spellList.add(spell);
-        });
+        }, this);
       }
 
       var destroyedSpells = spells.destroyedSpells;
       if (destroyedSpells && destroyedSpells.length > 0) {
         destroyedSpells.forEach(function (destroyedSpell) {
           return _this4.spellList.delete(destroyedSpell);
-        });
+        }, this);
       }
     }
   }], [{
@@ -892,7 +904,7 @@ var Graph = function () {
   }, {
     key: 'drawText',
     value: function drawText(text, x, y, fontSize) {
-      var hasStroke = arguments.length <= 4 || arguments[4] === undefined ? true : arguments[4];
+      var hasStroke = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
 
       if (typeof fontSize === 'undefined') {
         fontSize = this._playerOptions.fontSize;
@@ -976,7 +988,7 @@ var Graph = function () {
     value: function drawSpells() {
       var _this2 = this;
 
-      var spellList = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+      var spellList = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
 
       spellList.forEach(function (spell) {
         return _this2.drawSpell(spell);
@@ -1092,7 +1104,6 @@ var WSController = function (_EventEmitter) {
   }, {
     key: 'cast',
     value: function cast(opcode, options) {
-      console.log("CASTING");
       var buffer = BufferCodec().uint8(opcode).uint16le(options.playerX).uint16le(options.playerY).uint16le(options.x).uint16le(options.y).result();
 
       this._socket.send(buffer);
@@ -1308,7 +1319,6 @@ function startGame() {
         //For testing purposes only
         var scoreHolder = Statistics.Score.getInstance();
         scoreHolder.add();
-        console.log(scoreHolder.currentScore());
         break;
     }
   }
@@ -1581,7 +1591,7 @@ exports.default = {
       id: { type: 'string', length: 32 },
       ownerId: { type: 'string', length: 32 },
       name: 'string',
-      health: 'unint16le',
+      health: 'uint16le',
       maxHealth: 'uint16le',
       x: 'float32le',
       y: 'float32le',
@@ -1849,7 +1859,7 @@ var Score = function () {
     _createClass(Score, [{
         key: "add",
         value: function add() {
-            var s = arguments.length <= 0 || arguments[0] === undefined ? 1 : arguments[0];
+            var s = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 
             this._score += s;
         }
@@ -1862,10 +1872,8 @@ var Score = function () {
         key: "getInstance",
         value: function getInstance() {
             if (instance) {
-                console.log("Instance");
                 return instance;
             } else {
-                console.log("Newly made");
                 instance = new Score();
                 return instance;
             }

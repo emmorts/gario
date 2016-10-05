@@ -142,7 +142,6 @@ function startGame () {
         //For testing purposes only
         const scoreHolder = Statistics.Score.getInstance();
         scoreHolder.add();
-        console.log(scoreHolder.currentScore());
         break;
     }
   }

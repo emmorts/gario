@@ -4,7 +4,7 @@ export default {
       id: { type: 'string', length: 32 },
       ownerId: { type: 'string', length: 32},
       name: 'string',
-      health: 'unint16le',
+      health: 'uint16le',
       maxHealth: 'uint16le',
       x: 'float32le',
       y: 'float32le',

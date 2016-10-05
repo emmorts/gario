@@ -7,10 +7,8 @@ export default class Score {
 
     static getInstance() {
         if (instance) {
-            console.log("Instance");
             return instance;
         } else {
-            console.log("Newly made");
             instance = new Score();
             return instance;
         }

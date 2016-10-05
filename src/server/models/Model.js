@@ -7,9 +7,9 @@ class Model {
     this.type = null;
   }
 
-  calculateNextPosition() {}
-  setColor() {}
-  onAdd() {}
+  calculateNextPosition() {};
+  setColor() {};
+  onAdd() {};
 }
 
 module.exports = Model;

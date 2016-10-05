@@ -85,12 +85,12 @@ export default class Game extends EventEmitter {
           const player = new Models.Player(updatedPlayer);
           this.playerList.add(player);
         }
-      });
+      }, this);
     }
     
     const destroyedPlayers = players.destroyedPlayers;
     if (destroyedPlayers && destroyedPlayers.length > 0) {
-      destroyedPlayers.forEach(destroyedPlayer => this.playerList.delete(destroyedPlayer));
+      destroyedPlayers.forEach(destroyedPlayer => this.playerList.delete(destroyedPlayer), this);
     }
   }
   
@@ -102,12 +102,12 @@ export default class Game extends EventEmitter {
         const spell = new SpellClass(updatedSpell);
         spell.onAdd(this.playerList.get(spell.ownerId, 'ownerId'));
         this.spellList.add(spell);
-      });
+      }, this);
     }
     
     const destroyedSpells = spells.destroyedSpells;
     if (destroyedSpells && destroyedSpells.length > 0) {
-      destroyedSpells.forEach(destroyedSpell => this.spellList.delete(destroyedSpell));
+      destroyedSpells.forEach(destroyedSpell => this.spellList.delete(destroyedSpell), this);
     }
   }
 }

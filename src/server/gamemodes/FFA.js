@@ -11,9 +11,8 @@ class FFA extends Mode {
   
   onPlayerSpawn(player) {
     player.color = this.gameServer.getRandomColor();
-    player.maxHealth = player.health = this.baseHealth;
-
-    this.gameServer.spawnPlayer.call(this.gameServer, player);
+    player.maxHealth = this.baseHealth;
+    player.health = player.maxHealth;
   }
 }
 
