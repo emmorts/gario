@@ -698,7 +698,8 @@ var Game = function (_EventEmitter) {
       if (instance) {
         return instance;
       } else {
-        return new Game();
+        instance = new Game();
+        return instance;
       }
     }
   }]);
@@ -708,7 +709,7 @@ var Game = function (_EventEmitter) {
 
 exports.default = Game;
 
-},{"./WSController":5,"./models":8,"./spells":14,"./util/EventEmitter":16,"smartmap":2}],4:[function(require,module,exports){
+},{"./WSController":5,"./models":8,"./spells":14,"./util/EventEmitter":18,"smartmap":2}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -716,6 +717,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _statistics = require('./statistics');
+
+var Statistics = _interopRequireWildcard(_statistics);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -827,6 +834,10 @@ var Graph = function () {
         // VELOCITY
         var velocity = 'Velocity: ' + Math.round(this.player.velocity.x) + ' ' + Math.round(this.player.velocity.y);
         this.drawText(velocity, 50, 30);
+
+        // Score
+        var score = 'Score: ' + Statistics.Score.getInstance().currentScore();
+        this.drawText(score, 50, 10);
       }
 
       return this;
@@ -1019,7 +1030,7 @@ function getDefaultHeight() {
   return window.innerHeight && document.documentElement.clientHeight ? Math.min(window.innerHeight, document.documentElement.clientHeight) : window.innerHeight || document.documentElement.clientHeight || document.getElementsByTagName('body')[0].clientHeight;
 }
 
-},{"../../opCode":19}],5:[function(require,module,exports){
+},{"../../opCode":21,"./statistics":16}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1081,6 +1092,7 @@ var WSController = function (_EventEmitter) {
   }, {
     key: 'cast',
     value: function cast(opcode, options) {
+      console.log("CASTING");
       var buffer = BufferCodec().uint8(opcode).uint16le(options.playerX).uint16le(options.playerY).uint16le(options.x).uint16le(options.y).result();
 
       this._socket.send(buffer);
@@ -1134,7 +1146,7 @@ var WSController = function (_EventEmitter) {
 
 exports.default = WSController;
 
-},{"../../opCode":19,"./packets/index":12,"./util/EventEmitter":16,"buffercodec":1}],6:[function(require,module,exports){
+},{"../../opCode":21,"./packets/index":12,"./util/EventEmitter":18,"buffercodec":1}],6:[function(require,module,exports){
 'use strict';
 
 var _KeyCode = require('./util/KeyCode');
@@ -1152,6 +1164,12 @@ var _Graph2 = _interopRequireDefault(_Graph);
 var _Game = require('./Game');
 
 var _Game2 = _interopRequireDefault(_Game);
+
+var _statistics = require('./statistics');
+
+var Statistics = _interopRequireWildcard(_statistics);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1287,12 +1305,16 @@ function startGame() {
           x: mouse.x + graph.xOffset,
           y: mouse.y + graph.yOffset
         });
+        //For testing purposes only
+        var scoreHolder = Statistics.Score.getInstance();
+        scoreHolder.add();
+        console.log(scoreHolder.currentScore());
         break;
     }
   }
 }
 
-},{"../../opCode":19,"./Game":3,"./Graph":4,"./util/DomElement":15,"./util/KeyCode":17,"./util/polyfills":18}],7:[function(require,module,exports){
+},{"../../opCode":21,"./Game":3,"./Graph":4,"./statistics":16,"./util/DomElement":17,"./util/KeyCode":19,"./util/polyfills":20}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1804,7 +1826,76 @@ function get(code) {
   return spell;
 }
 
-},{"../../../opCode":19,"./Primary":13}],15:[function(require,module,exports){
+},{"../../../opCode":21,"./Primary":13}],15:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var instance = null;
+
+var Score = function () {
+    function Score() {
+        _classCallCheck(this, Score);
+
+        this._score = 0;
+    }
+
+    _createClass(Score, [{
+        key: "add",
+        value: function add() {
+            var s = arguments.length <= 0 || arguments[0] === undefined ? 1 : arguments[0];
+
+            this._score += s;
+        }
+    }, {
+        key: "currentScore",
+        value: function currentScore() {
+            return this._score;
+        }
+    }], [{
+        key: "getInstance",
+        value: function getInstance() {
+            if (instance) {
+                console.log("Instance");
+                return instance;
+            } else {
+                console.log("Newly made");
+                instance = new Score();
+                return instance;
+            }
+        }
+    }]);
+
+    return Score;
+}();
+
+exports.default = Score;
+
+},{}],16:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _Score = require('./Score');
+
+Object.defineProperty(exports, 'Score', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_Score).default;
+  }
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+},{"./Score":15}],17:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1853,7 +1944,7 @@ var DomElement = function () {
 
 exports.default = DomElement;
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1895,7 +1986,7 @@ var EventEmitter = function () {
 
 exports.default = EventEmitter;
 
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1993,7 +2084,7 @@ exports.default = {
   F12: 123
 };
 
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 if (!Array.prototype.find) {
@@ -2048,7 +2139,7 @@ if (!Date.now) {
   }
 })();
 
-},{}],19:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 "use strict";
 
 var operations = ["PING", "PONG", "SPAWN_PLAYER", "ADD_PLAYER", "UPDATE_PLAYERS", "UPDATE_SPELLS", "PLAYER_MOVE",

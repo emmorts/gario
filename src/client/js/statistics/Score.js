@@ -1,16 +1,18 @@
-
 let instance = null;
 
 export default class Score {
     constructor() {
-        this._score = 0
+        this._score = 0;
     }
 
     static getInstance() {
         if (instance) {
+            console.log("Instance");
             return instance;
         } else {
-            return new Score();
+            console.log("Newly made");
+            instance = new Score();
+            return instance;
         }
     }
 

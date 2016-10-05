@@ -1,5 +1,7 @@
 var OPCode = require('../../opCode');
 
+import * as Statistics from './statistics';
+
 export default class Graph {
   constructor(canvas) {
     this._canvas = canvas;
@@ -100,6 +102,10 @@ export default class Graph {
       // VELOCITY
       var velocity = 'Velocity: ' + Math.round(this.player.velocity.x) + ' ' + Math.round(this.player.velocity.y);
       this.drawText(velocity, 50, 30);
+
+      // Score
+      var score = 'Score: ' + Statistics.Score.getInstance().currentScore();
+      this.drawText(score, 50, 10);
     }
     
     return this;
