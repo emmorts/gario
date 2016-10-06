@@ -63,14 +63,15 @@ GameServer.prototype.start = function () {
     this.clients.push(socket);
 
     function closeConnection(error) {
-      const nodes = this.players.filter(node => node.ownerId === socket.playerController.pId);
+      const indexOfPlayer = this.players.findIndex(node => node.ownerId === socket.playerController.pId);
       
-      if (nodes.length > 0) {
-        this.clients.forEach(function (client) {
-          if (client !== socket) {
-            client.sendPacket(new Packets.UpdatePlayers(nodes));
-          }
-        }, this);
+      if (indexOfPlayer !== -1) {
+        const packet = new Packets.UpdatePlayers([ this.players[indexOfPlayer] ]);
+
+        this.players.splice(indexOfPlayer, 1);
+
+        this.clients = this.clients.filter(client => client !== socket);
+        this.clients.forEach(client => client.sendPacket(packet));
       }
       
       console.log("Connection closed.");
@@ -101,18 +102,20 @@ GameServer.prototype.movementTick = function () {
 }
 
 GameServer.prototype.addPlayer = function (player) {
-  this.players.push(player);
-
   if (player.owner) {
     player.setColor(player.owner.color);
     player.owner.socket.sendPacket(new Packets.AddPlayer(player));
     
-    // this.clients.forEach(function (client) {
-    //   if (client !== player.owner.socket) {
-    //     client.sendPacket(new Packets.UpdatePlayers([], [ player ]));
-    //   }
-    // }, this);
+    this.clients.forEach(function (client) {
+      if (client !== player.owner.socket) {
+        client.sendPacket(new Packets.UpdatePlayers([], [ player ]));
+      }
+    }, this);
+    
+    player.owner.socket.sendPacket(new Packets.UpdatePlayers([], this.players));
   }
+  
+  this.players.push(player);
 
   player.onAdd();
 }

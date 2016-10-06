@@ -1610,7 +1610,8 @@ exports.default = {
       return {
         id: player.id,
         ownerId: player.ownerId,
-        name: player.health,
+        name: player.name,
+        health: player.health,
         maxHealth: player.maxHealth,
         position: { x: player.x, y: player.y },
         target: { x: player.targetX, y: player.targetY },
