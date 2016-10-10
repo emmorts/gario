@@ -37,29 +37,31 @@ class PlayerController {
   }
 
   cast(spellType, options) {
-    const spell = Factory.instantiate(
-      OPCode.TYPE_SPELL, 
-      spellType, 
-      this.gameServer, 
-      this, 
-        {
-        position: {
-          x: options.playerX,
-          y: options.playerY
-        },
-        target: {
-          x: options.x,
-          y: options.y
+    if (!(spellType in this.spells)) {
+      const spell = Factory.instantiate(
+        OPCode.TYPE_SPELL, 
+        spellType, 
+        this.gameServer, 
+        this, 
+          {
+          position: {
+            x: options.playerX,
+            y: options.playerY
+          },
+          target: {
+            x: options.x,
+            y: options.y
+          }
         }
+      );
+
+      if (spell) {
+        this.spells[spellType] = spell;
+
+        setTimeout(() => delete this.spells[spellType], spell.cooldown);
+
+        this.gameServer.onCast(spell);
       }
-    );
-
-    if (spell) {
-      this.spells[spellType] = spell;
-
-      setTimeout(() => delete this.spells[spellType], spell.cooldown);
-
-      this.gameServer.onCast(spell);
     }
   };
 
