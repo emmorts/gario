@@ -53,7 +53,7 @@ export default class Game extends EventEmitter {
           const distance = distanceX * distanceX + distanceY * distanceY;
           if (distance < Math.pow(spell.radius + player.radius, 2)) {
             spell.onCollision(player);
-            this.spellList.splice(spellIndex, 1);
+            this.spellList.delete(spell.id, 'id');
           }
         }
       });
@@ -90,7 +90,7 @@ export default class Game extends EventEmitter {
     
     const destroyedPlayers = players.destroyedPlayers;
     if (destroyedPlayers && destroyedPlayers.length > 0) {
-      destroyedPlayers.forEach(destroyedPlayer => this.playerList.delete(destroyedPlayer), this);
+      destroyedPlayers.forEach(destroyedPlayer => this.playerList.delete(destroyedPlayer, 'id'), this);
     }
   }
   
@@ -107,7 +107,7 @@ export default class Game extends EventEmitter {
     
     const destroyedSpells = spells.destroyedSpells;
     if (destroyedSpells && destroyedSpells.length > 0) {
-      destroyedSpells.forEach(destroyedSpell => this.spellList.delete(destroyedSpell), this);
+      destroyedSpells.forEach(destroyedSpell => this.spellList.delete(destroyedSpell, 'id'), this);
     }
   }
 }

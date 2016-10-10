@@ -413,11 +413,11 @@ if (typeof module !== 'undefined' && module.exports) {
           
           if (this.length === 0) {
             this._head[index] = this._tail[index] = node;
-            node.p = node.n = null;
+            node.p = node.n = undefined;
             this.reset();
           } else {
             node.p = this._tail[index];
-            node.n = null;
+            node.n = undefined;
             this._tail[index].n = node;
             this._tail[index] = node;
           }
@@ -457,9 +457,12 @@ if (typeof module !== 'undefined' && module.exports) {
 
         if (node.p) node.p.n = node.n;
         if (node.n) node.n.p = node.p;
+        if (node === this._tail[index]) this._tail[index] = this._tail[index].p; 
 
-        this._keys[index][key] = null;
+        this._keys[index][key] = undefined;
         this.length--;
+        
+        delete this._keys[index][key];
       }
 
       return object;
@@ -473,7 +476,7 @@ if (typeof module !== 'undefined' && module.exports) {
       if (index in this._head) {
         pos[index] = { n: this._head[index] };
       } else {
-        pos[index] = { n : null };
+        pos[index] = { n : undefined };
       }
       return pos;
     }.bind(this), {});
@@ -635,7 +638,7 @@ var Game = function (_EventEmitter) {
             var distance = distanceX * distanceX + distanceY * distanceY;
             if (distance < Math.pow(spell.radius + player.radius, 2)) {
               spell.onCollision(player);
-              _this2.spellList.splice(spellIndex, 1);
+              _this2.spellList.delete(spell.id, 'id');
             }
           }
         });
@@ -678,7 +681,7 @@ var Game = function (_EventEmitter) {
       var destroyedPlayers = players.destroyedPlayers;
       if (destroyedPlayers && destroyedPlayers.length > 0) {
         destroyedPlayers.forEach(function (destroyedPlayer) {
-          return _this3.playerList.delete(destroyedPlayer);
+          return _this3.playerList.delete(destroyedPlayer, 'id');
         }, this);
       }
     }
@@ -700,7 +703,7 @@ var Game = function (_EventEmitter) {
       var destroyedSpells = spells.destroyedSpells;
       if (destroyedSpells && destroyedSpells.length > 0) {
         destroyedSpells.forEach(function (destroyedSpell) {
-          return _this4.spellList.delete(destroyedSpell);
+          return _this4.spellList.delete(destroyedSpell, 'id');
         }, this);
       }
     }
@@ -1080,7 +1083,7 @@ var WSController = function (_EventEmitter) {
 
     var _this = _possibleConstructorReturn(this, (WSController.__proto__ || Object.getPrototypeOf(WSController)).call(this));
 
-    _this._uri = 'ws://127.0.0.1:3000';
+    _this._uri = 'ws://192.168.1.142:3000';
     _this._socket = null;
 
     _this._setupSocket();
