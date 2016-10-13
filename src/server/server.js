@@ -13,7 +13,7 @@ const config = require('server/config');
 
 new GameServer(server).start();
 
-app.use(express['static'](__dirname + '/../dist'));
+app.use(express['static'](__dirname + '/../../dist'));
 
 server.on('request', app);
 server.listen(config.port, () => console.log('Listening on ' + server.address().port));

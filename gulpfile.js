@@ -9,6 +9,8 @@ var watchify = require('watchify');
 var babel = require('babelify');
 var path = require('path');
 
+var dist = './dist/';
+
 function compile(watch) {
   var bundler = watchify(
       browserify({
@@ -29,7 +31,7 @@ function compile(watch) {
       .pipe(buffer())
       .pipe(sourcemaps.init({ loadMaps: true }))
       .pipe(sourcemaps.write('./'))
-      .pipe(gulp.dest('./src/dist/js/'));
+      .pipe(gulp.dest(dist + 'js/'));
   }
 
   if (watch) {
@@ -53,12 +55,12 @@ function watch() {
 
 gulp.task('css', function () {
   return gulp.src('./src/assets/css/*.css')
-    .pipe(gulp.dest('./src/dist/css'));
+    .pipe(gulp.dest(dist + 'css'));
 });
 
 gulp.task('html', function () {
   return gulp.src('./src/assets/*.html')
-    .pipe(gulp.dest('./src/dist/'));
+    .pipe(gulp.dest(dist));
 });
 
 gulp.task('build', ['css', 'html'], function () {

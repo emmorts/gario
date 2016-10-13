@@ -66,13 +66,10 @@ GameServer.prototype.start = function () {
       const indexOfPlayer = this.players.findIndex(node => node.ownerId === socket.playerController.pId);
 
       if (indexOfPlayer !== -1) {
-        // const packet = new Packets.UpdatePlayers([ this.players[indexOfPlayer] ]);
-
         this.players.splice(indexOfPlayer, 1);
 
         this.clients = this.clients.filter(client => client !== socket);
         this.clients.forEach(client => client.playerController.nodeDestroyQueue.push(this.players[indexOfPlayer]));
-        // this.clients.forEach(client => client.sendPacket(packet));
       }
 
       console.log("Connection closed.");
@@ -110,12 +107,10 @@ GameServer.prototype.addPlayer = function (player) {
     this.clients.forEach(function (client) {
       if (client !== player.owner.socket) {
         client.playerController.nodeAdditionQueue.push(player);
-        // client.sendPacket(new Packets.UpdatePlayers([], [ player ]));
       }
     }, this);
 
     player.owner.nodeAdditionQueue = player.owner.nodeAdditionQueue.concat(this.players);
-    // player.owner.socket.sendPacket(new Packets.UpdatePlayers([], this.players));
   }
 
   this.players.push(player);
@@ -138,7 +133,6 @@ GameServer.prototype.onTargetUpdated = function (socket) {
     this.clients.forEach(function (client) {
       if (client !== socket) {
         client.playerController.nodeAdditionQueue.push(node);
-        // client.sendPacket(new Packets.UpdatePlayers([], [ node ]));
       }
     }, this);
   }
@@ -198,17 +192,6 @@ GameServer.prototype.getRandomColor = function () {
 	     b: 0,
 	     g: 255
     };
-  }
-};
-
-WebSocket.prototype.sendPacket = function (packet) {
-  if (this.readyState == WebSocket.OPEN && packet.build) {
-    const buffer = packet.build();
-    this.send(buffer, { binary: true });
-  } else {
-    this.readyState = WebSocket.CLOSED;
-    this.emit('close');
-    this.removeAllListeners();
   }
 };
 
