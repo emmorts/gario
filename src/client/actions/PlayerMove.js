@@ -7,6 +7,17 @@ class PlayerMove extends Action {
     super(OPCode.PLAYER_MOVE);
   }
 
+  build(object) {
+    if (this.actionSchema) {
+      return this.actionSchema.encode({
+        x: object.target.x,
+        y: object.target.y
+      });
+    }
+
+    return null;
+  }
+
 }
 
 module.exports = PlayerMove;
