@@ -1,4 +1,4 @@
-const factories = require('./factories');
+const factories = require('factories');
 
 class Factory {
 

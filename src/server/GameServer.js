@@ -1,13 +1,13 @@
 const server = require('http').createServer();
 const WebSocket = require('ws');
-const config = require('./config');
-const PacketHandler = require('./PacketHandler');
-const PlayerController = require('./PlayerController');
-const Factory = require('./Factory');
-const GameMode = require('./gamemodes');
-const Model = require('./models');
-const Packets = require('./packets');
-const Maps = require('./maps');
+const config = require('config');
+const PacketHandler = require('PacketHandler');
+const PlayerController = require('PlayerController');
+const Factory = require('Factory');
+const GameMode = require('gamemodes');
+const Model = require('models');
+const Packets = require('packets');
+const Maps = require('maps');
 const OPCode = require('../opCode');
 const WebSocketServer = WebSocket.Server;
 
@@ -53,9 +53,9 @@ GameServer.prototype.start = function () {
     socket.playerController = new PlayerController(this, socket);
     socket.packetHandler = new PacketHandler(this, socket);
 
-    socket.on('message', function (message) {
+    socket.on('message', message => {
       socket.packetHandler.handleMessage.call(socket.packetHandler, message);
-    }.bind(this));
+    });
 
     socket.on('error', closeConnection.bind(this));
     socket.on('close', closeConnection.bind(this));
@@ -82,7 +82,7 @@ GameServer.prototype.start = function () {
     console.log("[Error] Unhandled error code: " + error.code);
     process.exit(1);
   }
-}
+};
 
 GameServer.prototype.gameLoop = function () {
   const local = Date.now();
@@ -95,16 +95,16 @@ GameServer.prototype.gameLoop = function () {
 
     this.tick = 0;
   }
-}
+};
 
 GameServer.prototype.movementTick = function () {
   this.players.forEach(player => player.calculateNextPosition());
-}
+};
 
 GameServer.prototype.addPlayer = function (player) {
   if (player.owner) {
     player.setColor(player.owner.color);
-    player.owner.socket.sendPacket(new Packets.AddPlayer(player));
+    player.owner.send(OPCode.ADD_PLAYER, player);
     
     this.clients.forEach(function (client) {
       if (client !== player.owner.socket) {
@@ -118,7 +118,7 @@ GameServer.prototype.addPlayer = function (player) {
   this.players.push(player);
 
   player.onAdd();
-}
+};
 
 GameServer.prototype.updateClients = function () {
   this.clients.forEach(function (client) {
@@ -126,7 +126,7 @@ GameServer.prototype.updateClients = function () {
       client.playerController.update();
     }
   }, this);
-}
+};
 
 GameServer.prototype.onTargetUpdated = function (socket) {
   const node = this.players.find(node => node.owner.pId === socket.playerController.pId);
@@ -138,7 +138,7 @@ GameServer.prototype.onTargetUpdated = function (socket) {
       }
     }, this);
   }
-}
+};
 
 GameServer.prototype.onCast = function (spell) {
   this.spells.push(spell);
@@ -152,7 +152,7 @@ GameServer.prototype.onCast = function (spell) {
       this.spells.splice(index, 1);
     }
   }, spell.duration);
-}
+};
 
 GameServer.prototype.spawnPlayer = function (player) {
   const playerModel = Factory.instantiate(
@@ -172,7 +172,7 @@ GameServer.prototype.spawnPlayer = function (player) {
   this.gameMode.onPlayerSpawn(player);
   
   this.addPlayer(playerModel);
-}
+};
 
 GameServer.prototype.getRandomColor = function () {
   const rand = Math.floor(Math.random() * 3);
@@ -195,7 +195,7 @@ GameServer.prototype.getRandomColor = function () {
 	     g: 255
     };
   }
-}
+};
 
 WebSocket.prototype.sendPacket = function (packet) {
   if (this.readyState == WebSocket.OPEN && packet.build) {

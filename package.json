@@ -15,6 +15,7 @@
   "author": "Tomas Stropus",
   "license": "ISC",
   "dependencies": {
+    "app-module-path": "^2.1.0",
     "buffercodec": "*.*.*",
     "express": "^4.13.3",
     "node-uuid": "^1.4.7",
@@ -29,6 +30,8 @@
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",
     "gulp-sourcemaps": "^1.6.0",
+    "gulp-util": "^3.0.7",
+    "pathmodify": "^0.5.0",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.7.0"

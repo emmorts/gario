@@ -1,5 +1,5 @@
 const OPCode = require('../../opCode');
-const Spell = require('./Spell');
+const Spell = require('spells/Spell');
 
 class Primary extends Spell {
   constructor(gameServer, owner, options) {

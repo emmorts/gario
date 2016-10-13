@@ -1,4 +1,4 @@
-const Mode = require('./Mode');
+const Mode = require('gamemodes/Mode');
 
 class FFA extends Mode {
   constructor(gameServer) {

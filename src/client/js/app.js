@@ -1,12 +1,12 @@
-require('./util/polyfills');
+require('util/polyfills');
 
-const OPCode = require('../../opCode');
+const OPCode = require('shared/opCode');
 
-import KeyCode from './util/KeyCode';
-import DomElement from './util/DomElement';
-import Graph from './Graph';
-import Game from './Game';
-import * as Statistics from './statistics';
+import KeyCode from 'util/KeyCode';
+import DomElement from 'util/DomElement';
+import Graph from 'Graph';
+import Game from 'Game';
+import * as Statistics from 'statistics';
 
 var animationLoopHandle;
 var lastUpdate;
@@ -125,20 +125,28 @@ function startGame () {
         targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
         game.currentPlayer.setTarget({ x: targetX, y: targetY});
         targetTick = now;
-        game.controller.move(game.currentPlayer);
+        game.controller.send(OPCode.PLAYER_MOVE, game.currentPlayer);
+        // game.controller.move(game.currentPlayer);
       }
     }
   }
   
   function wHandleKeyDown(event) {
     switch (event.keyCode) {
-      case KeyCode.Q:
-        game.controller.cast(OPCode.CAST_PRIMARY, {
+      case KeyCode.SPACE:
+        game.controller.send(OPCode.CAST_SPELL, {
+          type: OPCode.SPELL_PRIMARY,
           playerX: game.currentPlayer.position.x,
           playerY: game.currentPlayer.position.y,
           x: mouse.x + graph.xOffset,
           y: mouse.y + graph.yOffset
         });
+        // game.controller.cast(OPCode.CAST_PRIMARY, {
+        //   playerX: game.currentPlayer.position.x,
+        //   playerY: game.currentPlayer.position.y,
+        //   x: mouse.x + graph.xOffset,
+        //   y: mouse.y + graph.yOffset
+        // });
         //For testing purposes only
         const scoreHolder = Statistics.Score.getInstance();
         scoreHolder.add();

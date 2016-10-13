@@ -1,8 +1,10 @@
+const OPCode = require('shared/opCode');
+
 import SmartMap from 'smartmap';
-import WSController from './WSController';
-import EventEmitter from './util/EventEmitter';
-import * as Spells from './spells';
-import * as Models from './models';
+import WSController from 'WSController';
+import EventEmitter from 'util/EventEmitter';
+import * as Spells from 'spells';
+import * as Models from 'models';
 
 let instance = null;
 
@@ -21,8 +23,7 @@ export default class Game extends EventEmitter {
     if (instance) {
       return instance;
     } else {
-      instance = new Game();
-      return instance;
+      return instance = new Game();
     }
   }
   
@@ -35,13 +36,13 @@ export default class Game extends EventEmitter {
       this.controller.on('updatePlayers', this._handleUpdatePlayers.bind(this));
       this.controller.on('updateSpells', this._handleUpdateSpells.bind(this));
       
-      this.controller.spawn(playerName);
+      this.controller.send(OPCode.SPAWN_PLAYER, { name: playerName });
       
       this.onStart(onConnection);
     }.bind(this));
   }
   
-  update(deltaT) {    
+  update(deltaT) {
     this.playerList.forEach(player => player.calculateNextPosition(deltaT));
     this.spellList.forEach(spell => spell.calculateNextPosition(deltaT));
     

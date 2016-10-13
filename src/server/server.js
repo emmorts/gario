@@ -1,12 +1,16 @@
 /* global __dirname */
 
+const modulePath = require('app-module-path');
+modulePath.addPath(__dirname);
+modulePath.addPath('../');
+
 const GameServer = require('./GameServer');
 
 const server = require('http').createServer();
 const express = require('express');
 const app = express();
 
-const config = require('./config');
+const config = require('./config'); 
 
 new GameServer(server).start();
 

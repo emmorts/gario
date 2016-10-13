@@ -24,7 +24,14 @@ function BufferCodec(buffer) {
       console.warn("Received malformed data");
     }
   }
-}
+};
+
+BufferCodec.prototype.getBuffer = function (trimOffset) {
+  if (trimOffset) {
+    return this.buffer.slice(this.offset);
+  }
+  return this.buffer;
+};
 
 BufferCodec.prototype.result = function () {
   this.offset = 0;
@@ -337,12 +344,7 @@ BufferCodec.prototype.parse = function (template, transform) {
         this.offset += 8;
         break;
       case 'string':
-        if (typeof element.length === 'undefined') {
-          element.length = data.getUint8(this.offset++);
-        } else if (!element.length) {
-          templateResult = '';
-          break;
-        }
+        element.length = data.getUint8(this.offset++);
         if (!element.encoding || element.encoding === 'utf16') {
           var utf16 = new ArrayBuffer(element.length * 2);
           var utf16view = new Uint16Array(utf16);
@@ -372,6 +374,51 @@ BufferCodec.prototype.parse = function (template, transform) {
       result = templateResult;
     }
   }
+}
+
+BufferCodec.Schema = function (schema, transform) {
+  this.schema = schema;
+  this.transform = transform;
+}
+
+BufferCodec.Schema.prototype.encode = function (object, codec) {
+  var codec = codec || new BufferCodec();
+
+  function encode(value, schema) {
+    for (var propertyName in schema) {
+      var method = null;
+      var encoding = null;
+      if (schema[propertyName] instanceof Array) {
+        codec.uint8(object[propertyName].length);
+        object[propertyName].forEach(function (item) {
+          encode(item, schema[propertyName][0]);
+        });
+      } else if (schema[propertyName] instanceof Object) {
+        method = schema[propertyName].type;
+        if (method === 'string') {
+          encoding = schema[propertyName].encoding;
+          codec.uint8(schema[propertyName].length || object[propertyName].length);
+        }
+      } else {
+        method = schema[propertyName];
+        if (method === 'string') {
+          codec.uint8(value[propertyName].length);
+        }
+      }
+      if (method) {
+        codec[method](value[propertyName], encoding);
+      }
+    }
+  }
+
+  encode(object, this.schema);
+
+  return codec.result();
+}
+
+BufferCodec.Schema.prototype.decode = function (buffer) {
+  var codec = new BufferCodec(buffer);
+  return codec.parse(this.schema, this.transform);
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -546,6 +593,55 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 });
 },{}],3:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var BufferCodec = require('buffercodec');
+var BufferSchema = BufferCodec.Schema;
+
+var Schema = function (_BufferSchema) {
+  _inherits(Schema, _BufferSchema);
+
+  function Schema(opCode, schema, transform) {
+    _classCallCheck(this, Schema);
+
+    if (!opCode) throw new Error("Operation code must be provided");
+
+    var _this = _possibleConstructorReturn(this, (Schema.__proto__ || Object.getPrototypeOf(Schema)).call(this, schema, transform));
+
+    _this.opCode = opCode;
+    return _this;
+  }
+
+  _createClass(Schema, [{
+    key: "encode",
+    value: function encode(object) {
+      var codec = BufferCodec().uint8(this.opCode);
+
+      return _get(Schema.prototype.__proto__ || Object.getPrototypeOf(Schema.prototype), "encode", this).call(this, object, codec);
+    }
+  }, {
+    key: "decode",
+    value: function decode(buffer) {
+      return _get(Schema.prototype.__proto__ || Object.getPrototypeOf(Schema.prototype), "decode", this).call(this, buffer);
+    }
+  }]);
+
+  return Schema;
+}(BufferSchema);
+
+module.exports = Schema;
+
+},{"buffercodec":1}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -558,19 +654,19 @@ var _smartmap = require('smartmap');
 
 var _smartmap2 = _interopRequireDefault(_smartmap);
 
-var _WSController = require('./WSController');
+var _WSController = require('WSController');
 
 var _WSController2 = _interopRequireDefault(_WSController);
 
-var _EventEmitter2 = require('./util/EventEmitter');
+var _EventEmitter2 = require('util/EventEmitter');
 
 var _EventEmitter3 = _interopRequireDefault(_EventEmitter2);
 
-var _spells = require('./spells');
+var _spells = require('spells');
 
 var Spells = _interopRequireWildcard(_spells);
 
-var _models = require('./models');
+var _models = require('models');
 
 var Models = _interopRequireWildcard(_models);
 
@@ -583,6 +679,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var OPCode = require('shared/opCode');
 
 var instance = null;
 
@@ -613,7 +711,7 @@ var Game = function (_EventEmitter) {
         this.controller.on('updatePlayers', this._handleUpdatePlayers.bind(this));
         this.controller.on('updateSpells', this._handleUpdateSpells.bind(this));
 
-        this.controller.spawn(playerName);
+        this.controller.send(OPCode.SPAWN_PLAYER, { name: playerName });
 
         this.onStart(onConnection);
       }.bind(this));
@@ -713,8 +811,7 @@ var Game = function (_EventEmitter) {
       if (instance) {
         return instance;
       } else {
-        instance = new Game();
-        return instance;
+        return instance = new Game();
       }
     }
   }]);
@@ -724,7 +821,7 @@ var Game = function (_EventEmitter) {
 
 exports.default = Game;
 
-},{"./WSController":5,"./models":8,"./spells":14,"./util/EventEmitter":18,"smartmap":2}],4:[function(require,module,exports){
+},{"WSController":6,"models":17,"shared/opCode":26,"smartmap":2,"spells":19,"util/EventEmitter":23}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -733,7 +830,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _statistics = require('./statistics');
+var _statistics = require('statistics');
 
 var Statistics = _interopRequireWildcard(_statistics);
 
@@ -741,7 +838,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var OPCode = require('../../opCode');
+var OPCode = require('shared/opCode');
 
 var Graph = function () {
   function Graph(canvas) {
@@ -1045,7 +1142,7 @@ function getDefaultHeight() {
   return window.innerHeight && document.documentElement.clientHeight ? Math.min(window.innerHeight, document.documentElement.clientHeight) : window.innerHeight || document.documentElement.clientHeight || document.getElementsByTagName('body')[0].clientHeight;
 }
 
-},{"../../opCode":21,"./statistics":16}],5:[function(require,module,exports){
+},{"shared/opCode":26,"statistics":21}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1054,18 +1151,6 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _EventEmitter2 = require('./util/EventEmitter');
-
-var _EventEmitter3 = _interopRequireDefault(_EventEmitter2);
-
-var _index = require('./packets/index');
-
-var Packets = _interopRequireWildcard(_index);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -1073,7 +1158,10 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var BufferCodec = require('buffercodec');
-var OPCode = require('../../opCode');
+var EventEmitter = require('util/EventEmitter');
+var Action = require('actions');
+var OPCode = require('shared/opCode');
+var Schema = require('shared/schemas');
 
 var WSController = function (_EventEmitter) {
   _inherits(WSController, _EventEmitter);
@@ -1083,7 +1171,7 @@ var WSController = function (_EventEmitter) {
 
     var _this = _possibleConstructorReturn(this, (WSController.__proto__ || Object.getPrototypeOf(WSController)).call(this));
 
-    _this._uri = 'ws://192.168.1.142:3000';
+    _this._uri = 'ws://127.0.0.1:3000';
     _this._socket = null;
 
     _this._setupSocket();
@@ -1091,25 +1179,18 @@ var WSController = function (_EventEmitter) {
   }
 
   _createClass(WSController, [{
-    key: 'spawn',
-    value: function spawn(playerName) {
-      var buffer = BufferCodec().uint8(OPCode.SPAWN_PLAYER).uint8(playerName.length).string(playerName).result();
+    key: 'send',
+    value: function send(opCode, object) {
+      if (opCode in Action) {
+        var action = new Action[opCode]();
+        var buffer = action.build(object);
 
-      this._socket.send(buffer);
-    }
-  }, {
-    key: 'move',
-    value: function move(player) {
-      var buffer = BufferCodec().uint8(OPCode.PLAYER_MOVE).uint16le(player.target.x).uint16le(player.target.y).result();
-
-      this._socket.send(buffer);
-    }
-  }, {
-    key: 'cast',
-    value: function cast(opcode, options) {
-      var buffer = BufferCodec().uint8(opcode).uint16le(options.playerX).uint16le(options.playerY).uint16le(options.x).uint16le(options.y).result();
-
-      this._socket.send(buffer);
+        if (buffer) {
+          this._socket.send(buffer);
+        }
+      } else {
+        console.error('Operation \'' + OPCode.getName(opCode) + '\' does not cover any action.\'');
+      }
     }
   }, {
     key: '_setupSocket',
@@ -1124,27 +1205,19 @@ var WSController = function (_EventEmitter) {
           var codec = BufferCodec(message.data);
           var code = this._getOpCode(codec);
 
-          switch (code) {
-            case OPCode.ADD_PLAYER:
-              this._fire('addPlayer', this._parse(codec, Packets.AddPlayer));
-              break;
-            case OPCode.UPDATE_PLAYERS:
-              this._fire('updatePlayers', this._parse(codec, Packets.UpdatePlayers));
-              break;
-            case OPCode.UPDATE_SPELLS:
-              this._fire('updateSpells', this._parse(codec, Packets.UpdateSpells));
-              break;
-            default:
-              console.warn("Undefined opcode");
-              break;
+          if (code in Action) {
+            var ActionClass = Action[code];
+            var action = new ActionClass();
+            var buffer = codec.getBuffer(true);
+
+            if (ActionClass.eventName) {
+              this._fire(ActionClass.eventName, action.parse(buffer));
+            }
+          } else {
+            console.error('Operation \'' + OPCode.getName(code) + '\' does not cover any action.\'');
           }
         }.bind(this);
       }.bind(this);
-    }
-  }, {
-    key: '_parse',
-    value: function _parse(codec, packet) {
-      return codec.parse(packet.mapping, packet.transform);
     }
   }, {
     key: '_getOpCode',
@@ -1156,30 +1229,267 @@ var WSController = function (_EventEmitter) {
   }]);
 
   return WSController;
-}(_EventEmitter3.default);
+}(EventEmitter);
 
 exports.default = WSController;
 
-},{"../../opCode":21,"./packets/index":12,"./util/EventEmitter":18,"buffercodec":1}],6:[function(require,module,exports){
+},{"actions":14,"buffercodec":1,"shared/opCode":26,"shared/schemas":33,"util/EventEmitter":23}],7:[function(require,module,exports){
 'use strict';
 
-var _KeyCode = require('./util/KeyCode');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Schema = require('shared/schemas');
+
+var Action = function () {
+  function Action(opCode) {
+    _classCallCheck(this, Action);
+
+    this.actionSchema = Schema.get(opCode);
+  }
+
+  _createClass(Action, [{
+    key: 'parse',
+    value: function parse(buffer) {
+      if (this.actionSchema) {
+        return this.actionSchema.decode(buffer);
+      }
+
+      return null;
+    }
+  }, {
+    key: 'build',
+    value: function build(object) {
+      if (this.actionSchema) {
+        return this.actionSchema.encode(object);
+      }
+
+      return null;
+    }
+  }]);
+
+  return Action;
+}();
+
+;
+
+module.exports = Action;
+
+},{"shared/schemas":33}],8:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Action = require('actions/Action');
+var OPCode = require('shared/opCode');
+
+var AddPlayer = function (_Action) {
+  _inherits(AddPlayer, _Action);
+
+  function AddPlayer() {
+    _classCallCheck(this, AddPlayer);
+
+    return _possibleConstructorReturn(this, (AddPlayer.__proto__ || Object.getPrototypeOf(AddPlayer)).call(this, OPCode.ADD_PLAYER));
+  }
+
+  _createClass(AddPlayer, null, [{
+    key: 'eventName',
+    get: function get() {
+      return 'addPlayer';
+    }
+  }]);
+
+  return AddPlayer;
+}(Action);
+
+module.exports = AddPlayer;
+
+},{"actions/Action":7,"shared/opCode":26}],9:[function(require,module,exports){
+'use strict';
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Action = require('actions/Action');
+var OPCode = require('shared/opCode');
+
+var CastSpell = function (_Action) {
+  _inherits(CastSpell, _Action);
+
+  function CastSpell() {
+    _classCallCheck(this, CastSpell);
+
+    return _possibleConstructorReturn(this, (CastSpell.__proto__ || Object.getPrototypeOf(CastSpell)).call(this, OPCode.CAST_SPELL));
+  }
+
+  return CastSpell;
+}(Action);
+
+module.exports = CastSpell;
+
+},{"actions/Action":7,"shared/opCode":26}],10:[function(require,module,exports){
+'use strict';
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Action = require('actions/Action');
+var OPCode = require('shared/opCode');
+
+var PlayerMove = function (_Action) {
+  _inherits(PlayerMove, _Action);
+
+  function PlayerMove() {
+    _classCallCheck(this, PlayerMove);
+
+    return _possibleConstructorReturn(this, (PlayerMove.__proto__ || Object.getPrototypeOf(PlayerMove)).call(this, OPCode.PLAYER_MOVE));
+  }
+
+  return PlayerMove;
+}(Action);
+
+module.exports = PlayerMove;
+
+},{"actions/Action":7,"shared/opCode":26}],11:[function(require,module,exports){
+'use strict';
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Action = require('actions/Action');
+var OPCode = require('shared/opCode');
+
+var SpawnPlayer = function (_Action) {
+  _inherits(SpawnPlayer, _Action);
+
+  function SpawnPlayer() {
+    _classCallCheck(this, SpawnPlayer);
+
+    return _possibleConstructorReturn(this, (SpawnPlayer.__proto__ || Object.getPrototypeOf(SpawnPlayer)).call(this, OPCode.SPAWN_PLAYER));
+  }
+
+  return SpawnPlayer;
+}(Action);
+
+module.exports = SpawnPlayer;
+
+},{"actions/Action":7,"shared/opCode":26}],12:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Action = require('actions/Action');
+var OPCode = require('shared/opCode');
+
+var UpdatePlayers = function (_Action) {
+  _inherits(UpdatePlayers, _Action);
+
+  function UpdatePlayers() {
+    _classCallCheck(this, UpdatePlayers);
+
+    return _possibleConstructorReturn(this, (UpdatePlayers.__proto__ || Object.getPrototypeOf(UpdatePlayers)).call(this, OPCode.UPDATE_PLAYERS));
+  }
+
+  _createClass(UpdatePlayers, null, [{
+    key: 'eventName',
+    get: function get() {
+      return 'updatePlayers';
+    }
+  }]);
+
+  return UpdatePlayers;
+}(Action);
+
+module.exports = UpdatePlayers;
+
+},{"actions/Action":7,"shared/opCode":26}],13:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Action = require('actions/Action');
+var OPCode = require('shared/opCode');
+
+var UpdateSpells = function (_Action) {
+  _inherits(UpdateSpells, _Action);
+
+  function UpdateSpells() {
+    _classCallCheck(this, UpdateSpells);
+
+    return _possibleConstructorReturn(this, (UpdateSpells.__proto__ || Object.getPrototypeOf(UpdateSpells)).call(this, OPCode.UPDATE_SPELLS));
+  }
+
+  _createClass(UpdateSpells, null, [{
+    key: 'eventName',
+    get: function get() {
+      return 'updateSpells';
+    }
+  }]);
+
+  return UpdateSpells;
+}(Action);
+
+module.exports = UpdateSpells;
+
+},{"actions/Action":7,"shared/opCode":26}],14:[function(require,module,exports){
+'use strict';
+
+var _module$exports;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var OPCode = require('shared/opCode');
+
+module.exports = (_module$exports = {}, _defineProperty(_module$exports, OPCode.ADD_PLAYER, require('actions/AddPlayer')), _defineProperty(_module$exports, OPCode.CAST_SPELL, require('actions/CastSpell')), _defineProperty(_module$exports, OPCode.SPAWN_PLAYER, require('actions/SpawnPlayer')), _defineProperty(_module$exports, OPCode.UPDATE_PLAYERS, require('actions/UpdatePlayers')), _defineProperty(_module$exports, OPCode.UPDATE_SPELLS, require('actions/UpdateSpells')), _defineProperty(_module$exports, OPCode.PLAYER_MOVE, require('actions/PlayerMove')), _module$exports);
+
+},{"actions/AddPlayer":8,"actions/CastSpell":9,"actions/PlayerMove":10,"actions/SpawnPlayer":11,"actions/UpdatePlayers":12,"actions/UpdateSpells":13,"shared/opCode":26}],15:[function(require,module,exports){
+'use strict';
+
+var _KeyCode = require('util/KeyCode');
 
 var _KeyCode2 = _interopRequireDefault(_KeyCode);
 
-var _DomElement = require('./util/DomElement');
+var _DomElement = require('util/DomElement');
 
 var _DomElement2 = _interopRequireDefault(_DomElement);
 
-var _Graph = require('./Graph');
+var _Graph = require('Graph');
 
 var _Graph2 = _interopRequireDefault(_Graph);
 
-var _Game = require('./Game');
+var _Game = require('Game');
 
 var _Game2 = _interopRequireDefault(_Game);
 
-var _statistics = require('./statistics');
+var _statistics = require('statistics');
 
 var Statistics = _interopRequireWildcard(_statistics);
 
@@ -1187,9 +1497,9 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-require('./util/polyfills');
+require('util/polyfills');
 
-var OPCode = require('../../opCode');
+var OPCode = require('shared/opCode');
 
 var animationLoopHandle;
 var lastUpdate;
@@ -1305,20 +1615,28 @@ function startGame() {
         targetY = Math.min(Math.max(targetY, 0), graph._gameHeight);
         game.currentPlayer.setTarget({ x: targetX, y: targetY });
         targetTick = now;
-        game.controller.move(game.currentPlayer);
+        game.controller.send(OPCode.PLAYER_MOVE, game.currentPlayer);
+        // game.controller.move(game.currentPlayer);
       }
     }
   }
 
   function wHandleKeyDown(event) {
     switch (event.keyCode) {
-      case _KeyCode2.default.Q:
-        game.controller.cast(OPCode.CAST_PRIMARY, {
+      case _KeyCode2.default.SPACE:
+        game.controller.send(OPCode.CAST_SPELL, {
+          type: OPCode.SPELL_PRIMARY,
           playerX: game.currentPlayer.position.x,
           playerY: game.currentPlayer.position.y,
           x: mouse.x + graph.xOffset,
           y: mouse.y + graph.yOffset
         });
+        // game.controller.cast(OPCode.CAST_PRIMARY, {
+        //   playerX: game.currentPlayer.position.x,
+        //   playerY: game.currentPlayer.position.y,
+        //   x: mouse.x + graph.xOffset,
+        //   y: mouse.y + graph.yOffset
+        // });
         //For testing purposes only
         var scoreHolder = Statistics.Score.getInstance();
         scoreHolder.add();
@@ -1327,7 +1645,7 @@ function startGame() {
   }
 }
 
-},{"../../opCode":21,"./Game":3,"./Graph":4,"./statistics":16,"./util/DomElement":17,"./util/KeyCode":19,"./util/polyfills":20}],7:[function(require,module,exports){
+},{"Game":4,"Graph":5,"shared/opCode":26,"statistics":21,"util/DomElement":22,"util/KeyCode":24,"util/polyfills":25}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1532,14 +1850,14 @@ var Player = function () {
 
 exports.default = Player;
 
-},{}],8:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Player = require('./Player');
+var _Player = require('models/Player');
 
 Object.defineProperty(exports, 'Player', {
   enumerable: true,
@@ -1550,175 +1868,7 @@ Object.defineProperty(exports, 'Player', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-},{"./Player":7}],9:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = {
-  mapping: {
-    id: { type: 'string', length: 32 },
-    ownerId: { type: 'string', length: 32 },
-    name: 'string',
-    health: 'uint16le',
-    maxHealth: 'uint16le',
-    x: 'float32le',
-    y: 'float32le',
-    r: 'uint8',
-    g: 'uint8',
-    b: 'uint8'
-  },
-  transform: function transform(player) {
-    return {
-      id: player.id,
-      ownerId: player.ownerId,
-      name: player.name,
-      health: player.health,
-      maxHealth: player.maxHealth,
-      position: { x: player.x, y: player.y },
-      color: { r: player.r, g: player.g, b: player.b }
-    };
-  }
-};
-
-},{}],10:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = {
-  mapping: {
-    updatedPlayers: [{
-      id: { type: 'string', length: 32 },
-      ownerId: { type: 'string', length: 32 },
-      name: 'string',
-      health: 'uint16le',
-      maxHealth: 'uint16le',
-      x: 'float32le',
-      y: 'float32le',
-      targetX: 'float32le',
-      targetY: 'float32le',
-      r: 'uint8',
-      g: 'uint8',
-      b: 'uint8'
-    }],
-    destroyedPlayers: [{
-      id: { type: 'string', length: 32 }
-    }]
-  },
-  transform: function transform(object) {
-    var updatedPlayers = object.updatedPlayers.map(function (player) {
-      return {
-        id: player.id,
-        ownerId: player.ownerId,
-        name: player.name,
-        health: player.health,
-        maxHealth: player.maxHealth,
-        position: { x: player.x, y: player.y },
-        target: { x: player.targetX, y: player.targetY },
-        color: { r: player.r, g: player.g, b: player.b }
-      };
-    });
-    var destroyedPlayers = object.destroyedPlayers.map(function (player) {
-      return player.id;
-    });
-
-    return {
-      updatedPlayers: updatedPlayers,
-      destroyedPlayers: destroyedPlayers
-    };
-  }
-};
-
-},{}],11:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = {
-  mapping: {
-    updatedSpells: [{
-      id: { type: 'string', length: 32 },
-      ownerId: { type: 'string', length: 32 },
-      type: 'uint8',
-      mass: 'uint8',
-      power: 'uint8',
-      x: 'float32le',
-      y: 'float32le',
-      targetX: 'float32le',
-      targetY: 'float32le',
-      r: 'uint8',
-      g: 'uint8',
-      b: 'uint8'
-    }],
-    destroyedSpells: [{
-      id: { type: 'string', length: 32 }
-    }]
-  },
-  transform: function transform(object) {
-    var updatedSpells = object.updatedSpells.map(function (spell) {
-      return {
-        id: spell.id,
-        ownerId: spell.ownerId,
-        type: spell.type,
-        mass: spell.mass,
-        power: spell.power,
-        position: { x: spell.x, y: spell.y },
-        target: { x: spell.targetX, y: spell.targetY },
-        color: { r: spell.r, g: spell.g, b: spell.b }
-      };
-    });
-    var destroyedSpells = object.destroyedSpells.map(function (spell) {
-      return spell.id;
-    });
-
-    return {
-      updatedSpells: updatedSpells,
-      destroyedSpells: destroyedSpells
-    };
-  }
-};
-
-},{}],12:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _AddPlayer = require('./AddPlayer');
-
-Object.defineProperty(exports, 'AddPlayer', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_AddPlayer).default;
-  }
-});
-
-var _UpdatePlayers = require('./UpdatePlayers');
-
-Object.defineProperty(exports, 'UpdatePlayers', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_UpdatePlayers).default;
-  }
-});
-
-var _UpdateSpells = require('./UpdateSpells');
-
-Object.defineProperty(exports, 'UpdateSpells', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_UpdateSpells).default;
-  }
-});
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-},{"./AddPlayer":9,"./UpdatePlayers":10,"./UpdateSpells":11}],13:[function(require,module,exports){
+},{"models/Player":16}],18:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1807,14 +1957,14 @@ var Primary = function () {
 
 exports.default = Primary;
 
-},{}],14:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Primary = require('./Primary');
+var _Primary = require('spells/Primary');
 
 Object.defineProperty(exports, 'Primary', {
   enumerable: true,
@@ -1826,7 +1976,7 @@ exports.get = get;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var OPCode = require('../../../opCode');
+var OPCode = require('shared/opCode');
 
 function get(code) {
   var spell = null;
@@ -1840,7 +1990,7 @@ function get(code) {
   return spell;
 }
 
-},{"../../../opCode":21,"./Primary":13}],15:[function(require,module,exports){
+},{"shared/opCode":26,"spells/Primary":18}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1889,7 +2039,7 @@ var Score = function () {
 
 exports.default = Score;
 
-},{}],16:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1907,7 +2057,7 @@ Object.defineProperty(exports, 'Score', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-},{"./Score":15}],17:[function(require,module,exports){
+},{"./Score":20}],22:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1956,18 +2106,14 @@ var DomElement = function () {
 
 exports.default = DomElement;
 
-},{}],18:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var EventEmitter = function () {
+module.exports = function () {
   function EventEmitter() {
     _classCallCheck(this, EventEmitter);
 
@@ -1996,9 +2142,7 @@ var EventEmitter = function () {
   return EventEmitter;
 }();
 
-exports.default = EventEmitter;
-
-},{}],19:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2096,7 +2240,7 @@ exports.default = {
   F12: 123
 };
 
-},{}],20:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 'use strict';
 
 if (!Array.prototype.find) {
@@ -2151,10 +2295,10 @@ if (!Date.now) {
   }
 })();
 
-},{}],21:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 "use strict";
 
-var operations = ["PING", "PONG", "SPAWN_PLAYER", "ADD_PLAYER", "UPDATE_PLAYERS", "UPDATE_SPELLS", "PLAYER_MOVE",
+var operations = ["PING", "PONG", "SPAWN_PLAYER", "ADD_PLAYER", "UPDATE_PLAYERS", "UPDATE_SPELLS", "PLAYER_MOVE", "CAST_SPELL",
 
 // cast
 "CAST_PRIMARY",
@@ -2179,7 +2323,196 @@ operations.forEach(function (op, index) {
 
 module.exports = opCodes;
 
-},{}]},{},[6])
+module.exports.getName = function (opCode) {
+  for (var propertyName in opCodes) {
+    if (opCodes[propertyName] === opCode) {
+      return propertyName;
+    }
+  }
+
+  return null;
+};
+
+},{}],27:[function(require,module,exports){
+'use strict';
+
+var Schema = require('../Schema');
+var OPCode = require('../opCode');
+
+module.exports = new Schema(OPCode.ADD_PLAYER, {
+  id: 'string',
+  ownerId: 'string',
+  name: 'string',
+  health: 'uint16le',
+  maxHealth: 'uint16le',
+  x: 'float32le',
+  y: 'float32le',
+  r: 'uint8',
+  g: 'uint8',
+  b: 'uint8'
+}, function (player) {
+  return {
+    id: player.id,
+    ownerId: player.ownerId,
+    name: player.name,
+    health: player.health,
+    maxHealth: player.maxHealth,
+    position: { x: player.x, y: player.y },
+    color: { r: player.r, g: player.g, b: player.b }
+  };
+});
+
+},{"../Schema":3,"../opCode":26}],28:[function(require,module,exports){
+'use strict';
+
+var Schema = require('../Schema');
+var OPCode = require('../opCode');
+
+module.exports = new Schema(OPCode.CAST_SPELL, {
+  type: 'uint8',
+  playerX: 'uint16le',
+  playerY: 'uint16le',
+  x: 'uint16le',
+  y: 'uint16le'
+});
+
+},{"../Schema":3,"../opCode":26}],29:[function(require,module,exports){
+'use strict';
+
+var Schema = require('../Schema');
+var OPCode = require('../opCode');
+
+module.exports = new Schema(OPCode.PLAYER_MOVE, {
+  x: 'uint16le',
+  y: 'uint16le'
+});
+
+},{"../Schema":3,"../opCode":26}],30:[function(require,module,exports){
+'use strict';
+
+var Schema = require('../Schema');
+var OPCode = require('../opCode');
+
+module.exports = new Schema(OPCode.SPAWN_PLAYER, {
+  name: { type: 'string' }
+}, function (obj) {
+  return obj.name || '';
+});
+
+},{"../Schema":3,"../opCode":26}],31:[function(require,module,exports){
+'use strict';
+
+var Schema = require('../Schema');
+var OPCode = require('../opCode');
+
+module.exports = new Schema(OPCode.UPDATE_PLAYERS, {
+  updatedPlayers: [{
+    id: 'string',
+    ownerId: 'string',
+    name: 'string',
+    health: 'uint16le',
+    maxHealth: 'uint16le',
+    x: 'float32le',
+    y: 'float32le',
+    targetX: 'float32le',
+    targetY: 'float32le',
+    r: 'uint8',
+    g: 'uint8',
+    b: 'uint8'
+  }],
+  destroyedPlayers: [{
+    id: { type: 'string', length: 32 }
+  }]
+}, function (object) {
+  var updatedPlayers = object.updatedPlayers.map(function (player) {
+    return {
+      id: player.id,
+      ownerId: player.ownerId,
+      name: player.name,
+      health: player.health,
+      maxHealth: player.maxHealth,
+      position: { x: player.x, y: player.y },
+      target: { x: player.targetX, y: player.targetY },
+      color: { r: player.r, g: player.g, b: player.b }
+    };
+  });
+  var destroyedPlayers = object.destroyedPlayers.map(function (player) {
+    return player.id;
+  });
+
+  return {
+    updatedPlayers: updatedPlayers,
+    destroyedPlayers: destroyedPlayers
+  };
+});
+
+},{"../Schema":3,"../opCode":26}],32:[function(require,module,exports){
+'use strict';
+
+var Schema = require('../Schema');
+var OPCode = require('../opCode');
+
+module.exports = new Schema(OPCode.UPDATE_SPELLS, {
+  updatedSpells: [{
+    id: 'string',
+    ownerId: 'string',
+    type: 'uint8',
+    mass: 'uint8',
+    power: 'uint8',
+    x: 'float32le',
+    y: 'float32le',
+    targetX: 'float32le',
+    targetY: 'float32le',
+    r: 'uint8',
+    g: 'uint8',
+    b: 'uint8'
+  }],
+  destroyedSpells: [{
+    id: { type: 'string', length: 32 }
+  }]
+}, function (object) {
+  var updatedSpells = object.updatedSpells.map(function (spell) {
+    return {
+      id: spell.id,
+      ownerId: spell.ownerId,
+      type: spell.type,
+      mass: spell.mass,
+      power: spell.power,
+      position: { x: spell.x, y: spell.y },
+      target: { x: spell.targetX, y: spell.targetY },
+      color: { r: spell.r, g: spell.g, b: spell.b }
+    };
+  });
+  var destroyedSpells = object.destroyedSpells.map(function (spell) {
+    return spell.id;
+  });
+
+  return {
+    updatedSpells: updatedSpells,
+    destroyedSpells: destroyedSpells
+  };
+});
+
+},{"../Schema":3,"../opCode":26}],33:[function(require,module,exports){
+'use strict';
+
+var _schemas;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var OPCode = require('../opCode');
+
+var schemas = (_schemas = {}, _defineProperty(_schemas, OPCode.ADD_PLAYER, require('./AddPlayer')), _defineProperty(_schemas, OPCode.CAST_SPELL, require('./CastSpell')), _defineProperty(_schemas, OPCode.PLAYER_MOVE, require('./PlayerMove')), _defineProperty(_schemas, OPCode.SPAWN_PLAYER, require('./SpawnPlayer')), _defineProperty(_schemas, OPCode.UPDATE_PLAYERS, require('./UpdatePlayers')), _defineProperty(_schemas, OPCode.UPDATE_SPELLS, require('./UpdateSpells')), _schemas);
+
+module.exports.get = function (opCode) {
+  if (opCode in schemas) {
+    return schemas[opCode];
+  } else {
+    console.error('Unable to find schema for ' + OPCode.getName(opCode) + '.');
+  }
+};
+
+},{"../opCode":26,"./AddPlayer":27,"./CastSpell":28,"./PlayerMove":29,"./SpawnPlayer":30,"./UpdatePlayers":31,"./UpdateSpells":32}]},{},[15])
 
 
 //# sourceMappingURL=game.js.map

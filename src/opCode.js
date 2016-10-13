@@ -6,6 +6,7 @@ const operations = [
   "UPDATE_PLAYERS",
   "UPDATE_SPELLS",
   "PLAYER_MOVE",
+  "CAST_SPELL",
   
   // cast
   "CAST_PRIMARY",
@@ -38,3 +39,13 @@ const opCodes = {};
 operations.forEach((op, index) => opCodes[op] = ++index);
 
 module.exports = opCodes;
+
+module.exports.getName = (opCode) => {
+  for (let propertyName in opCodes) {
+    if (opCodes[propertyName] === opCode) {
+      return propertyName;
+    }
+  }
+
+  return null;
+};

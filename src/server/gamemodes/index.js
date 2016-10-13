@@ -1,5 +1,5 @@
 module.exports = {
-  FFA: require('./FFA')
+  FFA: require('gamemodes/FFA')
 };
 
 module.exports.get = function (id) {

@@ -1,6 +1,6 @@
-var OPCode = require('../../opCode');
+var OPCode = require('shared/opCode');
 
-import * as Statistics from './statistics';
+import * as Statistics from 'statistics';
 
 export default class Graph {
   constructor(canvas) {

@@ -1,27 +1,35 @@
 var gulp = require('gulp');
 var concat = require('gulp-concat');
 var sourcemaps = require('gulp-sourcemaps');
+var gutil = require('gulp-util');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 var browserify = require('browserify');
 var watchify = require('watchify');
 var babel = require('babelify');
+var path = require('path');
+var pathmodify = require('pathmodify');
 
 function compile(watch) {
   var bundler = watchify(
       browserify({
         entries: ['./src/client/js/app.js'],
         debug: true,
+        paths: [ './node_modules', './src/client/js' ],
         builtins: [],
         extensions: [' ', 'js']
       }).transform(babel.configure({
         presets: ["es2015"]
-      }))
-    );
+      })).plugin(pathmodify, {
+        mods: [
+          pathmodify.mod.dir('shared', path.join(__dirname, 'src'))
+        ]
+      }));
 
-  function rebundle() {
-    bundler.bundle()
+  function rebundle(done) {
+    return bundler.bundle()
       .on('error', function (err) { console.error(err); this.emit('end'); })
+      .on('end', function () { if (done) done(); })
       .pipe(source('game.js'))
       .pipe(buffer())
       .pipe(sourcemaps.init({ loadMaps: true }))
@@ -31,12 +39,14 @@ function compile(watch) {
 
   if (watch) {
     bundler.on('update', function () {
-      console.log('-> bundling...');
-      rebundle();
+      gutil.log('Bundling... ');
+      rebundle(function () {
+        gutil.log('Done!');
+      });
     });
   }
 
-  rebundle();
+  return rebundle();
 }
 
 function watch() {

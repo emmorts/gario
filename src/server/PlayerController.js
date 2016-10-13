@@ -1,8 +1,10 @@
-const uuid = require('node-uuid');
+const WebSocket = require('ws');
 const OPCode = require('../opCode');
-const Packets = require('./packets');
-const Spells = require('./spells');
-const Factory = require ('./Factory');
+const uuid = require('node-uuid');
+const Packets = require('packets');
+const Spells = require('spells');
+const Action = require('actions');
+const Factory = require ('Factory');
 
 class PlayerController {
 
@@ -24,6 +26,19 @@ class PlayerController {
     }
   }
 
+  send(opCode, object) {
+    if (opCode in Action) {
+      const action = new Action[opCode]();
+      const buffer = action.build(object);
+
+      if (buffer) {
+        this._sendBuffer(buffer);
+      }
+    } else {
+      console.error(`Operation '${OPCode.getName(opCode)}' does not cover any action.'`);
+    }
+  }
+
   setTarget(target) {
     this.target = target;
     
@@ -36,11 +51,11 @@ class PlayerController {
     this.gameServer.spawnPlayer(this);
   }
 
-  cast(spellType, options) {
-    if (!(spellType in this.spells)) {
+  cast(options) {
+    if (!(options.type in this.spells)) {
       const spell = Factory.instantiate(
         OPCode.TYPE_SPELL, 
-        spellType, 
+        options.type, 
         this.gameServer, 
         this, 
           {
@@ -56,9 +71,9 @@ class PlayerController {
       );
 
       if (spell) {
-        this.spells[spellType] = spell;
+        this.spells[options.type] = spell;
 
-        setTimeout(() => delete this.spells[spellType], spell.cooldown);
+        setTimeout(() => delete this.spells[options.type], spell.cooldown);
 
         this.gameServer.onCast(spell);
       }
@@ -67,14 +82,22 @@ class PlayerController {
 
   update() {
     if (this.nodeAdditionQueue.length > 0 || this.nodeDestroyQueue.length > 0) {
-      this.socket.sendPacket(new Packets.UpdatePlayers(this.nodeDestroyQueue, this.nodeAdditionQueue));
+      this.send(OPCode.UPDATE_PLAYERS, {
+        updatedPlayers: this.nodeAdditionQueue,
+        destroyedPlayers: this.nodeDestroyQueue
+      });
+      // this.socket.sendPacket(new Packets.UpdatePlayers(this.nodeDestroyQueue, this.nodeAdditionQueue));
     }
     
     this.nodeDestroyQueue = [];
     this.nodeAdditionQueue = [];
     
     if (this.spellAdditionQueue.length > 0 || this.spellDestroyQueue.length > 0) {
-      this.socket.sendPacket(new Packets.UpdateSpells(this.spellDestroyQueue, this.spellAdditionQueue));
+      this.send(OPCode.UPDATE_SPELLS, {
+        updatedSpells: this.spellAdditionQueue,
+        destroyedSpells: this.spellDestroyQueue
+      });
+      // this.socket.sendPacket(new Packets.UpdateSpells(this.spellDestroyQueue, this.spellAdditionQueue));
     }
     
     this.spellAdditionQueue = [];
@@ -84,6 +107,16 @@ class PlayerController {
   _setName(value) {
     this.name = value;
   };
+  
+  _sendBuffer(buffer) {
+    if (this.socket.readyState == WebSocket.OPEN && buffer) {
+      this.socket.send(buffer, { binary: true });
+    } else {
+      this.socket.readyState = WebSocket.CLOSED;
+      this.socket.emit('close');
+      this.socket.removeAllListeners();
+    }
+  }
   
 }
 

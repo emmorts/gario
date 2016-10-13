@@ -1,0 +1,32 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Launch",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceRoot}\\src\\server\\server.js",
+			
+			"stopOnEntry": false,
+			"args": ["--use-strict"],
+			"cwd": "${workspaceRoot}/",
+			"runtimeExecutable": null,
+			"runtimeArgs": [
+				"--use-strict",
+				"--harmony"
+			],
+			"env": {
+				"NODE_ENV": "development"
+			},
+			"console": "internalConsole",
+			"sourceMaps": false,
+			"outDir": null
+		},
+		{
+			"name": "Attach",
+			"type": "node",
+			"request": "attach",
+			"port": 5858
+		}
+	]
+}

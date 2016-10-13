@@ -1,6 +1,6 @@
-var OPCode = require('../../../opCode');
+var OPCode = require('shared/opCode');
 
-export { default as Primary } from './Primary';
+export { default as Primary } from 'spells/Primary';
 
 export function get(code) {
   var spell = null;

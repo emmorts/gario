@@ -1,4 +1,4 @@
-const spells = require('../spells');
+const spells = require('spells');
 
 class SpellFactory {
 

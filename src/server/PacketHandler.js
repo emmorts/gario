@@ -1,5 +1,6 @@
 const OPCode = require('../opCode');
 const BufferCodec = require('buffercodec');
+const Action = require('actions');
 
 class PacketHandler {
 
@@ -10,24 +11,21 @@ class PacketHandler {
 
   handleMessage(message) {
     if (!message || message.length === 0) {
+      console.log("An empty message was received.");
+      
       return;
     }
     
     const codec = BufferCodec(message);
-    const opcode = codec.parse({ code: 'uint8' }, obj => obj.code);
-    
-    switch (opcode) {
-      case OPCode.SPAWN_PLAYER:
-        this._spawnPlayer.call(this, codec);
-        break;
-      case OPCode.PLAYER_MOVE:
-        this._movePlayer.call(this, codec);
-        break;
-      case OPCode.CAST_PRIMARY:
-        this._castPrimary.call(this, codec);
-        break;
-      default:
-        console.log("Undefined opcode %s", opcode);
+    const code = codec.parse({ code: 'uint8' }, obj => obj.code);
+
+    if (code in Action) {
+      const action = new Action[code](this.gameServer, this.socket);
+      const buffer = codec.getBuffer(true);
+
+      action.execute(buffer);
+    } else {
+      console.error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
     }
   }
 

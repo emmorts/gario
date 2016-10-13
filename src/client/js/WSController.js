@@ -1,49 +1,30 @@
-var BufferCodec = require('buffercodec');
-var OPCode = require('../../opCode');
-
-import EventEmitter from './util/EventEmitter';
-import * as Packets from './packets/index';
+const BufferCodec = require('buffercodec');
+const EventEmitter = require('util/EventEmitter');
+const Action = require('actions');
+const OPCode = require('shared/opCode');
+const Schema = require('shared/schemas');
 
 export default class WSController extends EventEmitter {
   constructor() {
     super();
     
-    this._uri = 'ws://192.168.1.142:3000';
+    this._uri = 'ws://127.0.0.1:3000';
     this._socket = null;
 
     this._setupSocket();
   }
-  
-  spawn(playerName) {
-    var buffer = BufferCodec()
-      .uint8(OPCode.SPAWN_PLAYER)
-      .uint8(playerName.length)
-      .string(playerName)
-      .result();
-      
-    this._socket.send(buffer);
-  }
-  
-  move(player) {
-    var buffer = BufferCodec()
-      .uint8(OPCode.PLAYER_MOVE)
-      .uint16le(player.target.x)
-      .uint16le(player.target.y)
-      .result();
 
-    this._socket.send(buffer);
-  }
-  
-  cast(opcode, options) {
-    var buffer = BufferCodec()
-      .uint8(opcode)
-      .uint16le(options.playerX)
-      .uint16le(options.playerY)
-      .uint16le(options.x)
-      .uint16le(options.y)
-      .result();
+  send(opCode, object) {
+    if (opCode in Action) {
+      const action = new Action[opCode]();
+      const buffer = action.build(object);
 
-    this._socket.send(buffer);
+      if (buffer) {
+        this._socket.send(buffer);
+      }
+    } else {
+      console.error(`Operation '${OPCode.getName(opCode)}' does not cover any action.'`);
+    }
   }
   
   _setupSocket() {
@@ -54,29 +35,22 @@ export default class WSController extends EventEmitter {
       this._fire('open');
 
       this._socket.onmessage = function handleMessage(message) {
-        var codec = BufferCodec(message.data);
-        var code = this._getOpCode(codec);
+        const codec = BufferCodec(message.data);
+        const code = this._getOpCode(codec);
 
-        switch (code) {
-          case OPCode.ADD_PLAYER:
-            this._fire('addPlayer', this._parse(codec, Packets.AddPlayer));
-            break;
-          case OPCode.UPDATE_PLAYERS:
-            this._fire('updatePlayers', this._parse(codec, Packets.UpdatePlayers));
-            break;
-          case OPCode.UPDATE_SPELLS:
-            this._fire('updateSpells', this._parse(codec, Packets.UpdateSpells));
-            break;
-          default:
-            console.warn("Undefined opcode");
-            break;
+        if (code in Action) {
+          const ActionClass = Action[code];
+          const action = new ActionClass();
+          const buffer = codec.getBuffer(true);
+
+          if (ActionClass.eventName) {
+            this._fire(ActionClass.eventName, action.parse(buffer));
+          }
+        } else {
+          console.error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
         }
-      }.bind(this)
-    }.bind(this)
-  }
-  
-  _parse(codec, packet) {
-    return codec.parse(packet.mapping, packet.transform);
+      }.bind(this);
+    }.bind(this);
   }
   
   _getOpCode(codec) {

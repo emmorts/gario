@@ -1,4 +1,4 @@
-export default class EventEmitter {
+module.exports = class EventEmitter {
   constructor() {
     this._eventHandlers = {};
   }
@@ -15,4 +15,4 @@ export default class EventEmitter {
       this._eventHandlers[name].forEach(handler => handler(options));
     }
   }
-}
+};
