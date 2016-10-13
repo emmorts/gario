@@ -1,10 +1,10 @@
-const OPCode = require('../../opCode');
-const Spell = require('spells/Spell');
+const OPCode = require('opCode');
+const Spell = require('server/spells/Spell');
 
 class Primary extends Spell {
   constructor(gameServer, owner, options) {
     super();
-    
+
     options = options || {};
     this.type = OPCode.SPELL_PRIMARY;
     this.owner = owner;
@@ -18,7 +18,7 @@ class Primary extends Spell {
     this.radius = 10;
     this.color = { r: 200, g: 150, b: 40 };
   }
-  
+
   onCollision(model) {
     model.health -= 10;
   }

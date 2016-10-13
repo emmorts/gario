@@ -1,5 +1,5 @@
-const Action = require('actions/Action');
-const OPCode = require('shared/opCode');
+const Action = require('client/actions/Action');
+const OPCode = require('opCode');
 
 class AddPlayer extends Action {
 
@@ -10,7 +10,7 @@ class AddPlayer extends Action {
   static get eventName() {
     return 'addPlayer';
   }
-  
+
 }
 
 module.exports = AddPlayer;

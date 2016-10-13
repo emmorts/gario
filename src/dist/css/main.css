@@ -28,7 +28,7 @@ body {
     background-color: rgba(255, 255, 255, 0.8);
     font-size: 0;
   }
-  
+
     .start-menu-content .player-name {
       display: inline-block;
       box-sizing: border-box;
@@ -43,12 +43,12 @@ body {
       border-radius: 3px 0 0 3px;
       transition: border-color 0.1s ease-in-out;
     }
-    
+
     .start-menu-content .player-name:focus {
       outline: none;
       border-color: rgb(200, 200, 200);
     }
-    
+
     .start-menu-content .validation-error {
       display: none;
       position: absolute;
@@ -63,7 +63,7 @@ body {
       border: 1px solid rgb(192, 57, 43);
       border-radius: 3px;
     }
-    
+
     .start-menu-content .play-button {
       display: inline-block;
       vertical-align: middle;
@@ -81,17 +81,17 @@ body {
       border-radius: 0 3px 3px 0;
       transition: background-color 0.1s ease-in-out, border-color 0.1s ease-in-out;
     }
-    
+
     .start-menu-content .play-button:hover {
       background-color: rgb(52, 214, 182);
       border-color: rgb(26, 188, 156);
       cursor: pointer;
     }
-    
+
 .game {
   font-size: 0;
 }
-  
+
   .game .game-canvas {
     position: relative;
-  } 
+  }

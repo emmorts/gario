@@ -1,10 +1,10 @@
-const WebSocket = require('ws');
-const OPCode = require('../opCode');
 const uuid = require('node-uuid');
-const Packets = require('packets');
-const Spells = require('spells');
-const Action = require('actions');
-const Factory = require ('Factory');
+const WebSocket = require('ws');
+const OPCode = require('opCode');
+const Packets = require('server/packets');
+const Spells = require('server/spells');
+const Action = require('server/actions');
+const Factory = require ('server/Factory');
 
 class PlayerController {
 
@@ -41,23 +41,23 @@ class PlayerController {
 
   setTarget(target) {
     this.target = target;
-    
+
     this.gameServer.onTargetUpdated(this.socket);
   };
-  
+
   spawn(name) {
     this._setName(name);
-    
+
     this.gameServer.spawnPlayer(this);
   }
 
   cast(options) {
     if (!(options.type in this.spells)) {
       const spell = Factory.instantiate(
-        OPCode.TYPE_SPELL, 
-        options.type, 
-        this.gameServer, 
-        this, 
+        OPCode.TYPE_SPELL,
+        options.type,
+        this.gameServer,
+        this,
           {
           position: {
             x: options.playerX,
@@ -86,20 +86,18 @@ class PlayerController {
         updatedPlayers: this.nodeAdditionQueue,
         destroyedPlayers: this.nodeDestroyQueue
       });
-      // this.socket.sendPacket(new Packets.UpdatePlayers(this.nodeDestroyQueue, this.nodeAdditionQueue));
     }
-    
+
     this.nodeDestroyQueue = [];
     this.nodeAdditionQueue = [];
-    
+
     if (this.spellAdditionQueue.length > 0 || this.spellDestroyQueue.length > 0) {
       this.send(OPCode.UPDATE_SPELLS, {
         updatedSpells: this.spellAdditionQueue,
         destroyedSpells: this.spellDestroyQueue
       });
-      // this.socket.sendPacket(new Packets.UpdateSpells(this.spellDestroyQueue, this.spellAdditionQueue));
     }
-    
+
     this.spellAdditionQueue = [];
     this.spellDestroyQueue = [];
   };
@@ -107,7 +105,7 @@ class PlayerController {
   _setName(value) {
     this.name = value;
   };
-  
+
   _sendBuffer(buffer) {
     if (this.socket.readyState == WebSocket.OPEN && buffer) {
       this.socket.send(buffer, { binary: true });
@@ -117,7 +115,7 @@ class PlayerController {
       this.socket.removeAllListeners();
     }
   }
-  
+
 }
 
 module.exports = PlayerController;

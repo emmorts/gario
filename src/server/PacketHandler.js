@@ -1,6 +1,6 @@
-const OPCode = require('../opCode');
+const OPCode = require('opCode');
 const BufferCodec = require('buffercodec');
-const Action = require('actions');
+const Action = require('server/actions');
 
 class PacketHandler {
 
@@ -12,10 +12,10 @@ class PacketHandler {
   handleMessage(message) {
     if (!message || message.length === 0) {
       console.log("An empty message was received.");
-      
+
       return;
     }
-    
+
     const codec = BufferCodec(message);
     const code = codec.parse({ code: 'uint8' }, obj => obj.code);
 
@@ -33,7 +33,7 @@ class PacketHandler {
     const playerName = codec.parse({
       name: { type: 'string', encoding: 'utf8' }
     }, obj => obj.name || '');
-    
+
     this.socket.playerController.spawn(playerName);
   }
 
@@ -42,7 +42,7 @@ class PacketHandler {
       x: 'uint16le',
       y: 'uint16le'
     });
-    
+
     this.socket.playerController.setTarget(target);
   }
 
@@ -53,10 +53,10 @@ class PacketHandler {
       x: 'uint16le',
       y: 'uint16le',
     });
-    
+
     this.socket.playerController.cast(OPCode.SPELL_PRIMARY, options);
   }
-  
+
 }
 
 module.exports = PacketHandler;

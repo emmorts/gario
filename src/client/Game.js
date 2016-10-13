@@ -1,17 +1,17 @@
-const OPCode = require('shared/opCode');
+const OPCode = require('opCode');
 
 import SmartMap from 'smartmap';
-import WSController from 'WSController';
-import EventEmitter from 'util/EventEmitter';
-import * as Spells from 'spells';
-import * as Models from 'models';
+import WSController from 'client/WSController';
+import EventEmitter from 'client/util/EventEmitter';
+import * as Spells from 'client/spells';
+import * as Models from 'client/models';
 
 let instance = null;
 
 export default class Game extends EventEmitter {
   constructor() {
     super();
-    
+
     this.started = false;
     this.currentPlayer = null;
     this.controller = null;
@@ -26,26 +26,26 @@ export default class Game extends EventEmitter {
       return instance = new Game();
     }
   }
-  
+
   startGame(playerName, onConnection) {
     this.controller = new WSController();
-    
+
     this.controller.on('open', function startGame() {
-      
+
       this.controller.on('addPlayer', this._handleAddPlayer.bind(this));
       this.controller.on('updatePlayers', this._handleUpdatePlayers.bind(this));
       this.controller.on('updateSpells', this._handleUpdateSpells.bind(this));
-      
+
       this.controller.send(OPCode.SPAWN_PLAYER, { name: playerName });
-      
+
       this.onStart(onConnection);
     }.bind(this));
   }
-  
+
   update(deltaT) {
     this.playerList.forEach(player => player.calculateNextPosition(deltaT));
     this.spellList.forEach(spell => spell.calculateNextPosition(deltaT));
-    
+
     this.spellList.forEach((spell, spellIndex) => {
       this.playerList.forEach(player => {
         if (spell.ownerId !== player.ownerId) {
@@ -60,21 +60,21 @@ export default class Game extends EventEmitter {
       });
     });
   }
-  
+
   onStart(callback) {
     this.started = true;
-    
+
     if (callback) {
       callback();
     }
   }
-  
+
   _handleAddPlayer (player) {
     this.currentPlayer = new Models.Player(player);
     this._fire('addPlayer');
     this.playerList.add(this.currentPlayer);
   }
-  
+
   _handleUpdatePlayers (players) {
     const updatedPlayers = players.updatedPlayers;
     if (updatedPlayers && updatedPlayers.length > 0) {
@@ -88,13 +88,13 @@ export default class Game extends EventEmitter {
         }
       }, this);
     }
-    
+
     const destroyedPlayers = players.destroyedPlayers;
     if (destroyedPlayers && destroyedPlayers.length > 0) {
       destroyedPlayers.forEach(destroyedPlayer => this.playerList.delete(destroyedPlayer, 'id'), this);
     }
   }
-  
+
   _handleUpdateSpells (spells) {
     const updatedSpells = spells.updatedSpells;
     if (updatedSpells && updatedSpells.length > 0) {
@@ -105,7 +105,7 @@ export default class Game extends EventEmitter {
         this.spellList.add(spell);
       }, this);
     }
-    
+
     const destroyedSpells = spells.destroyedSpells;
     if (destroyedSpells && destroyedSpells.length > 0) {
       destroyedSpells.forEach(destroyedSpell => this.spellList.delete(destroyedSpell, 'id'), this);

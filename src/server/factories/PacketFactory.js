@@ -1,4 +1,4 @@
-const packets = require('packets');
+const packets = require('server/packets');
 
 class PacketFactory {
 

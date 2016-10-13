@@ -1,4 +1,4 @@
-const Schema = require('../../schemas');
+const Schema = require('schemas');
 
 class Action {
 
@@ -27,7 +27,7 @@ class Action {
 
     return null;
   }
-  
+
 };
 
 module.exports = Action;

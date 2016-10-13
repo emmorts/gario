@@ -1,0 +1,1 @@
+export { default as Player } from 'client/models/Player';

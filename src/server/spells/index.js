@@ -1,5 +1,5 @@
-const OPCode = require('../../opCode');
+const OPCode = require('opCode');
 
 module.exports = {
-  [OPCode.SPELL_PRIMARY]: require('spells/Primary')
+  [OPCode.SPELL_PRIMARY]: require('server/spells/Primary')
 };

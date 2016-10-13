@@ -1,19 +1,19 @@
 const server = require('http').createServer();
 const WebSocket = require('ws');
-const config = require('config');
-const PacketHandler = require('PacketHandler');
-const PlayerController = require('PlayerController');
-const Factory = require('Factory');
-const GameMode = require('gamemodes');
-const Model = require('models');
-const Packets = require('packets');
-const Maps = require('maps');
-const OPCode = require('../opCode');
+const config = require('server/config');
+const PacketHandler = require('server/PacketHandler');
+const PlayerController = require('server/PlayerController');
+const Factory = require('server/Factory');
+const GameMode = require('server/gamemodes');
+const Model = require('server/models');
+// const Packets = require('server/packets');
+const Maps = require('server/maps');
+const OPCode = require('opCode');
 const WebSocketServer = WebSocket.Server;
 
 function GameServer(server) {
   this.debug = process.env.DEVELOPMENT ? true : false;
-  
+
   this.clients = [];
   this.players = [];
   this.spells = [];
@@ -23,13 +23,13 @@ function GameServer(server) {
   this.tick = 0;
   this.tickMain = 0;
   this.updateRate = 1000 / 60;
-  
+
   this.gameMode = GameMode.get.call(this, config.defaultGameMode);
-  
+
   this._socketServerOptions = server
     ? { server: server }
     : { port: config.port, perMessageDeflate: false };
-    
+
 }
 
 GameServer.prototype.start = function () {
@@ -64,16 +64,17 @@ GameServer.prototype.start = function () {
 
     function closeConnection(error) {
       const indexOfPlayer = this.players.findIndex(node => node.ownerId === socket.playerController.pId);
-      
+
       if (indexOfPlayer !== -1) {
-        const packet = new Packets.UpdatePlayers([ this.players[indexOfPlayer] ]);
+        // const packet = new Packets.UpdatePlayers([ this.players[indexOfPlayer] ]);
 
         this.players.splice(indexOfPlayer, 1);
 
         this.clients = this.clients.filter(client => client !== socket);
-        this.clients.forEach(client => client.sendPacket(packet));
+        this.clients.forEach(client => client.playerController.nodeDestroyQueue.push(this.players[indexOfPlayer]));
+        // this.clients.forEach(client => client.sendPacket(packet));
       }
-      
+
       console.log("Connection closed.");
     }
   }
@@ -105,16 +106,18 @@ GameServer.prototype.addPlayer = function (player) {
   if (player.owner) {
     player.setColor(player.owner.color);
     player.owner.send(OPCode.ADD_PLAYER, player);
-    
+
     this.clients.forEach(function (client) {
       if (client !== player.owner.socket) {
-        client.sendPacket(new Packets.UpdatePlayers([], [ player ]));
+        client.playerController.nodeAdditionQueue.push(player);
+        // client.sendPacket(new Packets.UpdatePlayers([], [ player ]));
       }
     }, this);
-    
-    player.owner.socket.sendPacket(new Packets.UpdatePlayers([], this.players));
+
+    player.owner.nodeAdditionQueue = player.owner.nodeAdditionQueue.concat(this.players);
+    // player.owner.socket.sendPacket(new Packets.UpdatePlayers([], this.players));
   }
-  
+
   this.players.push(player);
 
   player.onAdd();
@@ -130,11 +133,12 @@ GameServer.prototype.updateClients = function () {
 
 GameServer.prototype.onTargetUpdated = function (socket) {
   const node = this.players.find(node => node.owner.pId === socket.playerController.pId);
-  
+
   if (node) {
     this.clients.forEach(function (client) {
       if (client !== socket) {
-        client.sendPacket(new Packets.UpdatePlayers([], [ node ]));
+        client.playerController.nodeAdditionQueue.push(node);
+        // client.sendPacket(new Packets.UpdatePlayers([], [ node ]));
       }
     }, this);
   }
@@ -143,10 +147,10 @@ GameServer.prototype.onTargetUpdated = function (socket) {
 GameServer.prototype.onCast = function (spell) {
   this.spells.push(spell);
   this.clients.forEach(client => client.playerController.spellAdditionQueue.push(spell));
-  
+
   setTimeout(() => {
     this.clients.forEach(client => client.playerController.spellDestroyQueue.push(spell));
-    
+
     const index = this.spells.indexOf(spell);
     if (index !== -1) {
       this.spells.splice(index, 1);
@@ -156,21 +160,21 @@ GameServer.prototype.onCast = function (spell) {
 
 GameServer.prototype.spawnPlayer = function (player) {
   const playerModel = Factory.instantiate(
-    OPCode.TYPE_MODEL, 
+    OPCode.TYPE_MODEL,
     OPCode.MODEL_PLAYER,
     this,
     player
   );
-  
+
   player.target = {
     x: playerModel.position.x,
     y: playerModel.position.y
   };
 
   player.model = playerModel;
-  
+
   this.gameMode.onPlayerSpawn(player);
-  
+
   this.addPlayer(playerModel);
 };
 

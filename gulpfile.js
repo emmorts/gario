@@ -8,23 +8,18 @@ var browserify = require('browserify');
 var watchify = require('watchify');
 var babel = require('babelify');
 var path = require('path');
-var pathmodify = require('pathmodify');
 
 function compile(watch) {
   var bundler = watchify(
       browserify({
-        entries: ['./src/client/js/app.js'],
+        entries: ['./src/client/app.js'],
         debug: true,
-        paths: [ './node_modules', './src/client/js' ],
+        paths: [ './node_modules', './src' ],
         builtins: [],
         extensions: [' ', 'js']
       }).transform(babel.configure({
         presets: ["es2015"]
-      })).plugin(pathmodify, {
-        mods: [
-          pathmodify.mod.dir('shared', path.join(__dirname, 'src'))
-        ]
-      }));
+      })));
 
   function rebundle(done) {
     return bundler.bundle()
@@ -50,26 +45,26 @@ function compile(watch) {
 }
 
 function watch() {
-  gulp.watch(['./src/client/*.html'], ['html']);
-  gulp.watch(['./src/client/css/*.css'], ['css']);
-  
+  gulp.watch(['./src/assets/*.html'], ['html']);
+  gulp.watch(['./src/assets/css/*.css'], ['css']);
+
   return compile(true);
 };
 
 gulp.task('css', function () {
-  return gulp.src('./src/client/css/*.css')
+  return gulp.src('./src/assets/css/*.css')
     .pipe(gulp.dest('./src/dist/css'));
 });
 
 gulp.task('html', function () {
-  return gulp.src('./src/client/*.html')
+  return gulp.src('./src/assets/*.html')
     .pipe(gulp.dest('./src/dist/'));
 });
 
 gulp.task('build', ['css', 'html'], function () {
   return compile();
 });
- 
+
 gulp.task('watch', ['css', 'html'], function () {
   return watch();
 });

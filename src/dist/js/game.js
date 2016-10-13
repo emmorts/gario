@@ -654,19 +654,19 @@ var _smartmap = require('smartmap');
 
 var _smartmap2 = _interopRequireDefault(_smartmap);
 
-var _WSController = require('WSController');
+var _WSController = require('client/WSController');
 
 var _WSController2 = _interopRequireDefault(_WSController);
 
-var _EventEmitter2 = require('util/EventEmitter');
+var _EventEmitter2 = require('client/util/EventEmitter');
 
 var _EventEmitter3 = _interopRequireDefault(_EventEmitter2);
 
-var _spells = require('spells');
+var _spells = require('client/spells');
 
 var Spells = _interopRequireWildcard(_spells);
 
-var _models = require('models');
+var _models = require('client/models');
 
 var Models = _interopRequireWildcard(_models);
 
@@ -680,7 +680,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var OPCode = require('shared/opCode');
+var OPCode = require('opCode');
 
 var instance = null;
 
@@ -821,7 +821,7 @@ var Game = function (_EventEmitter) {
 
 exports.default = Game;
 
-},{"WSController":6,"models":17,"shared/opCode":26,"smartmap":2,"spells":19,"util/EventEmitter":23}],5:[function(require,module,exports){
+},{"client/WSController":6,"client/models":17,"client/spells":19,"client/util/EventEmitter":23,"opCode":26,"smartmap":2}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -830,7 +830,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _statistics = require('statistics');
+var _statistics = require('client/statistics');
 
 var Statistics = _interopRequireWildcard(_statistics);
 
@@ -838,7 +838,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var OPCode = require('shared/opCode');
+var OPCode = require('opCode');
 
 var Graph = function () {
   function Graph(canvas) {
@@ -1142,7 +1142,7 @@ function getDefaultHeight() {
   return window.innerHeight && document.documentElement.clientHeight ? Math.min(window.innerHeight, document.documentElement.clientHeight) : window.innerHeight || document.documentElement.clientHeight || document.getElementsByTagName('body')[0].clientHeight;
 }
 
-},{"shared/opCode":26,"statistics":21}],6:[function(require,module,exports){
+},{"client/statistics":21,"opCode":26}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1158,10 +1158,10 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var BufferCodec = require('buffercodec');
-var EventEmitter = require('util/EventEmitter');
-var Action = require('actions');
-var OPCode = require('shared/opCode');
-var Schema = require('shared/schemas');
+var EventEmitter = require('client/util/EventEmitter');
+var Action = require('client/actions');
+var OPCode = require('opCode');
+var Schema = require('schemas');
 
 var WSController = function (_EventEmitter) {
   _inherits(WSController, _EventEmitter);
@@ -1233,14 +1233,14 @@ var WSController = function (_EventEmitter) {
 
 exports.default = WSController;
 
-},{"actions":14,"buffercodec":1,"shared/opCode":26,"shared/schemas":33,"util/EventEmitter":23}],7:[function(require,module,exports){
+},{"buffercodec":1,"client/actions":14,"client/util/EventEmitter":23,"opCode":26,"schemas":33}],7:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Schema = require('shared/schemas');
+var Schema = require('schemas');
 
 var Action = function () {
   function Action(opCode) {
@@ -1276,7 +1276,7 @@ var Action = function () {
 
 module.exports = Action;
 
-},{"shared/schemas":33}],8:[function(require,module,exports){
+},{"schemas":33}],8:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1287,8 +1287,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Action = require('actions/Action');
-var OPCode = require('shared/opCode');
+var Action = require('client/actions/Action');
+var OPCode = require('opCode');
 
 var AddPlayer = function (_Action) {
   _inherits(AddPlayer, _Action);
@@ -1311,7 +1311,7 @@ var AddPlayer = function (_Action) {
 
 module.exports = AddPlayer;
 
-},{"actions/Action":7,"shared/opCode":26}],9:[function(require,module,exports){
+},{"client/actions/Action":7,"opCode":26}],9:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1320,8 +1320,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Action = require('actions/Action');
-var OPCode = require('shared/opCode');
+var Action = require('client/actions/Action');
+var OPCode = require('opCode');
 
 var CastSpell = function (_Action) {
   _inherits(CastSpell, _Action);
@@ -1337,7 +1337,7 @@ var CastSpell = function (_Action) {
 
 module.exports = CastSpell;
 
-},{"actions/Action":7,"shared/opCode":26}],10:[function(require,module,exports){
+},{"client/actions/Action":7,"opCode":26}],10:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1346,8 +1346,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Action = require('actions/Action');
-var OPCode = require('shared/opCode');
+var Action = require('client/actions/Action');
+var OPCode = require('opCode');
 
 var PlayerMove = function (_Action) {
   _inherits(PlayerMove, _Action);
@@ -1363,7 +1363,7 @@ var PlayerMove = function (_Action) {
 
 module.exports = PlayerMove;
 
-},{"actions/Action":7,"shared/opCode":26}],11:[function(require,module,exports){
+},{"client/actions/Action":7,"opCode":26}],11:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1372,8 +1372,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Action = require('actions/Action');
-var OPCode = require('shared/opCode');
+var Action = require('client/actions/Action');
+var OPCode = require('opCode');
 
 var SpawnPlayer = function (_Action) {
   _inherits(SpawnPlayer, _Action);
@@ -1389,7 +1389,7 @@ var SpawnPlayer = function (_Action) {
 
 module.exports = SpawnPlayer;
 
-},{"actions/Action":7,"shared/opCode":26}],12:[function(require,module,exports){
+},{"client/actions/Action":7,"opCode":26}],12:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1400,8 +1400,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Action = require('actions/Action');
-var OPCode = require('shared/opCode');
+var Action = require('client/actions/Action');
+var OPCode = require('opCode');
 
 var UpdatePlayers = function (_Action) {
   _inherits(UpdatePlayers, _Action);
@@ -1424,7 +1424,7 @@ var UpdatePlayers = function (_Action) {
 
 module.exports = UpdatePlayers;
 
-},{"actions/Action":7,"shared/opCode":26}],13:[function(require,module,exports){
+},{"client/actions/Action":7,"opCode":26}],13:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1435,8 +1435,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Action = require('actions/Action');
-var OPCode = require('shared/opCode');
+var Action = require('client/actions/Action');
+var OPCode = require('opCode');
 
 var UpdateSpells = function (_Action) {
   _inherits(UpdateSpells, _Action);
@@ -1459,37 +1459,37 @@ var UpdateSpells = function (_Action) {
 
 module.exports = UpdateSpells;
 
-},{"actions/Action":7,"shared/opCode":26}],14:[function(require,module,exports){
+},{"client/actions/Action":7,"opCode":26}],14:[function(require,module,exports){
 'use strict';
 
 var _module$exports;
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var OPCode = require('shared/opCode');
+var OPCode = require('opCode');
 
-module.exports = (_module$exports = {}, _defineProperty(_module$exports, OPCode.ADD_PLAYER, require('actions/AddPlayer')), _defineProperty(_module$exports, OPCode.CAST_SPELL, require('actions/CastSpell')), _defineProperty(_module$exports, OPCode.SPAWN_PLAYER, require('actions/SpawnPlayer')), _defineProperty(_module$exports, OPCode.UPDATE_PLAYERS, require('actions/UpdatePlayers')), _defineProperty(_module$exports, OPCode.UPDATE_SPELLS, require('actions/UpdateSpells')), _defineProperty(_module$exports, OPCode.PLAYER_MOVE, require('actions/PlayerMove')), _module$exports);
+module.exports = (_module$exports = {}, _defineProperty(_module$exports, OPCode.ADD_PLAYER, require('client/actions/AddPlayer')), _defineProperty(_module$exports, OPCode.CAST_SPELL, require('client/actions/CastSpell')), _defineProperty(_module$exports, OPCode.SPAWN_PLAYER, require('client/actions/SpawnPlayer')), _defineProperty(_module$exports, OPCode.UPDATE_PLAYERS, require('client/actions/UpdatePlayers')), _defineProperty(_module$exports, OPCode.UPDATE_SPELLS, require('client/actions/UpdateSpells')), _defineProperty(_module$exports, OPCode.PLAYER_MOVE, require('client/actions/PlayerMove')), _module$exports);
 
-},{"actions/AddPlayer":8,"actions/CastSpell":9,"actions/PlayerMove":10,"actions/SpawnPlayer":11,"actions/UpdatePlayers":12,"actions/UpdateSpells":13,"shared/opCode":26}],15:[function(require,module,exports){
+},{"client/actions/AddPlayer":8,"client/actions/CastSpell":9,"client/actions/PlayerMove":10,"client/actions/SpawnPlayer":11,"client/actions/UpdatePlayers":12,"client/actions/UpdateSpells":13,"opCode":26}],15:[function(require,module,exports){
 'use strict';
 
-var _KeyCode = require('util/KeyCode');
+var _KeyCode = require('client/util/KeyCode');
 
 var _KeyCode2 = _interopRequireDefault(_KeyCode);
 
-var _DomElement = require('util/DomElement');
+var _DomElement = require('client/util/DomElement');
 
 var _DomElement2 = _interopRequireDefault(_DomElement);
 
-var _Graph = require('Graph');
+var _Graph = require('client/Graph');
 
 var _Graph2 = _interopRequireDefault(_Graph);
 
-var _Game = require('Game');
+var _Game = require('client/Game');
 
 var _Game2 = _interopRequireDefault(_Game);
 
-var _statistics = require('statistics');
+var _statistics = require('client/statistics');
 
 var Statistics = _interopRequireWildcard(_statistics);
 
@@ -1497,9 +1497,9 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-require('util/polyfills');
+require('client/util/polyfills');
 
-var OPCode = require('shared/opCode');
+var OPCode = require('opCode');
 
 var animationLoopHandle;
 var lastUpdate;
@@ -1645,7 +1645,7 @@ function startGame() {
   }
 }
 
-},{"Game":4,"Graph":5,"shared/opCode":26,"statistics":21,"util/DomElement":22,"util/KeyCode":24,"util/polyfills":25}],16:[function(require,module,exports){
+},{"client/Game":4,"client/Graph":5,"client/statistics":21,"client/util/DomElement":22,"client/util/KeyCode":24,"client/util/polyfills":25,"opCode":26}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1857,7 +1857,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Player = require('models/Player');
+var _Player = require('client/models/Player');
 
 Object.defineProperty(exports, 'Player', {
   enumerable: true,
@@ -1868,7 +1868,7 @@ Object.defineProperty(exports, 'Player', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-},{"models/Player":16}],18:[function(require,module,exports){
+},{"client/models/Player":16}],18:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1964,7 +1964,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _Primary = require('spells/Primary');
+var _Primary = require('client/spells/Primary');
 
 Object.defineProperty(exports, 'Primary', {
   enumerable: true,
@@ -1976,7 +1976,7 @@ exports.get = get;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var OPCode = require('shared/opCode');
+var OPCode = require('opCode');
 
 function get(code) {
   var spell = null;
@@ -1990,7 +1990,7 @@ function get(code) {
   return spell;
 }
 
-},{"shared/opCode":26,"spells/Primary":18}],20:[function(require,module,exports){
+},{"client/spells/Primary":18,"opCode":26}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

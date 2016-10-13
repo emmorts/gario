@@ -1,16 +1,10 @@
-const Action = require('actions/Action');
-const OPCode = require('../../opCode');
-
-let instance = null;
+const Action = require('server/actions/Action');
+const OPCode = require('opCode');
 
 class CastSpell extends Action {
 
   constructor() {
-    if (instance) return instance;
-
     super(OPCode.CAST_SPELL, ...arguments);
-
-    instance = this;
   }
 
   execute(buffer) {
@@ -18,7 +12,7 @@ class CastSpell extends Action {
 
     this.socket.playerController.cast(spell);
   }
-  
+
 }
 
 module.exports = CastSpell;

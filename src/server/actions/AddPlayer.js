@@ -1,16 +1,10 @@
-const Action = require('actions/Action');
-const OPCode = require('../../opCode');
-
-let instance = null;
+const Action = require('server/actions/Action');
+const OPCode = require('opCode');
 
 class AddPlayer extends Action {
 
   constructor() {
-    if (instance) return instance;
-
     super(OPCode.ADD_PLAYER, ...arguments);
-
-    instance = this;
   }
 
   build(object) {
@@ -34,7 +28,7 @@ class AddPlayer extends Action {
 
     return null;
   }
-  
+
 }
 
 module.exports = AddPlayer;

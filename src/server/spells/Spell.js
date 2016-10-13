@@ -1,5 +1,5 @@
-const OPCode = require('../../opCode');
 const uuid = require('node-uuid');
+const OPCode = require('opCode');
 
 class Spell {
   constructor() {
@@ -9,7 +9,7 @@ class Spell {
     this.power = 0;
     this.duration = 0;
   }
-  
+
   onAdd() {}
   onCollision(model) {}
 }
