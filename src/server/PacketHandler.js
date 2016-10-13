@@ -1,62 +1,36 @@
 const OPCode = require('opCode');
 const BufferCodec = require('buffercodec');
+const EventEmitter = require('EventEmitter');
 const Action = require('server/actions');
 
-class PacketHandler {
-
+class PacketHandler extends EventEmitter {
   constructor(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
   }
 
   handleMessage(message) {
-    if (!message || message.length === 0) {
-      console.log("An empty message was received.");
+    if (message && message.length) {
+      const codec = BufferCodec(message);
+      const code = codec.parse({ code: 'uint8' }, obj => obj.code);
 
-      return;
-    }
+      if (code in Action) {
+        const ActionClass = Action[code]; 
+        const action = new ActionClass(this.gameServer, this.socket);
+        const buffer = codec.getBuffer(true);
 
-    const codec = BufferCodec(message);
-    const code = codec.parse({ code: 'uint8' }, obj => obj.code);
+        const actionResult = action.execute(buffer);
 
-    if (code in Action) {
-      const action = new Action[code](this.gameServer, this.socket);
-      const buffer = codec.getBuffer(true);
-
-      action.execute(buffer);
+        if (ActionClass.eventName) {
+          this._fire(ActionClass.eventName, actionResult);
+        }
+      } else {
+        console.error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
+      }
     } else {
-      console.error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
+      console.log("An empty message was received.");
     }
   }
-
-  _spawnPlayer(codec) {
-    const playerName = codec.parse({
-      name: { type: 'string', encoding: 'utf8' }
-    }, obj => obj.name || '');
-
-    this.socket.playerController.spawn(playerName);
-  }
-
-  _movePlayer(codec) {
-    const target = codec.parse({
-      x: 'uint16le',
-      y: 'uint16le'
-    });
-
-    this.socket.playerController.setTarget(target);
-  }
-
-  _castPrimary(codec) {
-    const options = codec.parse({
-      playerX: 'uint16le',
-      playerY: 'uint16le',
-      x: 'uint16le',
-      y: 'uint16le',
-    });
-
-    this.socket.playerController.cast(OPCode.SPELL_PRIMARY, options);
-  }
-
 }
 
 module.exports = PacketHandler;

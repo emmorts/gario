@@ -14,8 +14,8 @@ class PlayerController {
     this.socket = socket;
     this.name = "";
     this.model = null;
-    this.nodeAdditionQueue = [];
-    this.nodeDestroyQueue = [];
+    this.playerAdditionQueue = [];
+    this.playerDestroyQueue = [];
     this.spellAdditionQueue = [];
     this.spellDestroyQueue = [];
     this.spells = [];
@@ -81,16 +81,23 @@ class PlayerController {
   };
 
   update() {
-    if (this.nodeAdditionQueue.length > 0 || this.nodeDestroyQueue.length > 0) {
+    this._updatePlayers();
+    this._updateSpells();
+  };
+
+  _updatePlayers() {
+    if (this.playerAdditionQueue.length > 0 || this.playerDestroyQueue.length > 0) {
       this.send(OPCode.UPDATE_PLAYERS, {
-        updatedPlayers: this.nodeAdditionQueue,
-        destroyedPlayers: this.nodeDestroyQueue
+        updatedPlayers: this.playerAdditionQueue,
+        destroyedPlayers: this.playerDestroyQueue
       });
     }
 
-    this.nodeDestroyQueue = [];
-    this.nodeAdditionQueue = [];
+    this.playerDestroyQueue = [];
+    this.playerAdditionQueue = [];
+  }
 
+  _updateSpells() {
     if (this.spellAdditionQueue.length > 0 || this.spellDestroyQueue.length > 0) {
       this.send(OPCode.UPDATE_SPELLS, {
         updatedSpells: this.spellAdditionQueue,
@@ -100,7 +107,7 @@ class PlayerController {
 
     this.spellAdditionQueue = [];
     this.spellDestroyQueue = [];
-  };
+  }
 
   _setName(value) {
     this.name = value;

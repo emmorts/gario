@@ -1,5 +1,5 @@
 const BufferCodec = require('buffercodec');
-const EventEmitter = require('client/util/EventEmitter');
+const EventEmitter = require('EventEmitter');
 const Action = require('client/actions');
 const OPCode = require('opCode');
 const Schema = require('schemas');

@@ -1,8 +1,8 @@
+const SmartMap = require('smartmap');
 const OPCode = require('opCode');
+const EventEmitter = require('EventEmitter');
+const WSController = require('client/WSController');
 
-import SmartMap from 'smartmap';
-import WSController from 'client/WSController';
-import EventEmitter from 'client/util/EventEmitter';
 import * as Spells from 'client/spells';
 import * as Models from 'client/models';
 

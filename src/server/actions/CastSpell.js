@@ -3,6 +3,10 @@ const OPCode = require('opCode');
 
 class CastSpell extends Action {
 
+  static get eventName() {
+    return 'castSpell';
+  }
+
   constructor() {
     super(OPCode.CAST_SPELL, ...arguments);
   }

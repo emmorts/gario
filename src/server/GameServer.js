@@ -69,7 +69,7 @@ GameServer.prototype.start = function () {
         this.players.splice(indexOfPlayer, 1);
 
         this.clients = this.clients.filter(client => client !== socket);
-        this.clients.forEach(client => client.playerController.nodeDestroyQueue.push(this.players[indexOfPlayer]));
+        this.clients.forEach(client => client.playerController.playerDestroyQueue.push(this.players[indexOfPlayer]));
       }
 
       console.log("Connection closed.");
@@ -106,11 +106,11 @@ GameServer.prototype.addPlayer = function (player) {
 
     this.clients.forEach(function (client) {
       if (client !== player.owner.socket) {
-        client.playerController.nodeAdditionQueue.push(player);
+        client.playerController.playerAdditionQueue.push(player);
       }
     }, this);
 
-    player.owner.nodeAdditionQueue = player.owner.nodeAdditionQueue.concat(this.players);
+    player.owner.playerAdditionQueue = player.owner.playerAdditionQueue.concat(this.players);
   }
 
   this.players.push(player);
@@ -132,7 +132,7 @@ GameServer.prototype.onTargetUpdated = function (socket) {
   if (node) {
     this.clients.forEach(function (client) {
       if (client !== socket) {
-        client.playerController.nodeAdditionQueue.push(node);
+        client.playerController.playerAdditionQueue.push(node);
       }
     }, this);
   }
