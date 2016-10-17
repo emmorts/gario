@@ -15,6 +15,8 @@ class CastSpell extends Action {
     const spell = this.parse(buffer);
 
     this.socket.playerController.cast(spell);
+
+    return spell;
   }
 
 }

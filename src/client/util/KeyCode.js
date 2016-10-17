@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   MOUSE2: 2,
   MAC_ENTER: 3,
   BACKSPACE: 8,

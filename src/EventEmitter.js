@@ -8,6 +8,8 @@ module.exports = class EventEmitter {
       this._eventHandlers[name] = [];
     }
     this._eventHandlers[name].push(listener);
+
+    return this;
   }
   
   _fire(name, options) {

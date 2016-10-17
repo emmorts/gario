@@ -1,7 +1,6 @@
 const uuid = require('node-uuid');
 const WebSocket = require('ws');
 const OPCode = require('opCode');
-const Packets = require('server/packets');
 const Spells = require('server/spells');
 const Action = require('server/actions');
 const Factory = require ('server/Factory');

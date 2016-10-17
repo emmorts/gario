@@ -3,12 +3,16 @@ const OPCode = require('opCode');
 
 class UpdatePlayers extends Action {
 
+  static get eventName() {
+    return 'updatePlayers';
+  }
+
   constructor() {
     super(OPCode.UPDATE_PLAYERS);
   }
 
-  static get eventName() {
-    return 'updatePlayers';
+  execute(buffer) {
+    return this.parse(buffer);
   }
 
 }

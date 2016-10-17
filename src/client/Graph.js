@@ -2,7 +2,7 @@ var OPCode = require('opCode');
 
 import * as Statistics from 'client/statistics';
 
-export default class Graph {
+class Graph {
   constructor(canvas) {
     this._canvas = canvas;
     this._context = this._canvas.getContext('2d');
@@ -235,6 +235,8 @@ export default class Graph {
   }
 
 };
+
+module.exports = Graph;
 
 function getColorInRGB(color, lightenPct) {
   if (color) {

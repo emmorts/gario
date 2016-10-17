@@ -5,6 +5,8 @@ const Action = require('server/actions');
 
 class PacketHandler extends EventEmitter {
   constructor(gameServer, socket) {
+    super();
+    
     this.gameServer = gameServer;
     this.socket = socket;
   }

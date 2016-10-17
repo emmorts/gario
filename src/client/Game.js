@@ -8,7 +8,7 @@ import * as Models from 'client/models';
 
 let instance = null;
 
-export default class Game extends EventEmitter {
+class Game extends EventEmitter {
   constructor() {
     super();
 
@@ -40,6 +40,8 @@ export default class Game extends EventEmitter {
 
       this.onStart(onConnection);
     }.bind(this));
+
+    return this;
   }
 
   update(deltaT) {
@@ -112,3 +114,5 @@ export default class Game extends EventEmitter {
     }
   }
 }
+
+module.exports = Game;
