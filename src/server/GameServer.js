@@ -1,12 +1,11 @@
 const server = require('http').createServer();
 const WebSocket = require('ws');
+const present = require('present');
 const config = require('server/config');
 const PacketHandler = require('server/PacketHandler');
 const PlayerController = require('server/PlayerController');
 const Factory = require('server/Factory');
 const GameMode = require('server/gamemodes');
-const Model = require('server/models');
-// const Packets = require('server/packets');
 const Maps = require('server/maps');
 const OPCode = require('opCode');
 const WebSocketServer = WebSocket.Server;
@@ -18,7 +17,7 @@ function GameServer(server) {
   this.players = [];
   this.spells = [];
 
-  this.time = Date.now();
+  this.time = present();
   this.startTime = this.time;
   this.tick = 0;
   this.tickMain = 0;
@@ -29,7 +28,6 @@ function GameServer(server) {
   this._socketServerOptions = server
     ? { server: server }
     : { port: config.port, perMessageDeflate: false };
-
 }
 
 GameServer.prototype.start = function () {
@@ -66,10 +64,10 @@ GameServer.prototype.start = function () {
       const indexOfPlayer = this.players.findIndex(node => node.ownerId === socket.playerController.pId);
 
       if (indexOfPlayer !== -1) {
-        this.players.splice(indexOfPlayer, 1);
-
         this.clients = this.clients.filter(client => client !== socket);
         this.clients.forEach(client => client.playerController.playerDestroyQueue.push(this.players[indexOfPlayer]));
+
+        this.players.splice(indexOfPlayer, 1);
       }
 
       console.log("Connection closed.");
@@ -83,7 +81,8 @@ GameServer.prototype.start = function () {
 };
 
 GameServer.prototype.gameLoop = function () {
-  const local = Date.now();
+  const local = present();
+  
   this.tick += (local - this.time);
   this.time = local;
 

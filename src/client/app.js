@@ -1,5 +1,6 @@
 require('client/util/polyfills');
 
+const present = require('present');
 const OPCode = require('opCode');
 const KeyCode = require('client/util/KeyCode');
 const DomElement = require('client/util/DomElement');
@@ -54,7 +55,7 @@ function startGame (playerName) {
       });
       
     if (!animationLoopHandle) {
-      lastUpdate = Date.now();
+      lastUpdate = present();
       animationLoop(lastUpdate);
     }
   });

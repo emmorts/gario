@@ -19,6 +19,7 @@
     "buffercodec": "*.*.*",
     "express": "^4.13.3",
     "node-uuid": "^1.4.7",
+    "present": "^1.0.0",
     "smartmap": "*.*.*",
     "ws": "^0.8.1"
   },

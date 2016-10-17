@@ -17,7 +17,7 @@ class PlayerController {
     this.playerDestroyQueue = [];
     this.spellAdditionQueue = [];
     this.spellDestroyQueue = [];
-    this.spells = [];
+    this.rechargingSpells = [];
     this.target = {x: 0, y: 0};
 
     if (gameServer) {
@@ -45,13 +45,13 @@ class PlayerController {
   };
 
   spawn(name) {
-    this._setName(name);
+    this.name = name;
 
     this.gameServer.spawnPlayer(this);
   }
 
   cast(options) {
-    if (!(options.type in this.spells)) {
+    if (!(options.type in this.rechargingSpells)) {
       const spell = Factory.instantiate(
         OPCode.TYPE_SPELL,
         options.type,
@@ -70,9 +70,9 @@ class PlayerController {
       );
 
       if (spell) {
-        this.spells[options.type] = spell;
+        this.rechargingSpells[options.type] = spell;
 
-        setTimeout(() => delete this.spells[options.type], spell.cooldown);
+        setTimeout(() => delete this.rechargingSpells[options.type], spell.cooldown);
 
         this.gameServer.onCast(spell);
       }
@@ -107,10 +107,6 @@ class PlayerController {
     this.spellAdditionQueue = [];
     this.spellDestroyQueue = [];
   }
-
-  _setName(value) {
-    this.name = value;
-  };
 
   _sendBuffer(buffer) {
     if (this.socket.readyState == WebSocket.OPEN && buffer) {
