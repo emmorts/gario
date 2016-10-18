@@ -9,14 +9,16 @@ const Game = require('client/Game');
 const StartMenuElement = require('client/elements/StartMenuElement');
 const CanvasElement = require('client/elements/CanvasElement');
 
-var animationLoopHandle;
-var lastUpdate;
-var mousePosition = { x: 0, y: 0 };
-var scrollDirection = null;
-var game = Game.getInstance();
+const game = Game.getInstance();
 
 new StartMenuElement().bind().on('startGame', startGame);
+
+let animationLoopHandle;
+let lastUpdate;
+let scrollDirection = null;
 let canvas = null;
+
+const mousePosition = { x: 0, y: 0 };
 
 function animationLoop(timestamp) {
   animationLoopHandle = window.requestAnimationFrame(animationLoop);
@@ -46,7 +48,8 @@ function startGame (playerName) {
       .bind()
       .bindEvents()
       .on('mouseMove', mouse => {
-        mousePosition = { x: mouse.x, y: mouse.y };
+        mousePosition.x = mouse.x;
+        mousePosition.y = mouse.y;
         scrollDirection = mouse.direction;
       })
       .on('playerMove', target => {

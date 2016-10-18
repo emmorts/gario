@@ -93,19 +93,19 @@ class Graph {
       var posX = this.player.position.x;
       var posY = this.player.position.y;
       var coordinates = 'Coordinates: ' + Math.round(posX) + ' ' + Math.round(posY);
-      this.drawText(coordinates, 50, 50);
+      this.drawText(coordinates, 30, 50);
 
       // OFFSET
       var offset = 'Offset: ' + Math.round(this.xOffset) + ' ' + Math.round(this.yOffset);
-      this.drawText(offset, 50, 70);
+      this.drawText(offset, 30, 70);
 
       // VELOCITY
       var velocity = 'Velocity: ' + Math.round(this.player.velocity.x) + ' ' + Math.round(this.player.velocity.y);
-      this.drawText(velocity, 50, 30);
+      this.drawText(velocity, 30, 30);
 
       // Score
       var score = 'Score: ' + Statistics.Score.getInstance().currentScore();
-      this.drawText(score, 50, 10);
+      this.drawText(score, 30, 90);
     }
 
     return this;

@@ -21,6 +21,9 @@ class StartMenuElement extends Element {
     this._playButtonElement = new DomElement('.js-play-button')
       .on('mouseup', this._onPlayClick.bind(this));
     this._errorElement = new DomElement('.js-error');
+
+    this._validate();
+
     return this;
   }
 
@@ -31,22 +34,28 @@ class StartMenuElement extends Element {
   }
 
   _onPlayerNameChanged(event) {
-    this._valid = !!event.target.value.match(this._validationPattern);
-    if (this._valid) {
-      if (~[KeyCode.ENTER, KeyCode.MAC_ENTER].indexOf(event.keyCode)) {
-        this._startGame();
-      }
-      this._errorElement.hide();
-      this._playButtonElement.enable();
-    } else {
-      this._errorElement.show();
-      this._playButtonElement.disable();
+    this._validate(event.target.value);
+
+    if (this._valid && ~[KeyCode.ENTER, KeyCode.MAC_ENTER].indexOf(event.keyCode)) {
+      this._startGame();
     }
   }
 
   _startGame() {
     this._startMenuElement.hide();
     this._fire('startGame', this._playerNameElement.content);
+  }
+
+  _validate(playerName = this._playerNameElement.content) {
+    this._valid = !!playerName.match(this._validationPattern);
+    
+    if (this._valid) {
+      this._errorElement.hide();
+      this._playButtonElement.enable();
+    } else {
+      this._errorElement.show();
+      this._playButtonElement.disable();
+    }
   }
 }
 

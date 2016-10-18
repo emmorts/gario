@@ -29,7 +29,6 @@
     "browserify": "^13.0.0",
     "core-js": "^2.4.1",
     "gulp": "^3.9.1",
-    "gulp-concat": "^2.6.0",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-util": "^3.0.7",
     "pathmodify": "^0.5.0",

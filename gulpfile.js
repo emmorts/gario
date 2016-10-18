@@ -1,5 +1,4 @@
 var gulp = require('gulp');
-var concat = require('gulp-concat');
 var sourcemaps = require('gulp-sourcemaps');
 var gutil = require('gulp-util');
 var source = require('vinyl-source-stream');
