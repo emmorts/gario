@@ -85,7 +85,7 @@ class PlayerController {
   };
 
   _updatePlayers() {
-    if (this.playerAdditionQueue.length > 0 || this.playerDestroyQueue.length > 0) {
+    if (this.playerAdditionQueue.length || this.playerDestroyQueue.length) {
       this.send(OPCode.UPDATE_PLAYERS, {
         updatedPlayers: this.playerAdditionQueue,
         destroyedPlayers: this.playerDestroyQueue
@@ -97,7 +97,7 @@ class PlayerController {
   }
 
   _updateSpells() {
-    if (this.spellAdditionQueue.length > 0 || this.spellDestroyQueue.length > 0) {
+    if (this.spellAdditionQueue.length || this.spellDestroyQueue.length) {
       this.send(OPCode.UPDATE_SPELLS, {
         updatedSpells: this.spellAdditionQueue,
         destroyedSpells: this.spellDestroyQueue
@@ -109,9 +109,17 @@ class PlayerController {
   }
 
   _sendBuffer(buffer) {
-    if (this.socket.readyState == WebSocket.OPEN && buffer) {
-      this.socket.send(buffer, { binary: true });
+    if (!buffer) {
+      console.log('Empty buffer received, skipping message.');
+    } else if (this.socket.readyState == WebSocket.OPEN) {
+      this.socket.send(buffer, { binary: true }, error => {
+        if (error) {
+          console.log(`Failed to send a message('${error}').`);
+        }
+      });
     } else {
+      console.log('Socket is not open, closing connection.');
+
       this.socket.readyState = WebSocket.CLOSED;
       this.socket.emit('close');
       this.socket.removeAllListeners();
