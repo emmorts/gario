@@ -6,8 +6,8 @@ class Action {
     this.actionSchema = Schema.get(opCode);
   }
 
-  execute() {
-    throw new Error(`execute() must be overriden in an action ${this.constructor.name}`);
+  execute(buffer) {
+    return this.parse(buffer);
   }
 
   parse(buffer) {

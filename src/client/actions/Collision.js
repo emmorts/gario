@@ -1,16 +1,16 @@
 const Action = require('client/actions/Action');
 const OPCode = require('opCode');
 
-class UpdateSpells extends Action {
+class Collision extends Action {
 
   static get eventName() {
-    return 'updateSpells';
+    return 'collision';
   }
 
   constructor() {
-    super(OPCode.UPDATE_SPELLS);
+    super(OPCode.COLLISION);
   }
 
 }
 
-module.exports = UpdateSpells;
+module.exports = Collision;

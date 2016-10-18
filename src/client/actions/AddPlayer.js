@@ -11,10 +11,6 @@ class AddPlayer extends Action {
     super(OPCode.ADD_PLAYER);
   }
 
-  execute(buffer) {
-    return this.parse(buffer);
-  }
-
 }
 
 module.exports = AddPlayer;

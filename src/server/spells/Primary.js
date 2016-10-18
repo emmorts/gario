@@ -1,11 +1,13 @@
 const OPCode = require('opCode');
-const Spell = require('server/spells/Spell');
+const uuid = require('node-uuid');
+const SpellBase = require('models/SpellBase');
 
-class Primary extends Spell {
+class Primary extends SpellBase {
   constructor(gameServer, owner, options) {
     super();
 
     options = options || {};
+    this.id = uuid.v4().replace(/-/g, '');
     this.type = OPCode.SPELL_PRIMARY;
     this.owner = owner;
     this.gameServer = gameServer;
@@ -17,10 +19,6 @@ class Primary extends Spell {
     this.cooldown = 1000;
     this.radius = 10;
     this.color = { r: 200, g: 150, b: 40 };
-  }
-
-  onCollision(model) {
-    model.health -= 10;
   }
 }
 

@@ -21,7 +21,7 @@ class StartMenuElement extends Element {
     this._playButtonElement = new DomElement('.js-play-button')
       .on('mouseup', this._onPlayClick.bind(this));
     this._errorElement = new DomElement('.js-error');
-
+ 
     this._validate();
 
     return this;
@@ -48,7 +48,7 @@ class StartMenuElement extends Element {
 
   _validate(playerName = this._playerNameElement.content) {
     this._valid = !!playerName.match(this._validationPattern);
-    
+
     if (this._valid) {
       this._errorElement.hide();
       this._playButtonElement.enable();

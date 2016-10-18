@@ -6,19 +6,16 @@ const Action = require('server/actions');
 const Factory = require ('server/Factory');
 
 class PlayerController {
-
   constructor(gameServer, socket) {
     this.pId = -1;
     this.gameServer = gameServer;
     this.socket = socket;
-    this.name = "";
     this.model = null;
     this.playerAdditionQueue = [];
     this.playerDestroyQueue = [];
     this.spellAdditionQueue = [];
     this.spellDestroyQueue = [];
     this.rechargingSpells = [];
-    this.target = {x: 0, y: 0};
 
     if (gameServer) {
       this.pId = uuid.v4().replace(/-/g, '');
@@ -39,15 +36,24 @@ class PlayerController {
   }
 
   setTarget(target) {
-    this.target = target;
+    if (this.model && target) {
+      this.model.setTarget(target);
 
-    this.gameServer.onTargetUpdated(this.socket);
+      this.gameServer.onTargetUpdated(this);
+    }
   };
 
   spawn(name) {
-    this.name = name;
+    this.model = Factory.instantiate(
+      OPCode.TYPE_MODEL,
+      OPCode.MODEL_PLAYER,
+      this.gameServer,
+      this
+    );
 
-    this.gameServer.spawnPlayer(this);
+    this.model.name = name;
+
+    this.gameServer.onPlayerSpawn(this);
   }
 
   cast(options) {

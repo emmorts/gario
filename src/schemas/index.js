@@ -1,12 +1,13 @@
-const OPCode = require('../opCode');
+const OPCode = require('opCode');
 
 const schemas = {
-  [OPCode.ADD_PLAYER]: require('./AddPlayer'),
-  [OPCode.CAST_SPELL]: require('./CastSpell'),
-  [OPCode.PLAYER_MOVE]: require('./PlayerMove'),
-  [OPCode.SPAWN_PLAYER]: require('./SpawnPlayer'),
-  [OPCode.UPDATE_PLAYERS]: require('./UpdatePlayers'),
-  [OPCode.UPDATE_SPELLS]: require('./UpdateSpells'),
+  [OPCode.ADD_PLAYER]: require('schemas/AddPlayer'),
+  [OPCode.CAST_SPELL]: require('schemas/CastSpell'),
+  [OPCode.COLLISION]: require('schemas/Collision'),
+  [OPCode.PLAYER_MOVE]: require('schemas/PlayerMove'),
+  [OPCode.SPAWN_PLAYER]: require('schemas/SpawnPlayer'),
+  [OPCode.UPDATE_PLAYERS]: require('schemas/UpdatePlayers'),
+  [OPCode.UPDATE_SPELLS]: require('schemas/UpdateSpells'),
 };
 
 module.exports.get = opCode => {

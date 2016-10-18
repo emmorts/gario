@@ -53,46 +53,19 @@ class GameServer {
   }
 
   movementTick() {
-    this.players.forEach(player => player.calculateNextPosition());
-  }
-
-  addPlayer(player) {
-    if (player.owner) {
-      player.setColor(player.owner.color);
-      player.owner.send(OPCode.ADD_PLAYER, player);
-
-      this.sockets.forEach(function (client) {
-        if (client !== player.owner.socket) {
-          client.playerController.playerAdditionQueue.push(player);
-        }
-      }, this);
-
-      player.owner.playerAdditionQueue = player.owner.playerAdditionQueue.concat(this.players);
-    }
-
-    this.players.push(player);
-
-    player.onAdd();
+    this.players.forEach(player => player.update());
   }
 
   updateClients() {
-    this.sockets.forEach(function (client) {
-      if (client && typeof client !== 'undefined') {
-        client.playerController.update();
-      }
-    }, this);
+    this.players.forEach(playerController => playerController.update());
   };
 
-  onTargetUpdated(socket) {
-    const node = this.players.find(node => node.owner.pId === socket.playerController.pId);
-
-    if (node) {
-      this.sockets.forEach(function (client) {
-        if (client !== socket) {
-          client.playerController.playerAdditionQueue.push(node);
-        }
-      }, this);
-    }
+  onTargetUpdated(playerController) {
+    this.players.forEach(function (player) {
+      if (player !== playerController) {
+        player.playerAdditionQueue.push(playerController.model);
+      }
+    }, this);
   };
 
   onCast(spell) {
@@ -109,24 +82,21 @@ class GameServer {
     }, spell.duration);
   };
 
-  spawnPlayer(player) {
-    const playerModel = Factory.instantiate(
-      OPCode.TYPE_MODEL,
-      OPCode.MODEL_PLAYER,
-      this,
-      player
-    );
+  onPlayerSpawn(playerController) {
+    this.gameMode.onPlayerSpawn(playerController);
 
-    player.target = {
-      x: playerModel.position.x,
-      y: playerModel.position.y
-    };
+    playerController.send(OPCode.ADD_PLAYER, playerController.model);
 
-    player.model = playerModel;
+    this.sockets.forEach(function (client) {
+      if (client !== playerController.socket) {
+        client.playerController.playerAdditionQueue.push(playerController.model);
+      }
+    }, this);
 
-    this.gameMode.onPlayerSpawn(player);
+    const playerModelList = this.players.map(player => player.model);
+    playerController.playerAdditionQueue = playerController.playerAdditionQueue.concat(playerModelList);
 
-    this.addPlayer(playerModel);
+    this.players.push(playerController);
   };
 
   _setupSocket() {
@@ -136,12 +106,14 @@ class GameServer {
     this.socketServer.on('error', this._onConnectionError.bind(this));
   }
 
-  _closeConnection() {
-    const indexOfPlayer = this.players.findIndex(node => node.ownerId === socket.playerController.pId);
+  _closeConnection(socket) {
+    const indexOfPlayer = this.players.findIndex(node => node.pId === socket.playerController.pId);
 
     if (indexOfPlayer !== -1) {
+      const playerModel = this.players[indexOfPlayer].model;
+      
       this.sockets = this.sockets.filter(client => client !== socket);
-      this.sockets.forEach(client => client.playerController.playerDestroyQueue.push(this.players[indexOfPlayer]));
+      this.sockets.forEach(client => client.playerController.playerDestroyQueue.push(playerModel));
 
       this.players.splice(indexOfPlayer, 1);
     }
@@ -160,8 +132,8 @@ class GameServer {
         socket.packetHandler.handleMessage.call(socket.packetHandler, message);
       });
 
-      socket.on('error', this._closeConnection.bind(this));
-      socket.on('close', this._closeConnection.bind(this));
+      socket.on('error', this._closeConnection.bind(this, socket));
+      socket.on('close', this._closeConnection.bind(this, socket));
 
       this.sockets.push(socket);
     } else {

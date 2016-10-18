@@ -14,14 +14,14 @@ class UpdatePlayers extends Action {
           updatedPlayers: object.updatedPlayers.map(player => ({
             id: player.id,
             ownerId: player.ownerId,
-            length: player.owner.name.length,
-            name: player.owner.name,
+            length: player.name.length,
+            name: player.name,
             health: player.health,
             maxHealth: player.maxHealth,
             x: player.position.x,
             y: player.position.y,
-            targetX: player.owner.target.x,
-            targetY: player.owner.target.y,
+            targetX: player.target.x,
+            targetY: player.target.y,
             r: player.color.r,
             g: player.color.g,
             b: player.color.b

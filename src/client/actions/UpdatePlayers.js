@@ -11,10 +11,6 @@ class UpdatePlayers extends Action {
     super(OPCode.UPDATE_PLAYERS);
   }
 
-  execute(buffer) {
-    return this.parse(buffer);
-  }
-
 }
 
 module.exports = UpdatePlayers;

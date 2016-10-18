@@ -1,3 +1,4 @@
+const config = require('server/config');
 const Mode = require('server/gamemodes/Mode');
 
 class FFA extends Mode {
@@ -10,9 +11,23 @@ class FFA extends Mode {
   }
 
   onPlayerSpawn(player) {
-    player.color = this.getRandomColor();
-    player.maxHealth = this.baseHealth;
-    player.health = player.maxHealth;
+    if (player && player.model) {
+      player.model.position = this._getRandomPosition();
+      player.model.color = this._getRandomColor();
+      player.model.maxHealth = this.baseHealth;
+      player.model.health = player.model.maxHealth;
+      player.model.target = {
+        x: player.model.position.x,
+        y: player.model.position.y
+      };
+    }
+  }
+
+  _getRandomPosition() {
+    return {
+      x: Math.floor(Math.random() * config.gameWidth),
+      y: Math.floor(Math.random() * config.gameHeight)
+    };
   }
 
   _getRandomColor() {

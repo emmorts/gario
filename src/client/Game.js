@@ -38,32 +38,40 @@ class Game extends EventEmitter {
 
       this.controller.send(OPCode.SPAWN_PLAYER, { name: playerName });
 
-      this.onStart(onConnection);
+      this._onStart(onConnection);
     }.bind(this));
 
     return this;
   }
 
   update(deltaT) {
-    this.playerList.forEach(player => player.calculateNextPosition(deltaT));
-    this.spellList.forEach(spell => spell.calculateNextPosition(deltaT));
+    this.playerList.forEach(player => player.update(deltaT));
+    this.spellList.forEach(spell => spell.update(deltaT));
 
-    this.spellList.forEach((spell, spellIndex) => {
+    this._detectCollisions();
+  }
+
+  _detectCollisions() {
+    this.spellList.forEach(spell => {
       this.playerList.forEach(player => {
-        if (spell.ownerId !== player.ownerId) {
-          const distanceX = player.position.x - spell.position.x;
-          const distanceY = player.position.y - spell.position.y;
-          const distance = distanceX * distanceX + distanceY * distanceY;
-          if (distance < Math.pow(spell.radius + player.radius, 2)) {
-            spell.onCollision(player);
-            this.spellList.delete(spell.id, 'id');
-          }
+        if (spell.ownerId !== player.ownerId && this._didCollide(player, spell)) {
+          spell.onCollision(player);
+
+          this.spellList.delete(spell.id, 'id');
         }
       });
     });
   }
 
-  onStart(callback) {
+  _didCollide(actor, collider) {
+    const distanceX = actor.position.x - collider.position.x;
+    const distanceY = actor.position.y - collider.position.y;
+    const distance = distanceX * distanceX + distanceY * distanceY;
+
+    return distance <= Math.pow(collider.radius + actor.radius, 2);
+  }
+
+  _onStart(callback) {
     this.started = true;
 
     if (callback) {

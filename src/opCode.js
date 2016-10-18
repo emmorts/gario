@@ -7,6 +7,7 @@ const operations = [
   "UPDATE_SPELLS",
   "PLAYER_MOVE",
   "CAST_SPELL",
+  "COLLISION",
   
   // cast
   "CAST_PRIMARY",
