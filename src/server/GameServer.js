@@ -43,22 +43,52 @@ class GameServer {
 
     this.tick += (current - this.time);
     this.time = current;
+    
+    this.movementTick();
+    this.updateClients();
+    this.checkForCollisions();
 
-    if (this.tick > 50) {
-      this.movementTick();
-      this.updateClients();
+    if (this.tick > 30) {
 
       this.tick = 0;
     }
   }
 
   movementTick() {
-    this.players.forEach(player => player.update());
+    this.players.forEach(player => player.model.update());
+    this.spells.forEach(spell => spell.update());
   }
 
   updateClients() {
     this.players.forEach(playerController => playerController.update());
   };
+
+  checkForCollisions() {
+    const collisions = [];
+    
+    this.spells.forEach((spell, spellIndex) => {
+      this.players.forEach(player => {
+        if (spell.ownerId !== player.pId && this._didCollide(player.model, spell)) {
+          this.players.forEach(playerController => {
+            playerController.send(OPCode.COLLISION, {
+              actorId: player.model.id,
+              colliderId: spell.id
+            });
+          });
+
+          spell.onCollision(player.model);
+          
+          this.spells.splice(spellIndex, 1);
+        }
+      });
+    }); 
+
+    collisions.forEach(collision => {
+      this.players.forEach(playerController => {
+        playerController.send(OPCode.COLLISION, collision);
+      });
+    });
+  }
 
   onTargetUpdated(playerController) {
     this.players.forEach(function (player) {
@@ -98,6 +128,15 @@ class GameServer {
 
     this.players.push(playerController);
   };
+
+  _didCollide(actor, collider) {
+    const distanceX = actor.position.x - collider.position.x;
+    const distanceY = actor.position.y - collider.position.y;
+    const distance = distanceX * distanceX + distanceY * distanceY;
+    const hitBox = Math.pow(collider.radius + actor.radius, 2);
+
+    return distance <= hitBox;
+  }
 
   _setupSocket() {
     this.socketServer = new WebSocketServer(this._socketServerOptions);

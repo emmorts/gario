@@ -35,7 +35,8 @@ function gameLoop(deltaT) {
     .drawArena()
     .drawSpells(game.spellList)
     .drawPlayers(game.playerList)
-    .drawDebug();
+    .drawDebug()
+    .drawStatus();
 
   game.update();
 }
@@ -53,8 +54,10 @@ function startGame (playerName) {
         scrollDirection = mouse.direction;
       })
       .on('playerMove', target => {
-        game.currentPlayer.setTarget(target);
-        game.controller.send(OPCode.PLAYER_MOVE, game.currentPlayer);
+        if (game.currentPlayer.health > 0) {
+          game.currentPlayer.setTarget(target);
+          game.controller.send(OPCode.PLAYER_MOVE, game.currentPlayer);
+        }
       });
       
     if (!animationLoopHandle) {
@@ -68,13 +71,15 @@ function startGame (playerName) {
   function wHandleKeyDown(event) {
     switch (event.keyCode) {
       case KeyCode.SPACE:
-        game.controller.send(OPCode.CAST_SPELL, {
-          type: OPCode.SPELL_PRIMARY,
-          playerX: game.currentPlayer.position.x,
-          playerY: game.currentPlayer.position.y,
-          x: mousePosition.x,
-          y: mousePosition.y
-        });
+        if (game.currentPlayer.health > 0) {
+          game.controller.send(OPCode.CAST_SPELL, {
+            type: OPCode.SPELL_PRIMARY,
+            playerX: game.currentPlayer.position.x,
+            playerY: game.currentPlayer.position.y,
+            x: mousePosition.x,
+            y: mousePosition.y
+          });
+        }
     }
   }
 }

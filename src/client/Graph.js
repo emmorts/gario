@@ -111,6 +111,12 @@ class Graph {
     return this;
   }
 
+  drawStatus() {
+    if (this.player.id !== -1 && this.player.health === 0) {
+      this.drawText('You are dead!', this.screenWidth / 2, 150, 36, true, 'center');
+    }
+  }
+
   drawArena() {
     this._context.lineWidth = 2;
     this._context.beginPath();
@@ -156,7 +162,7 @@ class Graph {
     return this;
   }
 
-  drawText(text, x, y, fontSize, hasStroke = true) {
+  drawText(text, x, y, fontSize, hasStroke = true, align = "start") {
     if (typeof fontSize === 'undefined') {
       fontSize = this._playerOptions.fontSize;
     }
@@ -167,6 +173,7 @@ class Graph {
     this._context.miterLimit = 1;
     this._context.lineJoin = 'round';
     this._context.textBaseline = 'middle';
+    this._context.textAlign = align;
     if (hasStroke) {
       this._context.strokeText(text, x, y);
     }
@@ -176,17 +183,24 @@ class Graph {
   }
 
   drawPlayer(player) {
-    var posX = player.position.x - this.xOffset;
-    var posY = player.position.y - this.yOffset;
+    const posX = player.position.x - this.xOffset;
+    const posY = player.position.y - this.yOffset;
 
-    var arcLength = 2 * (player.health / player.maxHealth) * Math.PI;
-    var deficit = (2 * Math.PI - arcLength) / 2;
-    var arcStart = player.rotation + deficit;
-    var arcEnd = arcLength + player.rotation + deficit;
+    const arcLength = 2 * (player.health / player.maxHealth) * Math.PI;
+    const deficit = (2 * Math.PI - arcLength) / 2;
+    const arcStart = player.rotation + deficit;
+    const arcEnd = arcLength + player.rotation + deficit;
+
+    let playerColor;
+    if (player.health > 0) { 
+      playerColor = getColorInRGB(player.color);
+    } else {
+      playerColor = 'rgb(69, 69, 69)';
+    }
 
     this._context.beginPath();
     this._context.arc(posX, posY, player.radius, 0, 2 * Math.PI);
-    this._context.fillStyle = getColorInRGB(player.color);
+    this._context.fillStyle = playerColor;
     this._context.fill();
     this._context.closePath();
 
@@ -197,9 +211,7 @@ class Graph {
     this._context.stroke();
     this._context.closePath();
 
-    this._context.textAlign = 'center';
-    this.drawText(player.name, posX, posY - 40, 14);
-    this._context.textAlign = 'left';
+    this.drawText(player.name, posX, posY - 40, 14, true, 'center');
 
     return this;
   }

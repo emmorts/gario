@@ -24,6 +24,8 @@ class PlayerController {
 
   send(opCode, object) {
     if (opCode in Action) {
+      console.log(`Sending '${OPCode.getName(opCode)}'`);
+
       const action = new Action[opCode]();
       const buffer = action.build(object);
 

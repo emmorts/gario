@@ -35,6 +35,7 @@ class Game extends EventEmitter {
       this.controller.on('addPlayer', this._handleAddPlayer.bind(this));
       this.controller.on('updatePlayers', this._handleUpdatePlayers.bind(this));
       this.controller.on('updateSpells', this._handleUpdateSpells.bind(this));
+      this.controller.on('collision', this._handleCollision.bind(this));
 
       this.controller.send(OPCode.SPAWN_PLAYER, { name: playerName });
 
@@ -47,20 +48,6 @@ class Game extends EventEmitter {
   update(deltaT) {
     this.playerList.forEach(player => player.update(deltaT));
     this.spellList.forEach(spell => spell.update(deltaT));
-
-    this._detectCollisions();
-  }
-
-  _detectCollisions() {
-    this.spellList.forEach(spell => {
-      this.playerList.forEach(player => {
-        if (spell.ownerId !== player.ownerId && this._didCollide(player, spell)) {
-          spell.onCollision(player);
-
-          this.spellList.delete(spell.id, 'id');
-        }
-      });
-    });
   }
 
   _didCollide(actor, collider) {
@@ -79,13 +66,13 @@ class Game extends EventEmitter {
     }
   }
 
-  _handleAddPlayer (player) {
+  _handleAddPlayer(player) {
     this.currentPlayer = new Models.Player(player);
     this._fire('addPlayer');
     this.playerList.add(this.currentPlayer);
   }
 
-  _handleUpdatePlayers (players) {
+  _handleUpdatePlayers(players) {
     const updatedPlayers = players.updatedPlayers;
     if (updatedPlayers && updatedPlayers.length > 0) {
       updatedPlayers.forEach(updatedPlayer => {
@@ -105,7 +92,7 @@ class Game extends EventEmitter {
     }
   }
 
-  _handleUpdateSpells (spells) {
+  _handleUpdateSpells(spells) {
     const updatedSpells = spells.updatedSpells;
     if (updatedSpells && updatedSpells.length > 0) {
       updatedSpells.forEach(updatedSpell => {
@@ -119,6 +106,19 @@ class Game extends EventEmitter {
     const destroyedSpells = spells.destroyedSpells;
     if (destroyedSpells && destroyedSpells.length > 0) {
       destroyedSpells.forEach(destroyedSpell => this.spellList.delete(destroyedSpell, 'id'), this);
+    }
+  }
+
+  _handleCollision(collision) {
+    const actor = this.playerList.get(collision.actorId, 'id');
+    const spell = this.spellList.get(collision.colliderId, 'id');
+
+    if (actor && spell) {
+      spell.onCollision(actor);
+
+      this.spellList.delete(spell.id, 'id');
+    } else {
+      console.warn(`Collision object malformed, unable to find actor or collider.`);
     }
   }
 }

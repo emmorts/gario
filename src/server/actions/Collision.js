@@ -8,9 +8,7 @@ class Collision extends Action {
   }
 
   execute(buffer) {
-    const collision = this.parse(buffer);
-
-    return collision;
+    return this.parse(buffer);
   }
 
 }

@@ -7,6 +7,14 @@ class CastSpell extends Action {
     super(OPCode.CAST_SPELL);
   }
 
+  build(object) {
+    if (this.actionSchema) {
+      return this.actionSchema.encode(object);
+    }
+
+    return null;
+  }
+
 }
 
 module.exports = CastSpell;

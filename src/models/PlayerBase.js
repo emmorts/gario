@@ -1,6 +1,5 @@
 class PlayerBase {
   constructor() {
-    this.health = 0;
     this.maxHealth = 0;
     this.speed = 3;
     this.acceleration = 0.1;
@@ -12,6 +11,7 @@ class PlayerBase {
     this.velocity = { x: 0, y: 0 };
     this.position = { x: 0, y: 0 };
     this.target = { x: 0, y: 0 };
+    this._health = 0;
     this._baseFriction = 0.2;
     this._baseRotationTicks = 10;
     this._baseCastTicks = 10;
@@ -20,6 +20,14 @@ class PlayerBase {
     this._rotationTicks = this._baseRotationTicks;
     this._castTicks = this._baseCastTicks;
     this._friction = this._baseFriction;
+  }
+
+  get health() {
+    return this._health;
+  }
+
+  set health(value) {
+    this._health = Math.max(value, 0);
   }
 
   update(deltaT) {
