@@ -1,5 +1,5 @@
 const uuid = require('node-uuid');
-const OPCode = require('opCode');
+const OPCode = require('common/opCode');
 
 class Spell {
   constructor() {

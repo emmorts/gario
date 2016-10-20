@@ -1,4 +1,4 @@
-const SpellBase = require('models/SpellBase');
+const SpellBase = require('common/models/SpellBase');
 
 class Primary extends SpellBase {
   constructor(spellModel) {

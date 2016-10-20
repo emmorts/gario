@@ -1,6 +1,5 @@
 const uuid = require('node-uuid');
-const WebSocket = require('ws');
-const OPCode = require('opCode');
+const OPCode = require('common/opCode');
 const Spells = require('server/spells');
 const Action = require('server/actions');
 const Factory = require ('server/Factory');
@@ -22,19 +21,14 @@ class PlayerController {
     }
   }
 
-  send(opCode, object) {
-    if (opCode in Action) {
-      console.log(`Sending '${OPCode.getName(opCode)}'`);
-
-      const action = new Action[opCode]();
-      const buffer = action.build(object);
-
-      if (buffer) {
-        this._sendBuffer(buffer);
-      }
+  get packetHandler() {
+    if (this.socket) {
+      return this.socket.packetHandler;
     } else {
-      console.error(`Operation '${OPCode.getName(opCode)}' does not cover any action.'`);
+      console.log(`Player '${this.pId}' does not have an attached socket.`);
     }
+
+    return null;
   }
 
   setTarget(target) {
@@ -94,7 +88,7 @@ class PlayerController {
 
   _updatePlayers() {
     if (this.playerAdditionQueue.length || this.playerDestroyQueue.length) {
-      this.send(OPCode.UPDATE_PLAYERS, {
+      this.packetHandler.send(OPCode.UPDATE_PLAYERS, {
         updatedPlayers: this.playerAdditionQueue,
         destroyedPlayers: this.playerDestroyQueue
       });
@@ -106,7 +100,7 @@ class PlayerController {
 
   _updateSpells() {
     if (this.spellAdditionQueue.length || this.spellDestroyQueue.length) {
-      this.send(OPCode.UPDATE_SPELLS, {
+      this.packetHandler.send(OPCode.UPDATE_SPELLS, {
         updatedSpells: this.spellAdditionQueue,
         destroyedSpells: this.spellDestroyQueue
       });
@@ -115,25 +109,6 @@ class PlayerController {
     this.spellAdditionQueue = [];
     this.spellDestroyQueue = [];
   }
-
-  _sendBuffer(buffer) {
-    if (!buffer) {
-      console.log('Empty buffer received, skipping message.');
-    } else if (this.socket.readyState == WebSocket.OPEN) {
-      this.socket.send(buffer, { binary: true }, error => {
-        if (error) {
-          console.log(`Failed to send a message('${error}').`);
-        }
-      });
-    } else {
-      console.log('Socket is not open, closing connection.');
-
-      this.socket.readyState = WebSocket.CLOSED;
-      this.socket.emit('close');
-      this.socket.removeAllListeners();
-    }
-  }
-
 }
 
 module.exports = PlayerController;

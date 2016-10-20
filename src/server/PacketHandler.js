@@ -1,6 +1,7 @@
-const OPCode = require('opCode');
+const WebSocket = require('ws');
+const OPCode = require('common/opCode');
 const BufferCodec = require('buffercodec');
-const EventEmitter = require('EventEmitter');
+const EventEmitter = require('common/EventEmitter');
 const Action = require('server/actions');
 
 class PacketHandler extends EventEmitter {
@@ -9,6 +10,19 @@ class PacketHandler extends EventEmitter {
     
     this.gameServer = gameServer;
     this.socket = socket;
+  }
+
+  send(opCode, object) {
+    if (opCode in Action) {
+      const action = new Action[opCode]();
+      const buffer = action.build(object);
+
+      if (buffer) {
+        this._sendBuffer(buffer);
+      }
+    } else {
+      console.error(`Operation '${OPCode.getName(opCode)}' does not cover any action.'`);
+    }
   }
 
   handleMessage(message) {
@@ -24,13 +38,31 @@ class PacketHandler extends EventEmitter {
         const actionResult = action.execute(buffer);
 
         if (ActionClass.eventName) {
-          this._fire(ActionClass.eventName, actionResult);
+          this.fire(ActionClass.eventName, actionResult);
         }
       } else {
         console.error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
       }
     } else {
       console.log("An empty message was received.");
+    }
+  }
+
+  _sendBuffer(buffer) {
+    if (!buffer) {
+      console.log('Empty buffer received, skipping message.');
+    } else if (this.socket.readyState == WebSocket.OPEN) {
+      this.socket.send(buffer, { binary: true }, error => {
+        if (error) {
+          console.log(`Failed to send a message('${error}').`);
+        }
+      });
+    } else {
+      console.log('Socket is not open, closing connection.');
+
+      this.socket.readyState = WebSocket.CLOSED;
+      this.socket.emit('close');
+      this.socket.removeAllListeners();
     }
   }
 }

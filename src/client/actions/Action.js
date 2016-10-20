@@ -1,4 +1,4 @@
-const Schema = require('schemas');
+const Schema = require('common/schemas');
 
 class Action {
 

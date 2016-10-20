@@ -1,4 +1,4 @@
-const OPCode = require('opCode');
+const OPCode = require('common/opCode');
 
 module.exports = {
   [OPCode.ADD_PLAYER]: require('client/actions/AddPlayer'),

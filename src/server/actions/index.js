@@ -1,4 +1,4 @@
-const OPCode = require('opCode');
+const OPCode = require('common/opCode');
 
 module.exports = {
   [OPCode.SPAWN_PLAYER]: require('server/actions/SpawnPlayer'),

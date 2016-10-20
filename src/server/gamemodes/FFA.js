@@ -34,21 +34,21 @@ class FFA extends Mode {
     const rand = Math.floor(Math.random() * 3);
     if (rand === 0) {
       return {
-        r: 255,
-        b: Math.floor(Math.random() * 255),
+        r: 150,
+        b: Math.floor(Math.random() * 150),
         g: 0
       };
     } else if (rand === 1) {
       return {
         r: 0,
-        b: 255,
-        g: Math.floor(Math.random() * 255)
+        b: 150,
+        g: Math.floor(Math.random() * 150)
       };
     } else {
       return {
-        r: Math.floor(Math.random() * 255),
+        r: Math.floor(Math.random() * 150),
         b: 0,
-        g: 255
+        g: 150
       };
     }
   };

@@ -1,8 +1,8 @@
 const BufferCodec = require('buffercodec');
-const EventEmitter = require('EventEmitter');
+const EventEmitter = require('common/EventEmitter');
 const Action = require('client/actions');
-const OPCode = require('opCode');
-const Schema = require('schemas');
+const OPCode = require('common/opCode');
+const Schema = require('common/schemas');
 
 class WSController extends EventEmitter {
   constructor() {
@@ -32,7 +32,7 @@ class WSController extends EventEmitter {
     this._socket.binaryType = 'arraybuffer';
 
     this._socket.onopen = event => {
-      this._fire('open');
+      this.fire('open');
 
       this._socket.onmessage = this._handleMessage.bind(this);
     };
@@ -50,7 +50,7 @@ class WSController extends EventEmitter {
       const actionResult = action.execute(buffer);
 
       if (ActionClass.eventName) {
-        this._fire(ActionClass.eventName, actionResult);
+        this.fire(ActionClass.eventName, actionResult);
       }
     } else {
       console.error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);

@@ -1,5 +1,5 @@
-const OPCode = require('../../opCode');
+const OPCode = require('common/opCode');
 
 module.exports = {
-  [OPCode.MODEL_PLAYER]: require('./Player')
+  [OPCode.MODEL_PLAYER]: require('server/models/Player')
 };

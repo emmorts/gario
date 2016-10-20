@@ -1,6 +1,6 @@
-const OPCode = require('opCode');
 const uuid = require('node-uuid');
-const SpellBase = require('models/SpellBase');
+const OPCode = require('common/opCode');
+const SpellBase = require('common/models/SpellBase');
 
 class Primary extends SpellBase {
   constructor(gameServer, owner, options) {

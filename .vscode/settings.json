@@ -6,7 +6,9 @@
     "**/.svn": true,
     "**/.hg": true,
     "**/.DS_Store": true,
-    "**/node_modules": true
+    "**/node_modules": true,
+    "**/typings": true,
+    "**/dist": true
   },
   "explorer.openEditors.visible": 0
 }

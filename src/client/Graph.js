@@ -1,4 +1,4 @@
-var OPCode = require('opCode');
+var OPCode = require('common/opCode');
 
 import * as Statistics from 'client/statistics';
 

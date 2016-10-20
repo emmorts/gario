@@ -1,6 +1,6 @@
 const SmartMap = require('smartmap');
-const OPCode = require('opCode');
-const EventEmitter = require('EventEmitter');
+const OPCode = require('common/opCode');
+const EventEmitter = require('common/EventEmitter');
 const WSController = require('client/WSController');
 
 import * as Spells from 'client/spells';
@@ -68,7 +68,7 @@ class Game extends EventEmitter {
 
   _handleAddPlayer(player) {
     this.currentPlayer = new Models.Player(player);
-    this._fire('addPlayer');
+    this.fire('addPlayer');
     this.playerList.add(this.currentPlayer);
   }
 

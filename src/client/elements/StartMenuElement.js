@@ -43,7 +43,7 @@ class StartMenuElement extends Element {
 
   _startGame() {
     this._startMenuElement.hide();
-    this._fire('startGame', this._playerNameElement.content);
+    this.fire('startGame', this._playerNameElement.content);
   }
 
   _validate(playerName = this._playerNameElement.content) {

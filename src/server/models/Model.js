@@ -1,4 +1,4 @@
-const OPCode = require('../../opCode');
+const OPCode = require('common/opCode');
 
 class Model {
   constructor() {

@@ -1,5 +1,5 @@
 const Action = require('client/actions/Action');
-const OPCode = require('opCode');
+const OPCode = require('common/opCode');
 
 class Collision extends Action {
 

@@ -1,4 +1,4 @@
-var OPCode = require('opCode');
+var OPCode = require('common/opCode');
 
 export { default as Primary } from 'client/spells/Primary';
 

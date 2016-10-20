@@ -1,5 +1,5 @@
 const uuid = require('node-uuid');
-const PlayerBase = require('models/PlayerBase');
+const PlayerBase = require('common/models/PlayerBase');
 
 class Player extends PlayerBase {
 

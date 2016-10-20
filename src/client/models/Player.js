@@ -1,31 +1,10 @@
-const PlayerBase = require('models/PlayerBase');
+const PlayerBase = require('common/models/PlayerBase');
 
 export default class Player extends PlayerBase {
-  constructor(playerModel = {}) {
+  constructor(playerModel) {
     super();
 
-    this.id = playerModel.id || -1;
-    this.ownerId = playerModel.ownerId || -1;
-    this.name = playerModel.name;
-    this.health = playerModel.health;
-    this.maxHealth = playerModel.maxHealth;
-    this._animateCast = false;
-    
-    this.color = {
-      r: playerModel.color.r || 0,
-      g: playerModel.color.g | 0,
-      b: playerModel.color.b || 0
-    };
-    
-    this.position = {
-      x: playerModel.position.x || 0,
-      y: playerModel.position.y || 0
-    };
-    
-    this.target = {
-      x: (playerModel.target ? playerModel.target.x : null) || playerModel.position.x || 0,
-      y: (playerModel.target ? playerModel.target.y : null) || playerModel.position.y || 0
-    };
+    this._initialize(playerModel);
   }
 
   update(deltaT) {
@@ -40,6 +19,36 @@ export default class Player extends PlayerBase {
     this._animateCast = true;
     this.targetRotation = Math.atan2(spell.target.y - this.position.y, spell.target.x - this.position.x);
   }
+
+  _initialize(playerModel) {
+    if (playerModel) {
+      this._animateCast = false;
+
+      this.id = playerModel.id;
+      this.ownerId = playerModel.ownerId;
+      this.name = playerModel.name;
+      this.health = playerModel.health;
+      this.maxHealth = playerModel.maxHealth;
+      
+      this.color = {
+        r: playerModel.color.r,
+        g: playerModel.color.g,
+        b: playerModel.color.b
+      };
+      
+      this.position = {
+        x: playerModel.position.x,
+        y: playerModel.position.y
+      };
+      
+      this.target = {
+        x: (playerModel.target ? playerModel.target.x : playerModel.position.x),
+        y: (playerModel.target ? playerModel.target.y : playerModel.position.y)
+      };
+    } else {
+      console.error('Unable to construct player object - no model given.')
+    }
+  }
   
   _updateAnimation() {
     if (this._castTicks > 0) {
@@ -53,16 +62,5 @@ export default class Player extends PlayerBase {
 
       this.targetRotation = Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
     }
-  }
-  
-  _getHypotenuseLength(x, y) {
-    return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-  }
-  
-  _arePositionsApproximatelyEqual(positionA, positionB, errorMargin = 5) {
-    const isHorizontalPositionEqual = Math.abs(positionA.x - positionB.x) < errorMargin;
-    const isVerticalPositionEqual = Math.abs(positionA.y - positionB.y) < errorMargin;
-
-    return isHorizontalPositionEqual && isVerticalPositionEqual;
   }
 }

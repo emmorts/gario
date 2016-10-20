@@ -12,7 +12,7 @@ module.exports = class EventEmitter {
     return this;
   }
   
-  _fire(name, options) {
+  fire(name, options) {
     if (name in this._eventHandlers && this._eventHandlers[name].length > 0) {
       this._eventHandlers[name].forEach(handler => handler(options));
     }

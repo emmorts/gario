@@ -2,7 +2,7 @@ const Element = require('client/elements/Element');
 const DomElement = require('client/util/DomElement');
 const KeyCode = require('client/util/KeyCode');
 const Graph = require('client/Graph');
-const OPCode = require('opCode');
+const OPCode = require('common/opCode');
 
 class CanvasElement extends Element {
   constructor() {
@@ -67,7 +67,7 @@ class CanvasElement extends Element {
       y: event.y + this.graph.yOffset
     };
     
-    this._fire('mouseMove', {
+    this.fire('mouseMove', {
       x: this._mousePosition.x,
       y: this._mousePosition.y,
       direction: scrollDirection 
@@ -83,7 +83,7 @@ class CanvasElement extends Element {
       if (diff > 100) {
         this._targetTick = now;
 
-        this._fire('playerMove', {
+        this.fire('playerMove', {
           x: this._mousePosition.x,
           y: this._mousePosition.y
         });

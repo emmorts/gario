@@ -7,7 +7,7 @@ const PlayerController = require('server/PlayerController');
 const Factory = require('server/Factory');
 const GameMode = require('server/gamemodes');
 const Maps = require('server/maps');
-const OPCode = require('opCode');
+const OPCode = require('common/opCode');
 const WebSocketServer = WebSocket.Server;
 
 class GameServer {
@@ -70,7 +70,7 @@ class GameServer {
       this.players.forEach(player => {
         if (spell.ownerId !== player.pId && this._didCollide(player.model, spell)) {
           this.players.forEach(playerController => {
-            playerController.send(OPCode.COLLISION, {
+            playerController.packetHandler.send(OPCode.COLLISION, {
               actorId: player.model.id,
               colliderId: spell.id
             });
@@ -85,7 +85,7 @@ class GameServer {
 
     collisions.forEach(collision => {
       this.players.forEach(playerController => {
-        playerController.send(OPCode.COLLISION, collision);
+        playerController.packetHandler.send(OPCode.COLLISION, collision);
       });
     });
   }
@@ -115,7 +115,7 @@ class GameServer {
   onPlayerSpawn(playerController) {
     this.gameMode.onPlayerSpawn(playerController);
 
-    playerController.send(OPCode.ADD_PLAYER, playerController.model);
+    playerController.packetHandler.send(OPCode.ADD_PLAYER, playerController.model);
 
     this.sockets.forEach(function (client) {
       if (client !== playerController.socket) {

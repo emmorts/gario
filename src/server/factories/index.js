@@ -1,4 +1,4 @@
-const OPCode = require('opCode');
+const OPCode = require('common/opCode');
 
 module.exports = {
   [OPCode.TYPE_MODEL]: require('server/factories/ModelFactory'),

@@ -1,5 +1,5 @@
 const Action = require('server/actions/Action');
-const OPCode = require('opCode');
+const OPCode = require('common/opCode');
 
 class UpdateSpells extends Action {
 

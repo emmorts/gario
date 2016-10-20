@@ -1,7 +1,7 @@
 require('client/util/polyfills');
 
 const present = require('present');
-const OPCode = require('opCode');
+const OPCode = require('common/opCode');
 const KeyCode = require('client/util/KeyCode');
 const DomElement = require('client/util/DomElement');
 const Graph = require('client/Graph');
