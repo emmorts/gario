@@ -4,7 +4,8 @@
   "description": "Experimental game with binary WebSockets",
   "main": "index.js",
   "scripts": {
-    "dev": "start cmd /k gulp watch",
+    "dev": "npm run build-client && npm start",
+    "build-client": "start cmd /k gulp watch",
     "start": "nodemon --use-strict --harmony src/server/server --watch src/server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
