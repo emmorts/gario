@@ -18,7 +18,11 @@ class Schema extends BufferSchema {
   }
 
   decode(buffer) {
-    return super.decode(buffer);
+    if (buffer && buffer.byteLength) {
+      return super.decode(buffer);
+    }
+
+    return null;
   }
   
 }

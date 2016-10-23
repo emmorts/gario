@@ -1,3 +1,4 @@
+const present = require('present');
 const SmartMap = require('smartmap');
 const OPCode = require('common/opCode');
 const EventEmitter = require('common/EventEmitter');
@@ -8,15 +9,15 @@ import * as Models from 'client/models';
 
 let instance = null;
 
-class Game extends EventEmitter {
+class Game {
   constructor() {
-    super();
+    EventEmitter.attach(this);
 
-    this.started = false;
     this.currentPlayer = null;
     this.controller = null;
     this.playerList = new SmartMap('id', 'ownerId');
     this.spellList = new SmartMap('id');
+    this.ping = 0;
   }
 
   static getInstance() {
@@ -31,11 +32,12 @@ class Game extends EventEmitter {
     this.controller = new WSController();
 
     this.controller.on('open', function startGame() {
-
+      
       this.controller.on('addPlayer', this._handleAddPlayer.bind(this));
       this.controller.on('updatePlayers', this._handleUpdatePlayers.bind(this));
       this.controller.on('updateSpells', this._handleUpdateSpells.bind(this));
       this.controller.on('collision', this._handleCollision.bind(this));
+      this.controller.on('ping', this._handlePing.bind(this));
 
       this.controller.send(OPCode.SPAWN_PLAYER, { name: playerName });
 
@@ -59,7 +61,7 @@ class Game extends EventEmitter {
   }
 
   _onStart(callback) {
-    this.started = true;
+    this._lastHeartbeat = Date.now();
 
     if (callback) {
       callback();
@@ -120,6 +122,16 @@ class Game extends EventEmitter {
     } else {
       console.warn(`Collision object malformed, unable to find actor or collider.`);
     }
+  }
+
+  _handlePing(ping) {
+    this.ping = Math.max(ping.timestamp - this._lastHeartbeat, 0);
+
+    setTimeout(() => {
+      this._lastHeartbeat = Date.now();
+
+      this.controller.send(OPCode.PONG);
+    }, 1000);
   }
 }
 

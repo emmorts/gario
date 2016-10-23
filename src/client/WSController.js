@@ -4,9 +4,9 @@ const Action = require('client/actions');
 const OPCode = require('common/opCode');
 const Schema = require('common/schemas');
 
-class WSController extends EventEmitter {
+class WSController {
   constructor() {
-    super();
+    EventEmitter.attach(this);
 
     this._uri = 'ws://127.0.0.1:3000';
     this._socket = null;
@@ -16,7 +16,7 @@ class WSController extends EventEmitter {
 
   send(opCode, object) {
     if (opCode in Action) {
-      const action = new Action[opCode]();
+      const action = new Action[opCode](this._socket);
       const buffer = action.build(object);
 
       if (buffer) {
@@ -44,7 +44,7 @@ class WSController extends EventEmitter {
 
     if (code in Action) {
       const ActionClass = Action[code];
-      const action = new ActionClass();
+      const action = new ActionClass(this._socket);
       const buffer = codec.getBuffer(true);
 
       const actionResult = action.execute(buffer);

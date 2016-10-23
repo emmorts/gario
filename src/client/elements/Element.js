@@ -1,8 +1,8 @@
 const EventEmitter = require('common/EventEmitter');
 
-class Element extends EventEmitter {
+class Element {
   constructor() {
-    super();
+    EventEmitter.attach(this);
   }
 
   bind() {

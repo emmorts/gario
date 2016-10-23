@@ -35,7 +35,7 @@ function gameLoop(deltaT) {
     .drawArena()
     .drawSpells(game.spellList)
     .drawPlayers(game.playerList)
-    .drawDebug()
+    .drawDebug(game.ping)
     .drawStatus();
 
   game.update();

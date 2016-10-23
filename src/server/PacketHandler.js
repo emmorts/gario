@@ -4,17 +4,19 @@ const BufferCodec = require('buffercodec');
 const EventEmitter = require('common/EventEmitter');
 const Action = require('server/actions');
 
-class PacketHandler extends EventEmitter {
+class PacketHandler {
   constructor(gameServer, socket) {
-    super();
-    
+    EventEmitter.attach(this);
+
     this.gameServer = gameServer;
     this.socket = socket;
+
+    this.ping();
   }
 
   send(opCode, object) {
     if (opCode in Action) {
-      const action = new Action[opCode]();
+      const action = new Action[opCode](this.gameServer, this.socket);
       const buffer = action.build(object);
 
       if (buffer) {
@@ -45,6 +47,15 @@ class PacketHandler extends EventEmitter {
       }
     } else {
       console.log("An empty message was received.");
+    }
+  }
+
+  ping() {
+    const action = new Action[OPCode.PING](this.gameServer, this.socket);
+    const buffer = action.build();
+
+    if (buffer) {
+      this._sendBuffer(buffer);
     }
   }
 

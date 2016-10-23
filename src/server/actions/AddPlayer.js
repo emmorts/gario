@@ -12,7 +12,7 @@ class AddPlayer extends Action {
       const player = {
         id: object.id,
         ownerId: object.ownerId,
-        length: object.name.length,
+        length: object.name ? object.name.length : 0,
         name: object.name,
         health: object.health,
         maxHealth: object.maxHealth,

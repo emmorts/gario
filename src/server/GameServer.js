@@ -64,8 +64,6 @@ class GameServer {
   };
 
   checkForCollisions() {
-    const collisions = [];
-    
     this.spells.forEach((spell, spellIndex) => {
       this.players.forEach(player => {
         if (spell.ownerId !== player.pId && this._didCollide(player.model, spell)) {
@@ -80,12 +78,6 @@ class GameServer {
           
           this.spells.splice(spellIndex, 1);
         }
-      });
-    }); 
-
-    collisions.forEach(collision => {
-      this.players.forEach(playerController => {
-        playerController.packetHandler.send(OPCode.COLLISION, collision);
       });
     });
   }

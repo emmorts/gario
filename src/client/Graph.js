@@ -87,7 +87,7 @@ class Graph {
     return this;
   }
 
-  drawDebug() {
+  drawDebug(ping) {
     if (this.player.id !== -1) {
       // COORDINATES
       var posX = this.player.position.x;
@@ -103,9 +103,12 @@ class Graph {
       var velocity = 'Velocity: ' + Math.round(this.player.velocity.x) + ' ' + Math.round(this.player.velocity.y);
       this.drawText(velocity, 30, 30);
 
-      // Score
+      // SCORE
       var score = 'Score: ' + Statistics.Score.getInstance().currentScore();
       this.drawText(score, 30, 90);
+
+      // SCORE
+      this.drawText(`Ping: ${ping} ms`, 30, 110);
     }
 
     return this;

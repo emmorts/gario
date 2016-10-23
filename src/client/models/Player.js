@@ -46,7 +46,7 @@ export default class Player extends PlayerBase {
         y: (playerModel.target ? playerModel.target.y : playerModel.position.y)
       };
     } else {
-      console.error('Unable to construct player object - no model given.')
+      console.error('Unable to construct player object - no model given.');
     }
   }
   

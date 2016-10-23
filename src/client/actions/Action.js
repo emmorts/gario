@@ -2,8 +2,9 @@ const Schema = require('common/schemas');
 
 class Action {
 
-  constructor(opCode) {
+  constructor(opCode, socket) {
     this.actionSchema = Schema.get(opCode);
+    this.socket = socket;
   }
 
   execute(buffer) {
