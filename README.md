@@ -5,7 +5,6 @@ A multiplayer online, binary websocket based game inspired by a custom map _Warl
 ## TODO
 
 Eseential:
- * Following camera
  * Damage outside of map
  * Overall game scene boundaries
 

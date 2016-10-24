@@ -9,15 +9,18 @@ class Graph {
 
     this.screenWidth = this._canvas.width = getDefaultWidth();
     this.screenHeight = this._canvas.height = getDefaultHeight();
-    this.xOffset = 0;
-    this.yOffset = 0;
+    this._xOffset = 0;
+    this._yOffset = 0;
     this._borderColor = '#666';
     this._gridColor = '#ececec';
     this._globalAlpha = 0.15;
     this._gameWidth = 1000;
     this._gameHeight = 1000;
     this._arenaSize = 500;
-    this.__scrollSpeed = 4;
+    this._scrollSpeed = 4;
+    this._scrollLimit = 100;
+    this._forcedXOffset = 0;
+    this._forcedYOffset = 0;
 
     window.addEventListener('resize', onResize.bind(this));
 
@@ -40,6 +43,30 @@ class Graph {
     };
   }
 
+  get xOffset() {
+    return this._xOffset + this._forcedXOffset;
+  }
+
+  get yOffset() {
+    return this._yOffset + this._forcedYOffset;
+  }
+
+  get forcedXOffset() {
+    return this._forcedXOffset;
+  }
+
+  set forcedXOffset(value) {
+    this._forcedXOffset = Math.sign(value) * Math.min(this._scrollLimit, Math.abs(value));
+  }
+
+  get forcedYOffset() {
+    return this._forcedYOffset;
+  }
+
+  set forcedYOffset(value) {
+    this._forcedYOffset = Math.sign(value) * Math.min(this._scrollLimit, Math.abs(value));
+  }
+
   clear() {
     this._context.fillStyle = 'rgb(255, 255, 255)';
     this._context.fillRect(0, 0, this.screenWidth, this.screenHeight);
@@ -50,39 +77,37 @@ class Graph {
   updateOffset(scroll) {
     switch (scroll) {
       case OPCode.DIRECTION_NWEST:
-        this.xOffset -= this.__scrollSpeed;
-        this.yOffset -= this.__scrollSpeed;
+        this.forcedXOffset -= this._scrollSpeed;
+        this.forcedYOffset -= this._scrollSpeed;
         break;
       case OPCode.DIRECTION_NEAST:
-        this.xOffset += this.__scrollSpeed;
-        this.yOffset -= this.__scrollSpeed;
+        this.forcedXOffset += this._scrollSpeed;
+        this.forcedYOffset -= this._scrollSpeed;
         break;
       case OPCode.DIRECTION_SWEST:
-        this.xOffset -= this.__scrollSpeed;
-        this.yOffset += this.__scrollSpeed;
+        this.forcedXOffset -= this._scrollSpeed;
+        this.forcedYOffset += this._scrollSpeed;
         break;
       case OPCode.DIRECTION_SEAST:
-        this.xOffset += this.__scrollSpeed;
-        this.yOffset += this.__scrollSpeed;
+        this.forcedXOffset += this._scrollSpeed;
+        this.forcedYOffset += this._scrollSpeed;
         break;
       case OPCode.DIRECTION_WEST:
-        this.xOffset -= this.__scrollSpeed;
+        this.forcedXOffset -= this._scrollSpeed;
         break;
       case OPCode.DIRECTION_EAST:
-        this.xOffset += this.__scrollSpeed;
+        this.forcedXOffset += this._scrollSpeed;
         break;
       case OPCode.DIRECTION_NORTH:
-        this.yOffset -= this.__scrollSpeed;
+        this.forcedYOffset -= this._scrollSpeed;
         break;
       case OPCode.DIRECTION_SOUTH:
-        this.yOffset += this.__scrollSpeed;
+        this.forcedYOffset += this._scrollSpeed;
         break;
+      default:
+        this.forcedXOffset += Math.sign(this._forcedXOffset) * this._scrollSpeed * -1;
+        this.forcedYOffset += Math.sign(this._forcedYOffset) * this._scrollSpeed * -1;
     }
-
-    this.xOffset = Math.max(this.xOffset, 0);
-    this.xOffset = Math.min(this.xOffset, (this._gameWidth - this._arenaSize) / 2);
-    this.yOffset = Math.max(this.yOffset, 0);
-    this.yOffset = Math.min(this.yOffset, (this._gameHeight - this._arenaSize) / 2);
 
     return this;
   }
@@ -224,6 +249,9 @@ class Graph {
     if (currentPlayer) {
       this.player.position.x = currentPlayer.position.x;
       this.player.position.y = currentPlayer.position.y;
+      
+      this._xOffset = this.player.position.x - this.screenWidth / 2;
+      this._yOffset = this.player.position.y - this.screenHeight / 2;
     }
     playerList.forEach(player => this.drawPlayer(player));
 
