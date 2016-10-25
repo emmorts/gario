@@ -12,7 +12,7 @@ module.exports = new Schema(OPCode.INITIALIZE_MAP, {
   }]
 }, (arena) => {
   const tiledMap = arena.mapRows.map(row => {
-    rows.mapColumns.map(collumn => collumn.value);
+    row.mapColumns.map(collumn => collumn.value);
   });
 
   return {

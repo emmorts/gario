@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npm run build-client && npm start",
     "build-client": "start cmd /k gulp watch",
-    "start": "nodemon --use-strict --harmony src/server/server --watch src/server",
+    "start": "nodemon --use-strict --harmony src/server/server --watch src/server --watch src/common",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
