@@ -8,6 +8,7 @@ const Game = require('client/Game');
 const StartMenuElement = require('client/elements/StartMenuElement');
 const CanvasElement = require('client/elements/CanvasElement');
 const GameRenderer = require('client/GameRenderer');
+const DebugRenderer = require('client/renderers/DebugRenderer');
 
 const game = Game.getInstance();
 
@@ -34,10 +35,11 @@ const mapObject = new Map();
 
 function gameLoop(deltaT) {
   gameRenderer.add(mapObject);
-  game.spellList.forEach(spell => gameRenderer.add(spell));
-  game.playerList.forEach(player => gameRenderer.add(player));
   gameRenderer.draw(deltaT);
   gameRenderer.camera.update(scrollDirection);
+
+  // TODO: Remove this from here
+  DebugRenderer.draw(game, gameRenderer);
 
   game.update();
 }
@@ -64,7 +66,7 @@ function startGame (playerName) {
         }
       });
 
-    gameRenderer = canvas.renderer;
+    gameRenderer = game.renderer = canvas.renderer;
       
     if (!animationLoopHandle) {
       lastUpdate = present();
@@ -72,9 +74,7 @@ function startGame (playerName) {
     }
   });
 
-  game.on('addPlayer', () => {
-    gameRenderer.camera.follow(game.currentPlayer);
-  });
+  game.on('addPlayer', () => gameRenderer.camera.follow(game.currentPlayer));
 
   function wHandleKeyDown(event) {
     switch (event.keyCode) {

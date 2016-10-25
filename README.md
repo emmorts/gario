@@ -7,6 +7,7 @@ A multiplayer online, binary websocket based game inspired by a custom map _Warl
 Eseential:
  * Damage outside of map
  * Overall game scene boundaries
+ * Priority queue for rendering
 
 Important:
  * Spell variety and engine(leveling up, buying)

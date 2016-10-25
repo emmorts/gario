@@ -36,24 +36,6 @@ class PlayerRenderer extends IRenderer {
       borderWidth: 3,
       textAlign: 'center'
     });
-    
-    CanvasHelper.text(renderer.context, {
-      text: `Coordinates: ${Math.round(model.position.x)} ${Math.round(model.position.y)}`,
-      x: 30,
-      y: 50
-    });
-    
-    CanvasHelper.text(renderer.context, {
-      text: `Camera: ${Math.round(renderer.camera.scrollX)} ${Math.round(renderer.camera.scrollY)}`,
-      x: 30,
-      y: 30
-    });
-    
-    CanvasHelper.text(renderer.context, {
-      text: `Hidden Camera: ${Math.round(renderer.camera._offsetX)} ${Math.round(renderer.camera._offsetY)}`,
-      x: 30,
-      y: 70
-    });
   }
 
   static _getColorInRGB(color) {

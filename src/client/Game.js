@@ -16,6 +16,8 @@ class Game {
     this.playerList = new SmartMap('id', 'ownerId');
     this.spellList = new SmartMap('id');
     this.ping = 0;
+
+    this._renderer = null;
   }
 
   static getInstance() {
@@ -23,6 +25,14 @@ class Game {
       return instance;
     } else {
       return instance = new Game();
+    }
+  }
+  
+  set renderer(value) {
+    if (value && this._renderer !== value) {
+      this._renderer = value;
+      
+      this._onRendererChanged();
     }
   }
 
@@ -51,8 +61,14 @@ class Game {
     this.spellList.forEach(spell => spell.update(deltaT));
   }
 
-  _handleInitializeMap(map){
-    console.log(map);
+  _onRendererChanged() {
+    this.playerList.forEach(player => this._renderer.add(player));
+    this.spellList.forEach(spell => this._renderer.add(spell));
+
+    this.playerList.on('added', player => this._renderer.add(player));
+    this.playerList.on('deleted', player => this._renderer.remove(player));
+    this.spellList.on('added', spell => this._renderer.add(spell));
+    this.spellList.on('deleted', spell => this._renderer.remove(spell));
   }
 
   _onStart(callback) {
@@ -74,6 +90,10 @@ class Game {
     this.fire('addPlayer');
   }
 
+  _handleInitializeMap(map){
+    console.log(map);
+  }
+
   _handleUpdatePlayers(players) {
     const updatedPlayers = players.updatedPlayers;
     if (updatedPlayers && updatedPlayers.length > 0) {
@@ -88,7 +108,7 @@ class Game {
             updatedPlayer
           );
 
-          this.playerList.add(player);
+          this.playerList.add(playerModel);
         }
       }, this);
     }
@@ -103,15 +123,15 @@ class Game {
     const updatedSpells = spells.updatedSpells;
     if (updatedSpells && updatedSpells.length > 0) {
       updatedSpells.forEach(updatedSpell => {
-        const spell = Factory.instantiate(
+        const spellModel = Factory.instantiate(
           OPCode.TYPE_SPELL,
           OPCode.SPELL_PRIMARY,
           updatedSpell
         );
         
-        spell.onAdd(this.playerList.get(spell.ownerId, 'ownerId'));
+        spellModel.onAdd(this.playerList.get(spellModel.ownerId, 'ownerId'));
         
-        this.spellList.add(spell);
+        this.spellList.add(spellModel);
       }, this);
     }
 

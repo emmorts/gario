@@ -14,9 +14,11 @@ class Arena extends GameObject {
 
   buildMap() {
     const tiledMap = new Array(this.height);
-    for(let row = 0; row < this.height; row++ ) {
+
+    for (let row = 0; row < this.height; row++ ) {
       tiledMap[row] = new Array(this.width);
-      for(let column = 0; column < this.width; column++){
+      
+      for (let column = 0; column < this.width; column++) {
         tiledMap[row][column] = Tileset.FLAT;
       }
     }

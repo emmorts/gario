@@ -1,11 +1,11 @@
-const operations = [
+const listOfTilesets = [
   "LAVA",
   "FLAT"
 ];
 
 const tilesets = {};
 
-operations.forEach((op, index) => tilesets[op] = ++index);
+listOfTilesets.forEach((tileset, index) => tilesets[tileset] = ++index);
 
 module.exports = tilesets;
 
