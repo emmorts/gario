@@ -7,6 +7,10 @@ class PlayerMove extends Action {
     super(OPCode.PLAYER_MOVE);
   }
 
+  static get eventName() {
+    return 'playerMove';
+  }
+
   build(object) {
     if (this.actionSchema) {
       return this.actionSchema.encode({

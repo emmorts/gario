@@ -7,6 +7,10 @@ class SpawnPlayer extends Action {
     super(OPCode.SPAWN_PLAYER);
   }
 
+  static get eventName() {
+    return 'spawnPlayer';
+  }
+
 }
 
 module.exports = SpawnPlayer;

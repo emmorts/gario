@@ -3,14 +3,13 @@ const OPCode = require('common/opCode');
 
 class AddPlayer extends Action {
 
-  static get eventName() {
-    return 'addPlayer';
-  }
-
   constructor() {
     super(OPCode.ADD_PLAYER);
   }
 
+  static get eventName() {
+    return 'addPlayer';
+  }
 }
 
 module.exports = AddPlayer;

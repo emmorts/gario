@@ -3,12 +3,12 @@ const OPCode = require('common/opCode');
 
 class UpdateSpells extends Action {
 
-  static get eventName() {
-    return 'updateSpells';
-  }
-
   constructor() {
     super(OPCode.UPDATE_SPELLS);
+  }
+
+  static get eventName() {
+    return 'updateSpells';
   }
 
 }

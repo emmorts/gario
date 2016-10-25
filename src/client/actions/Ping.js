@@ -3,12 +3,12 @@ const OPCode = require('common/opCode');
 
 class Ping extends Action {
 
-  static get eventName() {
-    return 'ping';
-  }
-
   constructor() {
     super(OPCode.PING);
+  }
+
+  static get eventName() {
+    return 'ping';
   }
 
 }

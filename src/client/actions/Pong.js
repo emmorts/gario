@@ -3,12 +3,12 @@ const OPCode = require('common/opCode');
 
 class Pong extends Action {
 
-  static get eventName() {
-    return 'pong';
-  }
-
   constructor() {
     super(OPCode.PONG);
+  }
+
+  static get eventName() {
+    return 'pong';
   }
 
 }

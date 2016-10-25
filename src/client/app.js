@@ -46,7 +46,7 @@ function gameLoop(deltaT) {
   //   .drawStatus();
 
   gameRenderer.add(mapObject);
-  game.spellList.forEach(player => gameRenderer.add(player));
+  game.spellList.forEach(spell => gameRenderer.add(spell));
   game.playerList.forEach(player => gameRenderer.add(player));
   gameRenderer.draw(deltaT);
   gameRenderer.camera.update(scrollDirection);
