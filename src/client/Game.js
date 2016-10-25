@@ -32,6 +32,7 @@ class Game {
     this.packetHandler.on('open', function startGame() {
       
       this.packetHandler.on('addPlayer', this._handleAddPlayer.bind(this));
+      this.packetHandler.on('initializeMap', this._handleInitializeMap.bind(this));
       this.packetHandler.on('updatePlayers', this._handleUpdatePlayers.bind(this));
       this.packetHandler.on('updateSpells', this._handleUpdateSpells.bind(this));
       this.packetHandler.on('collision', this._handleCollision.bind(this));
@@ -48,6 +49,10 @@ class Game {
   update(deltaT) {
     this.playerList.forEach(player => player.update(deltaT));
     this.spellList.forEach(spell => spell.update(deltaT));
+  }
+
+  _handleInitializeMap(map){
+    console.log(map);
   }
 
   _onStart(callback) {

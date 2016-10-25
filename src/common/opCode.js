@@ -8,6 +8,7 @@ const operations = [
   "PLAYER_MOVE",
   "CAST_SPELL",
   "COLLISION",
+  "INITIALIZE_MAP",
   
   // cast
   "CAST_PRIMARY",

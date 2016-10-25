@@ -7,6 +7,10 @@ class CastSpell extends Action {
     super(OPCode.CAST_SPELL);
   }
 
+  static get eventName() {
+    return 'castSpell';
+  }
+
   build(object) {
     if (this.actionSchema) {
       return this.actionSchema.encode(object);

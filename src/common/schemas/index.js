@@ -4,6 +4,7 @@ const schemas = {
   [OPCode.ADD_PLAYER]: require('common/schemas/AddPlayer'),
   [OPCode.CAST_SPELL]: require('common/schemas/CastSpell'),
   [OPCode.COLLISION]: require('common/schemas/Collision'),
+  [OPCode.INITIALIZE_MAP]: require('common/schemas/InitializeMap'),
   [OPCode.PING]: require('common/schemas/Ping'),
   [OPCode.PONG]: require('common/schemas/Pong'),
   [OPCode.PLAYER_MOVE]: require('common/schemas/PlayerMove'),

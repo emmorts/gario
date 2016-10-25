@@ -1,5 +1,6 @@
 const config = require('server/config');
 const Mode = require('server/gamemodes/Mode');
+const ArenaMap = require('server/maps/ArenaMap');
 
 class FFA extends Mode {
   constructor(gameServer) {
@@ -8,8 +9,13 @@ class FFA extends Mode {
     this.name = "Free For All";
     this.baseHealth = 100;
     this.friction = 0.1;
+    this.map = null;
   }
-
+  
+  onServerInit() {
+    this.map = new ArenaMap();
+  }
+  
   onPlayerSpawn(player) {
     if (player && player.model) {
       player.model.position = this._getRandomPosition();
