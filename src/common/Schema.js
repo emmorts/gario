@@ -2,7 +2,6 @@ const BufferCodec = require('buffercodec');
 const BufferSchema = BufferCodec.Schema;
 
 class Schema extends BufferSchema {
-
   constructor(opCode, schema, transform) {
     if (!opCode) throw new Error("Operation code must be provided");
 
@@ -24,7 +23,6 @@ class Schema extends BufferSchema {
 
     return null;
   }
-  
 }
 
 module.exports = Schema;

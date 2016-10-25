@@ -3,9 +3,7 @@ const SmartMap = require('smartmap');
 const OPCode = require('common/opCode');
 const EventEmitter = require('common/EventEmitter');
 const PacketHandler = require('client/PacketHandler');
-
-import * as Spells from 'client/spells';
-import * as Models from 'client/models';
+const Factory = require('client/Factory');
 
 let instance = null;
 
@@ -61,7 +59,12 @@ class Game {
   }
 
   _handleAddPlayer(player) {
-    this.currentPlayer = new Models.Player(player);
+    this.currentPlayer = Factory.instantiate(
+      OPCode.TYPE_MODEL,
+      OPCode.MODEL_PLAYER,
+      player
+    );
+
     this.playerList.add(this.currentPlayer);
     this.fire('addPlayer');
   }
@@ -74,7 +77,12 @@ class Game {
         if (foundPlayer) {
           foundPlayer.setTarget(updatedPlayer.target);
         } else {
-          const player = new Models.Player(updatedPlayer);
+          const playerModel = Factory.instantiate(
+            OPCode.TYPE_MODEL,
+            OPCode.MODEL_PLAYER,
+            updatedPlayer
+          );
+
           this.playerList.add(player);
         }
       }, this);
@@ -90,9 +98,14 @@ class Game {
     const updatedSpells = spells.updatedSpells;
     if (updatedSpells && updatedSpells.length > 0) {
       updatedSpells.forEach(updatedSpell => {
-        const SpellClass = Spells.get(updatedSpell.type);
-        const spell = new SpellClass(updatedSpell);
+        const spell = Factory.instantiate(
+          OPCode.TYPE_SPELL,
+          OPCode.SPELL_PRIMARY,
+          updatedSpell
+        );
+        
         spell.onAdd(this.playerList.get(spell.ownerId, 'ownerId'));
+        
         this.spellList.add(spell);
       }, this);
     }

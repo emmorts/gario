@@ -4,7 +4,6 @@ const present = require('present');
 const OPCode = require('common/opCode');
 const KeyCode = require('client/util/KeyCode');
 const DomElement = require('client/util/DomElement');
-const Graph = require('client/Graph');
 const Game = require('client/Game');
 const StartMenuElement = require('client/elements/StartMenuElement');
 const CanvasElement = require('client/elements/CanvasElement');
@@ -34,17 +33,6 @@ const Map = require('client/maps/Map');
 const mapObject = new Map();
 
 function gameLoop(deltaT) {
-
-  // canvas.graph
-  //   .clear()
-  //   .updateOffset(scrollDirection)
-  //   .drawGrid()
-  //   // .drawArena()
-  //   .drawSpells(game.spellList)
-  //   // .drawPlayers(game.playerList)
-  //   .drawDebug(game.ping)
-  //   .drawStatus();
-
   gameRenderer.add(mapObject);
   game.spellList.forEach(spell => gameRenderer.add(spell));
   game.playerList.forEach(player => gameRenderer.add(player));
@@ -76,7 +64,7 @@ function startGame (playerName) {
         }
       });
 
-    gameRenderer = new GameRenderer(canvas.graph._context);
+    gameRenderer = canvas.renderer;
       
     if (!animationLoopHandle) {
       lastUpdate = present();
@@ -85,7 +73,6 @@ function startGame (playerName) {
   });
 
   game.on('addPlayer', () => {
-    canvas.graph.player = game.currentPlayer;
     gameRenderer.camera.follow(game.currentPlayer);
   });
 

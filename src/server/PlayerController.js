@@ -14,7 +14,7 @@ class PlayerController {
     this.playerDestroyQueue = [];
     this.spellAdditionQueue = [];
     this.spellDestroyQueue = [];
-    this.rechargingSpells = [];
+    this.spellsOnCooldown = [];
 
     if (gameServer) {
       this.pId = uuid.v4().replace(/-/g, '');
@@ -53,7 +53,7 @@ class PlayerController {
   }
 
   cast(options) {
-    if (!(options.type in this.rechargingSpells)) {
+    if (!(options.type in this.spellsOnCooldown)) {
       const spell = Factory.instantiate(
         OPCode.TYPE_SPELL,
         options.type,
@@ -72,9 +72,9 @@ class PlayerController {
       );
 
       if (spell) {
-        this.rechargingSpells[options.type] = spell;
+        this.spellsOnCooldown[options.type] = spell;
 
-        setTimeout(() => delete this.rechargingSpells[options.type], spell.cooldown);
+        setTimeout(() => delete this.spellsOnCooldown[options.type], spell.cooldown);
 
         this.gameServer.onCast(spell);
       }

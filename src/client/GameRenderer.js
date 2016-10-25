@@ -5,10 +5,15 @@ class GameRenderer {
     this.context = canvasContext;
     this.camera = new Camera(this);
 
-    this.width = this.context.canvas.clientWidth;
-    this.height = this.context.canvas.clientHeight;
-
     this._gameObjects = [];
+  }
+
+  get width() {
+    return this.context.canvas.clientWidth;
+  }
+
+  get height() {
+    return this.context.canvas.clientHeight;
   }
 
   draw(deltaT) {

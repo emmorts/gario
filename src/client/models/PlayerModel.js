@@ -1,7 +1,7 @@
-const PlayerBase = require('common/gameobjects/models/Player');
+const Player = require('common/gameobjects/models/Player');
 const PlayerRenderer = require('client/renderers/PlayerRenderer');
 
-export default class Player extends PlayerBase {
+class PlayerModel extends Player {
   constructor(playerModel) {
     super();
 
@@ -67,3 +67,5 @@ export default class Player extends PlayerBase {
     }
   }
 }
+
+module.exports = PlayerModel;

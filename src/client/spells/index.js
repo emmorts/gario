@@ -1,15 +1,5 @@
-var OPCode = require('common/opCode');
+const OPCode = require('common/opCode');
 
-export { default as Primary } from 'client/spells/Primary';
-
-export function get(code) {
-  var spell = null;
-
-  switch (code) {
-    case OPCode.SPELL_PRIMARY:
-      spell = module.exports.Primary;
-      break;
-  }
-
-  return spell;
-}
+module.exports = {
+  [OPCode.SPELL_PRIMARY]: require('client/spells/PrimarySpell')
+};

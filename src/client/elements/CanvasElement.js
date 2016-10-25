@@ -1,34 +1,38 @@
 const Element = require('client/elements/Element');
 const DomElement = require('client/util/DomElement');
 const KeyCode = require('client/util/KeyCode');
-const Graph = require('client/Graph');
+const GameRenderer = require('client/GameRenderer');
 const OPCode = require('common/opCode');
 
 class CanvasElement extends Element {
   constructor() {
     super();
 
+    this._renderer = null;
     this._canvasElement = null;
+    this._canvasContext = null;
     this._scrollOffset = 0.9;
     this._mousePosition = { x: 0, y: 0 };
     this._targetTick = performance.now();
   }
 
-  get graph() {
-    if (this._canvasElement) {
-      return this._canvasElement.instance;
-    }
-
-    return null;
+  get renderer() {
+    return this._renderer;
   }
 
   bind() {
-    this._canvasElement = new DomElement('.js-canvas', Graph);
+    this._canvasElement = new DomElement('.js-canvas');
+    this._canvasContext = this._canvasElement.htmlElement.getContext('2d');
+    this._renderer = new GameRenderer(this._canvasContext);
+
+    this._setDefaultSize();
 
     return this;
   }
 
   bindEvents() {
+    window.addEventListener('resize', this._setDefaultSize.bind(this));
+    
     this._canvasElement.on('contextmenu', event => event.preventDefault());
     this._canvasElement.on('mousemove', this._onMouseMove.bind(this));
     this._canvasElement.on('mousedown', this._onMouseDown.bind(this));
@@ -37,10 +41,10 @@ class CanvasElement extends Element {
   }
 
   _onMouseMove(event) {
-    const westBreakpoint = this.graph.screenWidth * (1 - this._scrollOffset);
-    const eastBreakpoint = this.graph.screenWidth * this._scrollOffset;
-    const northBreakpoint = this.graph.screenHeight * (1 - this._scrollOffset);
-    const southBreakpoint = this.graph.screenHeight * this._scrollOffset;
+    const westBreakpoint = this._canvasElement.htmlElement.clientWidth * (1 - this._scrollOffset);
+    const eastBreakpoint = this._canvasElement.htmlElement.clientWidth * this._scrollOffset;
+    const northBreakpoint = this._canvasElement.htmlElement.clientHeight * (1 - this._scrollOffset);
+    const southBreakpoint = this._canvasElement.htmlElement.clientHeight * this._scrollOffset;
 
     let scrollDirection = null;
 
@@ -89,6 +93,27 @@ class CanvasElement extends Element {
         });
       }
     }
+  }
+
+  _setDefaultSize() {
+    this._canvasElement.htmlElement.width = this._getDefaultWidth();
+    this._canvasElement.htmlElement.height = this._getDefaultHeight();
+  }
+
+  _getDefaultWidth() {
+    return window.innerWidth && document.documentElement.clientWidth
+      ? Math.min(window.innerWidth, document.documentElement.clientWidth)
+      : window.innerWidth ||
+      document.documentElement.clientWidth ||
+      document.getElementsByTagName('body')[0].clientWidth;
+  }
+
+  _getDefaultHeight() {
+    return window.innerHeight && document.documentElement.clientHeight
+      ? Math.min(window.innerHeight, document.documentElement.clientHeight)
+      : window.innerHeight ||
+      document.documentElement.clientHeight ||
+      document.getElementsByTagName('body')[0].clientHeight;
   }
 }
 

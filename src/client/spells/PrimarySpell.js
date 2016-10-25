@@ -1,7 +1,7 @@
-const PrimaryBase = require('common/gameobjects/spells/Primary');
+const Primary = require('common/gameobjects/spells/Primary');
 const PrimaryRenderer = require('client/renderers/PrimaryRenderer');
 
-class Primary extends PrimaryBase {
+class PrimarySpell extends Primary {
   constructor(spellModel) {
     super();
 
@@ -24,4 +24,4 @@ class Primary extends PrimaryBase {
   }
 }
 
-module.exports = Primary;
+module.exports = PrimarySpell;
