@@ -1,5 +1,62 @@
-class PlayerBehaviour {
+const GameObject = require('common/GameObject');
 
+class Player extends GameObject {
+  constructor() {
+    super();
+    
+    this.maxHealth = 0;
+    this.speed = 3;
+    this.acceleration = 0.1;
+    this.rotation = 0;
+    this.targetRotation = 0;
+    this.radius = 20;
+    this.mass = 20;
+    this.stunned = 0;
+    this.velocity = { x: 0, y: 0 };
+    this.position = { x: 0, y: 0 };
+    this.target = { x: 0, y: 0 };
+    this._health = 0;
+    this._baseFriction = 0.2;
+    this._baseRotationTicks = 10;
+    this._baseCastTicks = 10;
+    this._baseRadius = this.radius;
+    this._maxRadius = 25;
+    this._rotationTicks = this._baseRotationTicks;
+    this._castTicks = this._baseCastTicks;
+    this._friction = this._baseFriction;
+  }
+
+  get health() {
+    return this._health;
+  }
+
+  set health(value) {
+    this._health = Math.max(value, 0);
+  }
+
+  update(deltaT) {
+    if (typeof this.target.x !== 'undefined' && typeof this.target.y !== 'undefined') {
+      this._calculatePosition(deltaT);
+    }
+    if (typeof this.targetRotation !== 'undefined') {
+      this._calculateRotation(deltaT);
+    }
+  }
+  
+  setTarget(target) {
+    this.target = {
+      x: target.x,
+      y: target.y
+    };
+    
+    this.targetRotation = Math.atan2(target.y - this.position.y, target.x - this.position.x);
+    var diff = Math.abs(this.targetRotation - this.rotation);
+    
+    if (diff > Math.PI / 2) {
+      this._friction = this._baseFriction;
+    }
+  }
+  
   _calculatePosition(deltaT) {
     if (!this._arePositionsApproximatelyEqual(this.position, this.target) || this.stunned) {
       if (this._friction < 1) {
@@ -91,6 +148,7 @@ class PlayerBehaviour {
 
     return isHorizontalPositionEqual && isVerticalPositionEqual;
   }
+
 }
 
-module.exports = PlayerBehaviour;
+module.exports = Player;

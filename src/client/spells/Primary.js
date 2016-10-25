@@ -1,7 +1,7 @@
-const SpellBase = require('common/models/SpellBase');
+const PrimaryBase = require('common/gameobjects/spells/Primary');
 const PrimaryRenderer = require('client/renderers/PrimaryRenderer');
 
-class Primary extends SpellBase {
+class Primary extends PrimaryBase {
   constructor(spellModel) {
     super();
 

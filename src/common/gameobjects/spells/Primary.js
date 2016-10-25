@@ -1,5 +1,9 @@
-class SpellBase {
+const GameObject = require('common/GameObject');
+
+class Primary extends GameObject {
   constructor() {
+    super();
+    
     this.velocity = { x: 0, y: 0 };
     this.position = { x: 0, y: 0 };
     this.target = { x: 0, y: 0 };
@@ -50,4 +54,4 @@ class SpellBase {
   }
 }
 
-module.exports = SpellBase;
+module.exports = Primary;

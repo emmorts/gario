@@ -1,7 +1,6 @@
 class GameObject {
   constructor() {
-    this.renderer = null;
-    this.behaviour = null;
+    this.visible = true;
   }
 }
 
