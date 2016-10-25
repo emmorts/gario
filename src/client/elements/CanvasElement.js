@@ -8,8 +8,8 @@ class CanvasElement extends Element {
   constructor() {
     super();
 
-    this._scrollOffset = 0.9;
     this._canvasElement = null;
+    this._scrollOffset = 0.9;
     this._mousePosition = { x: 0, y: 0 };
     this._targetTick = performance.now();
   }
@@ -63,8 +63,8 @@ class CanvasElement extends Element {
     }
 
     this._mousePosition = {
-      x: event.x + this.graph.xOffset,
-      y: event.y + this.graph.yOffset
+      x: Math.round(event.x),
+      y: Math.round(event.y)
     };
     
     this.fire('mouseMove', {

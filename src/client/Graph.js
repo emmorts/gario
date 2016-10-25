@@ -13,7 +13,6 @@ class Graph {
     this._yOffset = 0;
     this._borderColor = '#666';
     this._gridColor = '#ececec';
-    this._globalAlpha = 0.15;
     this._gameWidth = 1000;
     this._gameHeight = 1000;
     this._arenaSize = 500;
@@ -114,19 +113,19 @@ class Graph {
 
   drawDebug(ping) {
     if (this.player.id !== -1) {
+      const posX = this.player.position.x;
+      const posY = this.player.position.y;
+      const velX = this.player.velocity.x;
+      const velY = this.player.velocity.y;
+
       // COORDINATES
-      var posX = this.player.position.x;
-      var posY = this.player.position.y;
-      var coordinates = 'Coordinates: ' + Math.round(posX) + ' ' + Math.round(posY);
-      this.drawText(coordinates, 30, 50);
+      this.drawText(`Coordinates: ${Math.round(posX)} ${Math.round(posY)}`, 30, 50);
 
       // OFFSET
-      var offset = 'Offset: ' + Math.round(this.xOffset) + ' ' + Math.round(this.yOffset);
-      this.drawText(offset, 30, 70);
+      this.drawText(`Offset: ${Math.round(this.xOffset)} ${Math.round(this.yOffset)}`, 30, 70);
 
       // VELOCITY
-      var velocity = 'Velocity: ' + Math.round(this.player.velocity.x) + ' ' + Math.round(this.player.velocity.y);
-      this.drawText(velocity, 30, 30);
+      this.drawText(`Velocity: ${Math.round(velX)} ${Math.round(velY)}`, 30, 30);
 
       // SCORE
       var score = 'Score: ' + Statistics.Score.getInstance().currentScore();

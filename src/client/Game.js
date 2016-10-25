@@ -2,7 +2,7 @@ const present = require('present');
 const SmartMap = require('smartmap');
 const OPCode = require('common/opCode');
 const EventEmitter = require('common/EventEmitter');
-const WSController = require('client/WSController');
+const PacketHandler = require('client/PacketHandler');
 
 import * as Spells from 'client/spells';
 import * as Models from 'client/models';
@@ -29,17 +29,17 @@ class Game {
   }
 
   startGame(playerName, onConnection) {
-    this.controller = new WSController();
+    this.packetHandler = new PacketHandler();
 
-    this.controller.on('open', function startGame() {
+    this.packetHandler.on('open', function startGame() {
       
-      this.controller.on('addPlayer', this._handleAddPlayer.bind(this));
-      this.controller.on('updatePlayers', this._handleUpdatePlayers.bind(this));
-      this.controller.on('updateSpells', this._handleUpdateSpells.bind(this));
-      this.controller.on('collision', this._handleCollision.bind(this));
-      this.controller.on('ping', this._handlePing.bind(this));
+      this.packetHandler.on('addPlayer', this._handleAddPlayer.bind(this));
+      this.packetHandler.on('updatePlayers', this._handleUpdatePlayers.bind(this));
+      this.packetHandler.on('updateSpells', this._handleUpdateSpells.bind(this));
+      this.packetHandler.on('collision', this._handleCollision.bind(this));
+      this.packetHandler.on('ping', this._handlePing.bind(this));
 
-      this.controller.send(OPCode.SPAWN_PLAYER, { name: playerName });
+      this.packetHandler.send(OPCode.SPAWN_PLAYER, { name: playerName });
 
       this._onStart(onConnection);
     }.bind(this));
@@ -52,14 +52,6 @@ class Game {
     this.spellList.forEach(spell => spell.update(deltaT));
   }
 
-  _didCollide(actor, collider) {
-    const distanceX = actor.position.x - collider.position.x;
-    const distanceY = actor.position.y - collider.position.y;
-    const distance = distanceX * distanceX + distanceY * distanceY;
-
-    return distance <= Math.pow(collider.radius + actor.radius, 2);
-  }
-
   _onStart(callback) {
     this._lastHeartbeat = Date.now();
 
@@ -70,8 +62,8 @@ class Game {
 
   _handleAddPlayer(player) {
     this.currentPlayer = new Models.Player(player);
-    this.fire('addPlayer');
     this.playerList.add(this.currentPlayer);
+    this.fire('addPlayer');
   }
 
   _handleUpdatePlayers(players) {
@@ -130,7 +122,7 @@ class Game {
     setTimeout(() => {
       this._lastHeartbeat = Date.now();
 
-      this.controller.send(OPCode.PONG);
+      this.packetHandler.send(OPCode.PONG);
     }, 1000);
   }
 }

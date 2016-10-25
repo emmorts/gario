@@ -4,7 +4,7 @@ const Action = require('client/actions');
 const OPCode = require('common/opCode');
 const Schema = require('common/schemas');
 
-class WSController {
+class PacketHandler {
   constructor() {
     EventEmitter.attach(this);
 
@@ -62,4 +62,4 @@ class WSController {
   }
 }
 
-module.exports = WSController;
+module.exports = PacketHandler;

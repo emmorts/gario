@@ -1,8 +1,11 @@
 const PlayerBase = require('common/models/PlayerBase');
+const PlayerRenderer = require('client/renderers/PlayerRenderer');
 
 export default class Player extends PlayerBase {
   constructor(playerModel) {
     super();
+
+    this.renderer = PlayerRenderer;
 
     this._initialize(playerModel);
   }

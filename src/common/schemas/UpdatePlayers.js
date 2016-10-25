@@ -1,5 +1,5 @@
-const Schema = require('../Schema');
-const OPCode = require('../opCode');
+const Schema = require('common/Schema');
+const OPCode = require('common/opCode');
 
 module.exports = new Schema(OPCode.UPDATE_PLAYERS, {
   updatedPlayers: [{

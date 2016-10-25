@@ -1,8 +1,11 @@
 const SpellBase = require('common/models/SpellBase');
+const PrimaryRenderer = require('client/renderers/PrimaryRenderer');
 
 class Primary extends SpellBase {
   constructor(spellModel) {
     super();
+
+    this.renderer = PrimaryRenderer;
 
     this.id = spellModel.id;
     this.ownerId = spellModel.ownerId;

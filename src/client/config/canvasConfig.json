@@ -1,0 +1,11 @@
+{
+  "fontSize": 12,
+  "fontWeight": "bold",
+  "fontColor": "rgb(255, 255, 255)",
+  "textBorderColor": "rgb(69, 69, 69)",
+  "textBorderWidth": 3,
+  "textBaseline": "middle",
+  "textAlign": "left",
+  "miterLimit": 1,
+  "lineJoin": "round"
+}
