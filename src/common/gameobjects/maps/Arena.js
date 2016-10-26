@@ -29,7 +29,6 @@ class Arena extends GameObject {
       //returns a map with a hole of 25 percent (width and height must be and even number)
       const tiledMap = new Array(this.cubicHeight);
       const holeVar = Math.sqrt(((Math.pow(this.cubicWidth,2) * 25) / 100)) / 2; 
-      console.log(holeVar);
       for (let row = 0; row < this.cubicHeight; row++ ) {
         tiledMap[row] = new Array(this.cubicWidth);
         for (let column = 0; column < this.cubicWidth; column++) {

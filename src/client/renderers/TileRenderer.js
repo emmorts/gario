@@ -15,18 +15,21 @@ class TileRenderer extends IRenderer {
     const tiledMap = model.tiledMap;
     const tileSize = model.tileSize;
 
-    for (var rowIndex in tiledMap) {
-      for(var columnIndex in tiledMap[rowIndex]){
+    renderer.context.fillStyle = MapTiles[Tileset.LAVA].color;
+    renderer.context.fillRect(0, 0, renderer.width, renderer.height);
+
+    for (let rowIndex in tiledMap) {
+      for (let columnIndex in tiledMap[rowIndex]) {
         const tileStartX = startX + tileSize * columnIndex;
         const tileStartY = startY + tileSize * rowIndex;
         const tileType = tiledMap[rowIndex][columnIndex];
-        if(tileType != Tileset.LAVA){
+        if (tileType != Tileset.LAVA){
           CanvasHelper.square(renderer.context, {
           x: tileStartX,
           y: tileStartY,
           width: tileSize + 1,
           height: tileSize + 1,
-          fillColor: MapTiles[tileType].fillColor
+          fillColor: MapTiles[tileType].color
         });
         } 
       };
