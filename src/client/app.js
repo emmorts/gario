@@ -31,7 +31,9 @@ function animationLoop(timestamp) {
 
 // TODO: Remove this
 const Map = require('client/maps/Map');
-const mapObject = new Map();
+const ArenaMap = require('client/maps/ArenaMap');
+// const mapObject = new Map();
+const mapObject = new ArenaMap();
 
 function gameLoop(deltaT) {
   gameRenderer.add(mapObject);
