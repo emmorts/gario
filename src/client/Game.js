@@ -5,6 +5,8 @@ const EventEmitter = require('common/EventEmitter');
 const PacketHandler = require('client/PacketHandler');
 const Factory = require('client/Factory');
 const ArenaMap = require('client/maps/ArenaMap');
+const DebugRenderer = require('client/renderers/DebugRenderer');
+
 let instance = null;
 
 class Game {
@@ -12,13 +14,14 @@ class Game {
     EventEmitter.attach(this);
 
     this.currentPlayer = null;
-    this.controller = null;
     this.map = null;
     this.playerList = new SmartMap('id', 'ownerId');
     this.spellList = new SmartMap('id');
     this.ping = 0;
 
     this._renderer = null;
+    this._lastUpdate = null;
+    this._gameLoopHandle = null;
   }
 
   static getInstance() {
@@ -52,6 +55,7 @@ class Game {
       this.packetHandler.send(OPCode.SPAWN_PLAYER, { name: playerName });
 
       this._onStart(onConnection);
+      this._gameLoop(present());
     }.bind(this));
 
     return this;
@@ -60,6 +64,21 @@ class Game {
   update(deltaT) {
     this.playerList.forEach(player => player.update(deltaT));
     this.spellList.forEach(spell => spell.update(deltaT));
+
+    this._renderer.draw(deltaT);
+  }
+
+  _gameLoop(timestamp) {
+    const deltaT = timestamp - this._lastUpdate;
+    
+    this._gameLoopHandle = window.requestAnimationFrame(timestamp => this._gameLoop(timestamp));
+
+    this.update(deltaT);
+
+    // TODO: Remove this from here
+    DebugRenderer.draw(this, this._renderer, deltaT);
+    
+    this._lastUpdate = timestamp;
   }
 
   _onRendererChanged() {
@@ -88,13 +107,15 @@ class Game {
     );
 
     this.playerList.add(this.currentPlayer);
-    this.fire('addPlayer');
+    this._renderer.camera.follow(this.currentPlayer);
   }
 
   _handleInitializeMap(map){
-    console.log(map);
     this.map = new ArenaMap(map);
-    this.fire('updateMap');
+
+    // HACK! Remove once indexed priority queue is implemented
+    this._renderer._gameObjects.splice(0, 0, this.map);
+    // this._renderer.add(this.map);
   }
 
   _handleUpdatePlayers(players) {

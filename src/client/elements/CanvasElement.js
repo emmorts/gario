@@ -14,6 +14,10 @@ class CanvasElement extends Element {
     this._scrollOffset = 0.9;
     this._mousePosition = { x: 0, y: 0 };
     this._targetTick = performance.now();
+
+    this
+      .bind()
+      .bindEvents();
   }
 
   get renderer() {
@@ -67,15 +71,11 @@ class CanvasElement extends Element {
     }
 
     this._mousePosition = {
-      x: Math.round(event.x),
-      y: Math.round(event.y)
+      x: Math.round(event.x) + this._renderer.camera.scrollX,
+      y: Math.round(event.y) + this._renderer.camera.scrollY
     };
-    
-    this.fire('mouseMove', {
-      x: this._mousePosition.x,
-      y: this._mousePosition.y,
-      direction: scrollDirection 
-    });
+
+    this._renderer.scrollDirection = scrollDirection;
   }
 
   _onMouseDown(event) {

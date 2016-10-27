@@ -12,6 +12,8 @@ class StartMenuElement extends Element {
     this._playerNameElement = null;
     this._playButtonElement = null;
     this._errorElement = null;
+
+    this.bind();
   }
 
   bind() {

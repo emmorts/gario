@@ -1,76 +1,32 @@
 require('client/util/polyfills');
 
-const present = require('present');
 const OPCode = require('common/opCode');
 const KeyCode = require('client/util/KeyCode');
-const DomElement = require('client/util/DomElement');
 const Game = require('client/Game');
 const StartMenuElement = require('client/elements/StartMenuElement');
 const CanvasElement = require('client/elements/CanvasElement');
-const GameRenderer = require('client/GameRenderer');
-const DebugRenderer = require('client/renderers/DebugRenderer');
 
 const game = Game.getInstance();
 
-new StartMenuElement().bind().on('startGame', startGame);
-
-let animationLoopHandle;
-let lastUpdate;
-let scrollDirection = null;
-let canvas = null;
-let gameRenderer = null;
-
-const mousePosition = { x: 0, y: 0 };
-
-function animationLoop(timestamp) {
-  animationLoopHandle = window.requestAnimationFrame(animationLoop);
-
-  gameLoop(timestamp - lastUpdate);
-  lastUpdate = timestamp;
-}
-
-function gameLoop(deltaT) {
-  gameRenderer.draw(deltaT);
-  gameRenderer.camera.update(scrollDirection);
-
-  // TODO: Remove this from here
-  DebugRenderer.draw(game, gameRenderer);
-
-  game.update();
-}
+new StartMenuElement().on('startGame', startGame);
 
 function startGame (playerName) {
+  const canvas = new CanvasElement()
+    .on('playerMove', target => {
+      if (game.currentPlayer.health > 0) {
+        game.currentPlayer.setTarget({
+          x: target.x,
+          y: target.y
+        });
+        game.packetHandler.send(OPCode.PLAYER_MOVE, game.currentPlayer);
+      }
+    });
+
+  game.renderer = canvas.renderer;
+
   game.startGame(playerName, () => {
     window.document.addEventListener('keydown', wHandleKeyDown);
-
-    canvas = new CanvasElement()
-      .bind()
-      .bindEvents()
-      .on('mouseMove', mouse => {
-        mousePosition.x = mouse.x + gameRenderer.camera.scrollX;
-        mousePosition.y = mouse.y + gameRenderer.camera.scrollY;
-        scrollDirection = mouse.direction;
-      })
-      .on('playerMove', target => {
-        if (game.currentPlayer.health > 0) {
-          game.currentPlayer.setTarget({
-            x: target.x + gameRenderer.camera.scrollX,
-            y: target.y + gameRenderer.camera.scrollY
-          });
-          game.packetHandler.send(OPCode.PLAYER_MOVE, game.currentPlayer);
-        }
-      });
-
-    gameRenderer = game.renderer = canvas.renderer;
-      
-    if (!animationLoopHandle) {
-      lastUpdate = present();
-      animationLoop(lastUpdate);
-    }
   });
-
-  game.on('addPlayer', () => gameRenderer.camera.follow(game.currentPlayer));
-  game.on('updateMap', () => gameRenderer.add(game.map));
 
   function wHandleKeyDown(event) {
     switch (event.keyCode) {
@@ -80,8 +36,8 @@ function startGame (playerName) {
             type: OPCode.SPELL_PRIMARY,
             playerX: game.currentPlayer.position.x,
             playerY: game.currentPlayer.position.y,
-            x: mousePosition.x,
-            y: mousePosition.y
+            x: canvas._mousePosition.x, //hack
+            y: canvas._mousePosition.y
           });
         }
     }

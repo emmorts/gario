@@ -53,7 +53,7 @@ class Camera {
     }
   }
   
-  update(direction) {
+  update(direction, deltaT) {
     switch (direction) {
       case OPCode.DIRECTION_NWEST:
         this.offsetX -= this._scrollSpeed;
@@ -97,6 +97,7 @@ class Camera {
     }
   }
 
+  // TODO: Implement this, you nig
   easeInQuad(elapsed, start, end, total) {
     return end * (elapsed /= total) * elapsed + start;
   }

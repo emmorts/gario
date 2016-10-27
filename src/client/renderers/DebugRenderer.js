@@ -2,7 +2,7 @@ const IRenderer = require('client/renderers/IRenderer');
 const CanvasHelper = require('client/util/CanvasHelper');
 
 class DebugRenderer extends IRenderer {
-  static draw(game, renderer) {
+  static draw(game, renderer, deltaT) {
     const currentPlayerPosition = game.currentPlayer
       ? game.currentPlayer.position
       : { x: 'N/A', y: 'N/A' };
@@ -35,6 +35,12 @@ class DebugRenderer extends IRenderer {
       text: `Ping: ${game.ping}`,
       x: 30,
       y: 110
+    });
+    
+    CanvasHelper.text(renderer.context, {
+      text: `FPS: ${(1000 / deltaT) | 0}`,
+      x: 30,
+      y: 130
     });
   }
 }

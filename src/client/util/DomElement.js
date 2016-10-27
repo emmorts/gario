@@ -1,5 +1,5 @@
 class DomElement {
-  constructor(query, elementClass) {
+  constructor(query) {
     this.htmlElement = null;
     this.instance = null;
     this._disabled = false;
@@ -8,10 +8,6 @@ class DomElement {
     
     if (query) {
       this.htmlElement = window.document.querySelector(query);
-      
-      if (this.htmlElement && elementClass) {
-        this.instance = new elementClass(this.htmlElement);
-      }
     }
   }
 

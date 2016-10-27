@@ -3,6 +3,7 @@ const Camera = require('client/Camera');
 class GameRenderer {
   constructor(canvasContext) {
     this.context = canvasContext;
+    this.scrollDirection = null;
     this.camera = new Camera(this);
 
     this._gameObjects = [];
@@ -17,6 +18,9 @@ class GameRenderer {
   }
 
   draw(deltaT) {
+    this.camera.update(this.scrollDirection, deltaT);
+
+    // TODO: Current solution is ineffective, should only clear the screen of what was drawn
     this.context.clearRect(0, 0, this.width, this.height);
 
     this._gameObjects.forEach(gameObject => {
