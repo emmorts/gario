@@ -4,7 +4,7 @@ const CanvasHelper = require('client/util/CanvasHelper');
 const MapTiles = require('client/mapTiles/');
 const Tileset = require('common/Tileset');
 
-class TileRenderer extends IRenderer {
+class ArenaRenderer extends IRenderer {
   static draw(model, renderer) {
     const scrollX = renderer.camera.scrollX;
     const scrollY = renderer.camera.scrollY;
@@ -37,4 +37,4 @@ class TileRenderer extends IRenderer {
   }
 }
 
-module.exports = TileRenderer;
+module.exports = ArenaRenderer;

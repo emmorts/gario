@@ -29,14 +29,7 @@ function animationLoop(timestamp) {
   lastUpdate = timestamp;
 }
 
-// TODO: Remove this
-const Map = require('client/maps/Map');
-const ArenaMap = require('client/maps/ArenaMap');
-// const mapObject = new Map();
-const mapObject = new ArenaMap();
-
 function gameLoop(deltaT) {
-  gameRenderer.add(mapObject);
   gameRenderer.draw(deltaT);
   gameRenderer.camera.update(scrollDirection);
 
@@ -77,6 +70,7 @@ function startGame (playerName) {
   });
 
   game.on('addPlayer', () => gameRenderer.camera.follow(game.currentPlayer));
+  game.on('updateMap', () => gameRenderer.add(game.map));
 
   function wHandleKeyDown(event) {
     switch (event.keyCode) {

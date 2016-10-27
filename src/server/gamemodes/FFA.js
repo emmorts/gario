@@ -1,6 +1,7 @@
 const config = require('server/config');
 const Mode = require('server/gamemodes/Mode');
-const ArenaMap = require('server/maps/ArenaMap');
+const MapBuilder = require('server/maps/MapBuilder');
+const MapNames = require('common/MapName');
 
 class FFA extends Mode {
   constructor(gameServer) {
@@ -13,7 +14,11 @@ class FFA extends Mode {
   }
   
   onServerInit() {
-    this.map = new ArenaMap();
+    const mapBuilder = new MapBuilder();
+    mapBuilder.setCube(32);
+    mapBuilder.setTileSize(16);
+    mapBuilder.setMapName(MapNames.HOLY);
+    this.map = mapBuilder.constructMap();
   }
   
   onPlayerSpawn(player) {

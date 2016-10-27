@@ -1,14 +1,17 @@
-const TileRenderer = require('client/renderers/TileRenderer');
+const ArenaRenderer = require('client/renderers/ArenaRenderer');
 const Arena = require('common/gameobjects/maps/Arena');
 
 class ArenaMap extends Arena {
-  constructor() {
+  constructor(arena) {
     super();
-    this.renderer = TileRenderer;
+    console.log(arena);
+    this.renderer = ArenaRenderer;
 
-    console.log(this.tiledMap);
-    this.width = this.cubicWidth * this.tileSize;
-    this.height = this.cubicHeight * this.tileSize;
+    this.tileSize = arena.tileSize;
+    this.cubicWidth = arena.cubicWidth;
+    this.cubicHeight = arena.cubicHeight;
+  
+    this.tiledMap = arena.tiledMap;
   }
 
 }

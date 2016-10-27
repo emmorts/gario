@@ -29,8 +29,7 @@ class GameRenderer {
       if (gameObject.renderer) {
         this._gameObjects.push(gameObject);
       } else {
-        console.log(gameObject);
-        // console.warn(`Game object ${gameObject.constructor.name} does not have a renderer.`);
+        console.warn(`Game object ${gameObject.constructor.name} does not have a renderer.`);
       }
     }
   }

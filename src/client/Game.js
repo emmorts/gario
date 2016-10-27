@@ -4,7 +4,7 @@ const OPCode = require('common/opCode');
 const EventEmitter = require('common/EventEmitter');
 const PacketHandler = require('client/PacketHandler');
 const Factory = require('client/Factory');
-
+const ArenaMap = require('client/maps/ArenaMap');
 let instance = null;
 
 class Game {
@@ -13,6 +13,7 @@ class Game {
 
     this.currentPlayer = null;
     this.controller = null;
+    this.map = null;
     this.playerList = new SmartMap('id', 'ownerId');
     this.spellList = new SmartMap('id');
     this.ping = 0;
@@ -92,6 +93,8 @@ class Game {
 
   _handleInitializeMap(map){
     console.log(map);
+    this.map = new ArenaMap(map);
+    this.fire('updateMap');
   }
 
   _handleUpdatePlayers(players) {
