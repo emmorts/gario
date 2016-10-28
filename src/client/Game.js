@@ -4,7 +4,7 @@ const OPCode = require('common/opCode');
 const EventEmitter = require('common/EventEmitter');
 const PacketHandler = require('client/PacketHandler');
 const Factory = require('client/Factory');
-const Arena = require('client/maps/Arena');
+const Arena = require('client/arenas/Arena');
 const DebugRenderer = require('client/renderers/DebugRenderer');
 
 let instance = null;

@@ -1,6 +1,6 @@
 const config = require('server/config');
 const Mode = require('server/gamemodes/Mode');
-const ArenaBuilder = require('server/maps/ArenaBuilder');
+const ArenaBuilder = require('server/arenas/ArenaBuilder');
 const MapNames = require('common/MapName');
 
 class FFA extends Mode {
@@ -10,7 +10,7 @@ class FFA extends Mode {
     this.name = "Free For All";
     this.baseHealth = 100;
     this.friction = 0.1;
-    this.map = null;
+    this.arena = null;
   }
   
   onServerInit() {
@@ -18,7 +18,7 @@ class FFA extends Mode {
     arenaBuilder.setCube(32);
     arenaBuilder.setTileSize(16);
     arenaBuilder.setMapName(MapNames.HOLY);
-    this.map = arenaBuilder.constructArena();
+    this.arena = arenaBuilder.constructArena();
   }
   
   onPlayerSpawn(player) {

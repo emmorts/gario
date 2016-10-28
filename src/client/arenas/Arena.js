@@ -1,5 +1,5 @@
 const ArenaRenderer = require('client/renderers/ArenaRenderer');
-const IArena = require('common/gameobjects/maps/IArena');
+const IArena = require('common/gameobjects/arenas/IArena');
 
 class Arena extends IArena {
   constructor(arena) {

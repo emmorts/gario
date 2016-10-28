@@ -1,4 +1,4 @@
-const IArena = require('common/gameobjects/maps/IArena');
+const IArena = require('common/gameobjects/arenas/IArena');
 const MapMaker = require('common/mapmaker');
 const MapNames = require('common/MapName');
 

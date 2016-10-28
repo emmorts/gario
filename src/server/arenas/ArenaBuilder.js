@@ -1,6 +1,6 @@
-const IArena = require('common/gameobjects/maps/IArena');
+const IArena = require('common/gameobjects/arenas/IArena');
 const MapMaker = require('common/mapmaker');
-const Arena = require('server/maps/Arena');
+const Arena = require('server/arenas/Arena');
 
 class ArenaBuilder {
   constructor() {

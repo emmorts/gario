@@ -6,7 +6,7 @@ const PacketHandler = require('server/PacketHandler');
 const PlayerController = require('server/PlayerController');
 const Factory = require('server/Factory');
 const GameMode = require('server/gamemodes');
-const Maps = require('server/maps');
+const Maps = require('server/arenas');
 const OPCode = require('common/opCode');
 const WebSocketServer = WebSocket.Server;
 
@@ -108,7 +108,7 @@ class GameServer {
     this.gameMode.onPlayerSpawn(playerController);
 
     playerController.packetHandler.send(OPCode.ADD_PLAYER, playerController.model);
-    playerController.packetHandler.send(OPCode.INITIALIZE_ARENA, this.gameMode.map);
+    playerController.packetHandler.send(OPCode.INITIALIZE_ARENA, this.gameMode.arena);
     
     this.sockets.forEach(function (client) {
       if (client !== playerController.socket) {
