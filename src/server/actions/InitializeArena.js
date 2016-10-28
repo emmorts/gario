@@ -1,20 +1,20 @@
 const Action = require('server/actions/Action');
 const OPCode = require('common/opCode');
 
-class InitializeMap extends Action {
+class InitializeArena extends Action {
 
   constructor() {
-    super(OPCode.INITIALIZE_MAP, ...arguments);
+    super(OPCode.INITIALIZE_ARENA, ...arguments);
   }
 
   build(arena) {
-  if ('tiledMap' in arena) {
+  if ('map' in arena) {
       if (this.actionSchema) {
         const flattenedObject = {
           width: arena.width,
           height: arena.height,
           tileSize: arena.tileSize,
-          mapRows: arena.tiledMap.map(row => ({
+          mapRows: arena.map.map(row => ({
             mapColumns: row.map(column => ({
               value: column
             }))
@@ -32,4 +32,4 @@ class InitializeMap extends Action {
 
 }
 
-module.exports = InitializeMap;
+module.exports = InitializeArena;

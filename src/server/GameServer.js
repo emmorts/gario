@@ -108,7 +108,7 @@ class GameServer {
     this.gameMode.onPlayerSpawn(playerController);
 
     playerController.packetHandler.send(OPCode.ADD_PLAYER, playerController.model);
-    playerController.packetHandler.send(OPCode.INITIALIZE_MAP, this.gameMode.map);
+    playerController.packetHandler.send(OPCode.INITIALIZE_ARENA, this.gameMode.map);
     
     this.sockets.forEach(function (client) {
       if (client !== playerController.socket) {

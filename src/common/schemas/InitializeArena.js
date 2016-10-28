@@ -1,7 +1,7 @@
 const Schema = require('common/Schema');
 const OPCode = require('common/opCode');
 
-module.exports = new Schema(OPCode.INITIALIZE_MAP, {
+module.exports = new Schema(OPCode.INITIALIZE_ARENA, {
   width: 'uint8',
   height: 'uint8',
   tileSize: 'uint8',
@@ -11,7 +11,7 @@ module.exports = new Schema(OPCode.INITIALIZE_MAP, {
     }]
   }]
 }, (arena) => {
-  const tiledMap = arena.mapRows.map(row => {
+  const map = arena.mapRows.map(row => {
     return row.mapColumns.map(column => column.value);
   });
 
@@ -19,6 +19,6 @@ module.exports = new Schema(OPCode.INITIALIZE_MAP, {
     width: arena.width,
     height: arena.height,
     tileSize: arena.tileSize,
-    tiledMap
+    map: map
   };
 });

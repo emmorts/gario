@@ -1,8 +1,8 @@
-const IArena = require('common/gameobjects/maps/Arena');
+const IArena = require('common/gameobjects/maps/IArena');
 const MapMaker = require('common/mapmaker');
-const Arena = require('server/maps/ArenaMap');
+const Arena = require('server/maps/Arena');
 
-class MapBuilder {
+class ArenaBuilder {
   constructor() {
     this.width = null;
     this.height = null;
@@ -32,7 +32,7 @@ class MapBuilder {
     this.mapName = name;
   }
 
-  constructMap() {
+  constructArena() {
     if(this.width == null || this.height == null || this.tileSize == null || this.mapName == null) {
       throw "Incomplete build parameters";
     } else return new Arena({
@@ -45,4 +45,4 @@ class MapBuilder {
 
 }
 
-module.exports = MapBuilder;
+module.exports = ArenaBuilder;

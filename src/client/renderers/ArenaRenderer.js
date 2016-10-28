@@ -12,17 +12,17 @@ class ArenaRenderer extends IRenderer {
     const startX = 0 - scrollX;
     const startY = 0 - scrollY;
 
-    const tiledMap = model.tiledMap;
+    const map = model.map;
     const tileSize = model.tileSize;
 
     renderer.context.fillStyle = MapTiles[Tileset.LAVA].color;
     renderer.context.fillRect(0, 0, renderer.width, renderer.height);
 
-    for (let rowIndex in tiledMap) {
-      for (let columnIndex in tiledMap[rowIndex]) {
+    for (let rowIndex in map) {
+      for (let columnIndex in map[rowIndex]) {
         const tileStartX = startX + tileSize * columnIndex;
         const tileStartY = startY + tileSize * rowIndex;
-        const tileType = tiledMap[rowIndex][columnIndex];
+        const tileType = map[rowIndex][columnIndex];
         if (tileType != Tileset.LAVA){
           CanvasHelper.square(renderer.context, {
           x: tileStartX,

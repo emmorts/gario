@@ -1,16 +1,16 @@
 const Action = require('client/actions/Action');
 const OPCode = require('common/opCode');
 
-class InitializeMap extends Action {
+class InitializeArena extends Action {
 
   constructor() {
-    super(OPCode.INITIALIZE_MAP);
+    super(OPCode.INITIALIZE_ARENA);
   }
 
   static get eventName() {
-    return 'initializeMap';
+    return 'initializeArena';
   }
 
 }
 
-module.exports = InitializeMap;
+module.exports = InitializeArena;

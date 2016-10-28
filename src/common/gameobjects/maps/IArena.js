@@ -1,16 +1,16 @@
 const GameObject = require('common/GameObject');
 const Tileset = require('common/Tileset');
 
-class Arena extends GameObject {
+class IArena extends GameObject {
   constructor() {
     super();
 
     this.tileSize = null;
-    this.cubicWidth = null;
-    this.cubicHeight = null;
-  
-    this.tiledMap = null;
+    this.width = null;
+    this.height = null;
+    this.map = null;
+    
   }
 }
 
-module.exports = Arena;
+module.exports = IArena;

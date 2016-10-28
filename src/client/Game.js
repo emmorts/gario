@@ -4,7 +4,7 @@ const OPCode = require('common/opCode');
 const EventEmitter = require('common/EventEmitter');
 const PacketHandler = require('client/PacketHandler');
 const Factory = require('client/Factory');
-const ArenaMap = require('client/maps/ArenaMap');
+const Arena = require('client/maps/Arena');
 const DebugRenderer = require('client/renderers/DebugRenderer');
 
 let instance = null;
@@ -14,7 +14,7 @@ class Game {
     EventEmitter.attach(this);
 
     this.currentPlayer = null;
-    this.map = null;
+    this.arena = null;
     this.playerList = new SmartMap('id', 'ownerId');
     this.spellList = new SmartMap('id');
     this.ping = 0;
@@ -46,7 +46,7 @@ class Game {
     this.packetHandler.on('open', function startGame() {
       
       this.packetHandler.on('addPlayer', this._handleAddPlayer.bind(this));
-      this.packetHandler.on('initializeMap', this._handleInitializeMap.bind(this));
+      this.packetHandler.on('initializeArena', this._handleInitializeArena.bind(this));
       this.packetHandler.on('updatePlayers', this._handleUpdatePlayers.bind(this));
       this.packetHandler.on('updateSpells', this._handleUpdateSpells.bind(this));
       this.packetHandler.on('collision', this._handleCollision.bind(this));
@@ -110,11 +110,11 @@ class Game {
     this._renderer.camera.follow(this.currentPlayer);
   }
 
-  _handleInitializeMap(map){
-    this.map = new ArenaMap(map);
+  _handleInitializeArena(arena){
+    this.arena = new Arena(arena);
 
     // HACK! Remove once indexed priority queue is implemented
-    this._renderer._gameObjects.splice(0, 0, this.map);
+    this._renderer._gameObjects.splice(0, 0, this.arena);
     // this._renderer.add(this.map);
   }
 

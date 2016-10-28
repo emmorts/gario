@@ -1,3 +1,3 @@
 module.exports = {
-  ArenaMap: require('server/maps/ArenaMap')
+  Arena: require('server/maps/Arena')
 };
