@@ -6,41 +6,41 @@ class DebugRenderer extends IRenderer {
     const currentPlayerPosition = game.currentPlayer
       ? game.currentPlayer.position
       : { x: 'N/A', y: 'N/A' };
-    
+
     CanvasHelper.text(renderer.context, {
       text: `Camera: ${Math.round(renderer.camera.scrollX)} ${Math.round(renderer.camera.scrollY)}`,
       x: 30,
-      y: 30
+      y: 30,
     });
 
     CanvasHelper.text(renderer.context, {
       text: `Coordinates: ${Math.round(currentPlayerPosition.x)} ${Math.round(currentPlayerPosition.y)}`,
       x: 30,
-      y: 50
+      y: 50,
     });
-    
+
     CanvasHelper.text(renderer.context, {
       text: `Player Camera: ${Math.round(renderer.camera.offsetX)} ${Math.round(renderer.camera.offsetY)}`,
       x: 30,
-      y: 70
+      y: 70,
     });
-    
+
     CanvasHelper.text(renderer.context, {
       text: `Players Online: ${game.playerList.length}`,
       x: 30,
-      y: 90
+      y: 90,
     });
-    
+
     CanvasHelper.text(renderer.context, {
       text: `Ping: ${game.ping}`,
       x: 30,
-      y: 110
+      y: 110,
     });
-    
+
     CanvasHelper.text(renderer.context, {
-      text: `FPS: ${(1000 / deltaT) | 0}`,
+      text: `FPS: ${~~(1000 / deltaT) | 0}`,
       x: 30,
-      y: 130
+      y: 130,
     });
   }
 }

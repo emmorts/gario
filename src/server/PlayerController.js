@@ -1,8 +1,6 @@
 const uuid = require('node-uuid');
 const OPCode = require('common/opCode');
-const Spells = require('server/spells');
-const Action = require('server/actions');
-const Factory = require ('server/Factory');
+const Factory = require('server/Factory');
 
 class PlayerController {
   constructor(gameServer, socket) {
@@ -24,9 +22,9 @@ class PlayerController {
   get packetHandler() {
     if (this.socket) {
       return this.socket.packetHandler;
-    } else {
-      console.log(`Player '${this.pId}' does not have an attached socket.`);
     }
+
+    console.log(`Player '${this.pId}' does not have an attached socket.`);
 
     return null;
   }
@@ -37,7 +35,7 @@ class PlayerController {
 
       this.gameServer.onTargetUpdated(this);
     }
-  };
+  }
 
   spawn(name) {
     this.model = Factory.instantiate(
@@ -59,15 +57,15 @@ class PlayerController {
         options.type,
         this.gameServer,
         this,
-          {
+        {
           position: {
             x: options.playerX,
-            y: options.playerY
+            y: options.playerY,
           },
           target: {
             x: options.x,
-            y: options.y
-          }
+            y: options.y,
+          },
         }
       );
 
@@ -79,18 +77,18 @@ class PlayerController {
         this.gameServer.onCast(spell);
       }
     }
-  };
+  }
 
   update() {
     this._updatePlayers();
     this._updateSpells();
-  };
+  }
 
   _updatePlayers() {
     if (this.playerAdditionQueue.length || this.playerDestroyQueue.length) {
       this.packetHandler.send(OPCode.UPDATE_PLAYERS, {
         updatedPlayers: this.playerAdditionQueue,
-        destroyedPlayers: this.playerDestroyQueue
+        destroyedPlayers: this.playerDestroyQueue,
       });
     }
 
@@ -102,7 +100,7 @@ class PlayerController {
     if (this.spellAdditionQueue.length || this.spellDestroyQueue.length) {
       this.packetHandler.send(OPCode.UPDATE_SPELLS, {
         updatedSpells: this.spellAdditionQueue,
-        destroyedSpells: this.spellDestroyQueue
+        destroyedSpells: this.spellDestroyQueue,
       });
     }
 

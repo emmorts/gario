@@ -7,7 +7,7 @@ class CanvasHelper {
         canvasContext.fillStyle = properties.fillColor;
         canvasContext.fillRect(properties.x, properties.y, properties.width, properties.height);
       }
-      
+
       if (properties.strokeColor) {
         canvasContext.lineWidth = properties.strokeWidth;
         canvasContext.strokeStyle = properties.strokeColor;
@@ -20,10 +20,15 @@ class CanvasHelper {
     if (canvasContext && properties) {
       properties.start = properties.start || 0;
       properties.end = properties.end || 2 * Math.PI;
-      
+
       canvasContext.beginPath();
 
-      canvasContext.arc(properties.x, properties.y, properties.radius, properties.start, properties.end);
+      canvasContext.arc(
+        properties.x,
+        properties.y,
+        properties.radius,
+        properties.start,
+        properties.end);
 
       if (properties.fillColor) {
         canvasContext.fillStyle = properties.fillColor;
@@ -71,7 +76,7 @@ class CanvasHelper {
       canvasContext.fillText(properties.text, properties.x, properties.y);
     }
   }
-  
+
 }
 
 module.exports = CanvasHelper;

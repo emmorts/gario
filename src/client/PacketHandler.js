@@ -2,7 +2,6 @@ const BufferCodec = require('buffercodec');
 const EventEmitter = require('common/EventEmitter');
 const Action = require('client/actions');
 const OPCode = require('common/opCode');
-const Schema = require('common/schemas');
 
 class PacketHandler {
   constructor() {
@@ -31,7 +30,7 @@ class PacketHandler {
     this._socket = new WebSocket(this._uri);
     this._socket.binaryType = 'arraybuffer';
 
-    this._socket.onopen = event => {
+    this._socket.onopen = () => {
       this.fire('open');
 
       this._socket.onmessage = this._handleMessage.bind(this);
@@ -40,7 +39,7 @@ class PacketHandler {
 
   _handleMessage(message) {
     const codec = BufferCodec(message.data);
-    const code = this._getOpCode(codec);
+    const code = PacketHandler._getOpCode(codec);
 
     if (code in Action) {
       const ActionClass = Action[code];
@@ -57,7 +56,7 @@ class PacketHandler {
     }
   }
 
-  _getOpCode(codec) {
+  static _getOpCode(codec) {
     return codec.parse({ code: 'uint8' }, obj => obj.code);
   }
 }

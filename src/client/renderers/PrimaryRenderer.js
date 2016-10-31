@@ -10,9 +10,8 @@ class PrimaryRenderer extends IRenderer {
       x: posX,
       y: posY,
       radius: model.radius,
-      fillColor: PrimaryRenderer._getColorInRGB(model.color)
+      fillColor: PrimaryRenderer._getColorInRGB(model.color),
     });
-    
   }
 
   static _getColorInRGB(color) {

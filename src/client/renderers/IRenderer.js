@@ -1,5 +1,5 @@
 class IRenderer {
-  static draw(model, canvasContext) {
+  static draw() {
     console.error(`Method draw() was not initialized in ${this.constructor.name}`);
   }
 }

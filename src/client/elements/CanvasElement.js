@@ -36,7 +36,7 @@ class CanvasElement extends Element {
 
   bindEvents() {
     window.addEventListener('resize', this._setDefaultSize.bind(this));
-    
+
     this._canvasElement.on('contextmenu', event => event.preventDefault());
     this._canvasElement.on('mousemove', this._onMouseMove.bind(this));
     this._canvasElement.on('mousedown', this._onMouseDown.bind(this));
@@ -72,7 +72,7 @@ class CanvasElement extends Element {
 
     this._mousePosition = {
       x: Math.round(event.x) + this._renderer.camera.scrollX,
-      y: Math.round(event.y) + this._renderer.camera.scrollY
+      y: Math.round(event.y) + this._renderer.camera.scrollY,
     };
 
     this._renderer.scrollDirection = scrollDirection;
@@ -89,18 +89,18 @@ class CanvasElement extends Element {
 
         this.fire('playerMove', {
           x: this._mousePosition.x,
-          y: this._mousePosition.y
+          y: this._mousePosition.y,
         });
       }
     }
   }
 
   _setDefaultSize() {
-    this._canvasElement.htmlElement.width = this._getDefaultWidth();
-    this._canvasElement.htmlElement.height = this._getDefaultHeight();
+    this._canvasElement.htmlElement.width = CanvasElement._getDefaultWidth();
+    this._canvasElement.htmlElement.height = CanvasElement._getDefaultHeight();
   }
 
-  _getDefaultWidth() {
+  static _getDefaultWidth() {
     return window.innerWidth && document.documentElement.clientWidth
       ? Math.min(window.innerWidth, document.documentElement.clientWidth)
       : window.innerWidth ||
@@ -108,7 +108,7 @@ class CanvasElement extends Element {
       document.getElementsByTagName('body')[0].clientWidth;
   }
 
-  _getDefaultHeight() {
+  static _getDefaultHeight() {
     return window.innerHeight && document.documentElement.clientHeight
       ? Math.min(window.innerHeight, document.documentElement.clientHeight)
       : window.innerHeight ||

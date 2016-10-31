@@ -13,10 +13,12 @@ const schemas = {
   [OPCode.UPDATE_SPELLS]: require('common/schemas/UpdateSpells'),
 };
 
-module.exports.get = opCode => {
+module.exports.get = (opCode) => {
   if (opCode in schemas) {
     return schemas[opCode];
-  } else {
-    console.error(`Unable to find schema for ${OPCode.getName(opCode)}.`);
   }
+
+  console.error(`Unable to find schema for ${OPCode.getName(opCode)}.`);
+
+  return null;
 };

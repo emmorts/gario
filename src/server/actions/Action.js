@@ -28,6 +28,6 @@ class Action {
     return null;
   }
 
-};
+}
 
 module.exports = Action;

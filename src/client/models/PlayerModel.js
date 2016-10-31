@@ -15,12 +15,16 @@ class PlayerModel extends Player {
 
     if (this._animateCast) {
       this._updateAnimation();
-    }    
+    }
   }
-  
+
   onCast(spell) {
     this._animateCast = true;
-    this.targetRotation = Math.atan2(spell.target.y - this.position.y, spell.target.x - this.position.x);
+
+    const diffX = spell.target.x - this.position.x;
+    const diffY = spell.target.y - this.position.y;
+
+    this.targetRotation = Math.atan2(diffY, diffX);
   }
 
   _initialize(playerModel) {
@@ -32,38 +36,43 @@ class PlayerModel extends Player {
       this.name = playerModel.name;
       this.health = playerModel.health;
       this.maxHealth = playerModel.maxHealth;
-      
+
       this.color = {
         r: playerModel.color.r,
         g: playerModel.color.g,
-        b: playerModel.color.b
+        b: playerModel.color.b,
       };
-      
+
       this.position = {
         x: playerModel.position.x,
-        y: playerModel.position.y
+        y: playerModel.position.y,
       };
-      
+
       this.target = {
         x: (playerModel.target ? playerModel.target.x : playerModel.position.x),
-        y: (playerModel.target ? playerModel.target.y : playerModel.position.y)
+        y: (playerModel.target ? playerModel.target.y : playerModel.position.y),
       };
     } else {
       console.error('Unable to construct player object - no model given.');
     }
   }
-  
+
   _updateAnimation() {
     if (this._castTicks > 0) {
-      const sign = Math.sign(this._castTicks - this._baseCastTicks / 2);
-      this.radius += sign * (this._maxRadius - this.radius) / 4;
-      this._castTicks--;
+      const sign = Math.sign(this._castTicks - (this._baseCastTicks / 2));
+      const radius = sign * (this._maxRadius - this.radius);
+
+      this.radius += radius / 4;
+      this._castTicks -= 1;
     } else {
       this.radius = this._baseRadius;
       this._castTicks = this._baseCastTicks;
       this._animateCast = false;
 
-      this.targetRotation = Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
+      const diffX = this.target.x - this.position.x;
+      const diffY = this.target.y - this.position.y;
+
+      this.targetRotation = Math.atan2(diffY, diffX);
     }
   }
 }

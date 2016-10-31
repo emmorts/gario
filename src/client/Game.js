@@ -26,16 +26,16 @@ class Game {
 
   static getInstance() {
     if (instance) {
-      return instance;
-    } else {
-      return instance = new Game();
+      instance = new Game();
     }
+
+    return instance;
   }
-  
+
   set renderer(value) {
     if (value && this._renderer !== value) {
       this._renderer = value;
-      
+
       this._onRendererChanged();
     }
   }
@@ -43,8 +43,7 @@ class Game {
   startGame(playerName, onConnection) {
     this.packetHandler = new PacketHandler();
 
-    this.packetHandler.on('open', function startGame() {
-      
+    this.packetHandler.on('open', () => {
       this.packetHandler.on('addPlayer', this._handleAddPlayer.bind(this));
       this.packetHandler.on('initializeMap', this._handleInitializeMap.bind(this));
       this.packetHandler.on('updatePlayers', this._handleUpdatePlayers.bind(this));
@@ -56,7 +55,7 @@ class Game {
 
       this._onStart(onConnection);
       this._gameLoop(present());
-    }.bind(this));
+    });
 
     return this;
   }
@@ -70,14 +69,14 @@ class Game {
 
   _gameLoop(timestamp) {
     const deltaT = timestamp - this._lastUpdate;
-    
-    this._gameLoopHandle = window.requestAnimationFrame(timestamp => this._gameLoop(timestamp));
+
+    this._gameLoopHandle = window.requestAnimationFrame(time => this._gameLoop(time));
 
     this.update(deltaT);
 
     // TODO: Remove this from here
     DebugRenderer.draw(this, this._renderer, deltaT);
-    
+
     this._lastUpdate = timestamp;
   }
 
@@ -110,7 +109,7 @@ class Game {
     this._renderer.camera.follow(this.currentPlayer);
   }
 
-  _handleInitializeMap(map){
+  _handleInitializeMap(map) {
     this.map = new ArenaMap(map);
 
     // HACK! Remove once indexed priority queue is implemented
@@ -121,7 +120,7 @@ class Game {
   _handleUpdatePlayers(players) {
     const updatedPlayers = players.updatedPlayers;
     if (updatedPlayers && updatedPlayers.length > 0) {
-      updatedPlayers.forEach(updatedPlayer => {
+      updatedPlayers.forEach((updatedPlayer) => {
         const foundPlayer = this.playerList.get(updatedPlayer.id, 'id');
         if (foundPlayer) {
           foundPlayer.setTarget(updatedPlayer.target);
@@ -146,15 +145,15 @@ class Game {
   _handleUpdateSpells(spells) {
     const updatedSpells = spells.updatedSpells;
     if (updatedSpells && updatedSpells.length > 0) {
-      updatedSpells.forEach(updatedSpell => {
+      updatedSpells.forEach((updatedSpell) => {
         const spellModel = Factory.instantiate(
           OPCode.TYPE_SPELL,
           OPCode.SPELL_PRIMARY,
           updatedSpell
         );
-        
+
         spellModel.onAdd(this.playerList.get(spellModel.ownerId, 'ownerId'));
-        
+
         this.spellList.add(spellModel);
       }, this);
     }
@@ -174,7 +173,7 @@ class Game {
 
       this.spellList.delete(spell.id, 'id');
     } else {
-      console.warn(`Collision object malformed, unable to find actor or collider.`);
+      console.warn('Collision object malformed, unable to find actor or collider.');
     }
   }
 

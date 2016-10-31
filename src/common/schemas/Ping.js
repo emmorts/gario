@@ -2,7 +2,7 @@ const Schema = require('common/Schema');
 const OPCode = require('common/opCode');
 
 module.exports = new Schema(OPCode.PING, {
-  timestamp: 'string'
+  timestamp: 'string',
 }, object => ({
-  timestamp: Number(object.timestamp)
+  timestamp: Number(object.timestamp),
 }));

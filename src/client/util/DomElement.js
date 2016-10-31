@@ -5,7 +5,7 @@ class DomElement {
     this._disabled = false;
     this._visible = true;
     this._eventHandlers = [];
-    
+
     if (query) {
       this.htmlElement = window.document.querySelector(query);
     }
@@ -26,7 +26,7 @@ class DomElement {
   get isVisible() {
     return this._visible;
   }
-  
+
   enable() {
     if (this.htmlElement) {
       this._disabled = false;
@@ -62,21 +62,21 @@ class DomElement {
 
     return this;
   }
-  
+
   on(name, listener) {
     if (!this.htmlElement) {
-      console.error("Adding an event listener failed due to missing HTML node.");
+      console.error('Adding an event listener failed due to missing HTML node.');
     } else {
       if (!(name in this._eventHandlers) || !(this._eventHandlers[name] instanceof Array)) {
         this._eventHandlers[name] = [];
       }
       if (!~this._eventHandlers[name].indexOf(listener)) {
         this._eventHandlers[name].push(listener);
-        
+
         this.htmlElement.addEventListener(name, listener);
       }
     }
-    
+
     return this;
   }
 }

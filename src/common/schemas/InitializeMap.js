@@ -7,18 +7,16 @@ module.exports = new Schema(OPCode.INITIALIZE_MAP, {
   tileSize: 'uint8',
   mapRows: [{
     mapColumns: [{
-      value: 'uint8'
-    }]
-  }]
+      value: 'uint8',
+    }],
+  }],
 }, (arena) => {
-  const tiledMap = arena.mapRows.map(row => {
-    return row.mapColumns.map(column => column.value);
-  });
+  const tiledMap = arena.mapRows.map(row => row.mapColumns.map(column => column.value));
 
   return {
     width: arena.width,
     height: arena.height,
     tileSize: arena.tileSize,
-    tiledMap
+    tiledMap,
   };
 });

@@ -5,10 +5,10 @@ class SpellFactory {
   static instantiate(type) {
     if (spells) {
       const args = Array.prototype.slice.call(arguments, 1);
-      const spell = spells[type];
+      const Spell = spells[type];
 
-      if (spell) {
-        return new spell(...args);
+      if (Spell) {
+        return new Spell(...args);
       }
     }
 

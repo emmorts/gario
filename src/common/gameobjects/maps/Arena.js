@@ -1,5 +1,4 @@
 const GameObject = require('common/GameObject');
-const Tileset = require('common/Tileset');
 
 class Arena extends GameObject {
   constructor() {
@@ -8,7 +7,7 @@ class Arena extends GameObject {
     this.tileSize = null;
     this.cubicWidth = null;
     this.cubicHeight = null;
-  
+
     this.tiledMap = null;
   }
 }

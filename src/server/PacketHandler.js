@@ -33,7 +33,7 @@ class PacketHandler {
       const code = codec.parse({ code: 'uint8' }, obj => obj.code);
 
       if (code in Action) {
-        const ActionClass = Action[code]; 
+        const ActionClass = Action[code];
         const action = new ActionClass(this.gameServer, this.socket);
         const buffer = codec.getBuffer(true);
 
@@ -46,7 +46,7 @@ class PacketHandler {
         console.error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
       }
     } else {
-      console.log("An empty message was received.");
+      console.log('An empty message was received.');
     }
   }
 
@@ -62,8 +62,8 @@ class PacketHandler {
   _sendBuffer(buffer) {
     if (!buffer) {
       console.log('Empty buffer received, skipping message.');
-    } else if (this.socket.readyState == WebSocket.OPEN) {
-      this.socket.send(buffer, { binary: true }, error => {
+    } else if (this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(buffer, { binary: true }, (error) => {
         if (error) {
           console.log(`Failed to send a message('${error}').`);
         }

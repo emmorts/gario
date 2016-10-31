@@ -23,11 +23,11 @@ class GameRenderer {
     // TODO: Current solution is ineffective, should only clear the screen of what was drawn
     this.context.clearRect(0, 0, this.width, this.height);
 
-    this._gameObjects.forEach(gameObject => {
+    this._gameObjects.forEach((gameObject) => {
       gameObject.renderer.draw(gameObject, this, deltaT);
     });
   }
-  
+
   add(gameObject) {
     if (gameObject && this._gameObjects.indexOf(gameObject) === -1) {
       if (gameObject.renderer) {

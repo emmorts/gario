@@ -3,5 +3,5 @@ const OPCode = require('common/opCode');
 
 module.exports = new Schema(OPCode.COLLISION, {
   actorId: 'string',
-  colliderId: 'string'
+  colliderId: 'string',
 });

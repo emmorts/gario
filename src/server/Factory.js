@@ -2,7 +2,7 @@ const factories = require('server/factories');
 
 class Factory {
 
-  static instantiate(classType, type) {
+  static instantiate(classType) {
     if (factories) {
       const args = Array.prototype.slice.call(arguments, 1);
       const factory = factories[classType];

@@ -20,7 +20,7 @@ class AddPlayer extends Action {
         y: object.position.y,
         r: object.color.r,
         g: object.color.g,
-        b: object.color.b
+        b: object.color.b,
       };
 
       return this.actionSchema.encode(player);

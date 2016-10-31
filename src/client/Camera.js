@@ -3,7 +3,7 @@ const OPCode = require('common/opCode');
 class Camera {
   constructor(renderer) {
     this.renderer = renderer;
-    
+
     this._followee = null;
     this._scrollSpeed = 4;
     this._scrollLimit = 200;
@@ -13,18 +13,18 @@ class Camera {
 
   get scrollX() {
     if (this._followee) {
-      return this._followee.position.x + this.offsetX - this.renderer.width / 2;
+      return (this._followee.position.x + this.offsetX) - (this.renderer.width / 2);
     }
 
-    return 0; 
+    return 0;
   }
 
   get scrollY() {
     if (this._followee) {
-      return this._followee.position.y + this.offsetY - this.renderer.height / 2;
+      return (this._followee.position.y + this.offsetY) - (this.renderer.height / 2);
     }
 
-    return 0; 
+    return 0;
   }
 
   get offsetX() {
@@ -42,7 +42,7 @@ class Camera {
   set offsetY(value) {
     this._offsetY = Math.sign(value) * Math.min(this._scrollLimit, Math.abs(value));
   }
-  
+
   follow(gameObject) {
     if (gameObject) {
       if (gameObject.position) {
@@ -52,8 +52,8 @@ class Camera {
       }
     }
   }
-  
-  update(direction, deltaT) {
+
+  update(direction) {
     switch (direction) {
       case OPCode.DIRECTION_NWEST:
         this.offsetX -= this._scrollSpeed;
@@ -98,9 +98,9 @@ class Camera {
   }
 
   // TODO: Implement this, you nig
-  easeInQuad(elapsed, start, end, total) {
-    return end * (elapsed /= total) * elapsed + start;
-  }
+  // easeInQuad(elapsed, start, end, total) {
+  //   return end * (elapsed /= total) * elapsed + start;
+  // }
 }
 
 module.exports = Camera;

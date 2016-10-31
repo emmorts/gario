@@ -14,28 +14,26 @@ module.exports = new Schema(OPCode.UPDATE_SPELLS, {
     targetY: 'int16le',
     r: 'uint8',
     g: 'uint8',
-    b: 'uint8'
+    b: 'uint8',
   }],
   destroyedSpells: [{
-    id: { type: 'string', length: 32 }
-  }]
+    id: { type: 'string', length: 32 },
+  }],
 }, (object) => {
-  const updatedSpells = object.updatedSpells.map(spell => {
-    return {
-      id: spell.id,
-      ownerId: spell.ownerId,
-      type: spell.type,
-      mass: spell.mass,
-      power: spell.power,
-      position: { x: spell.x, y: spell.y },
-      target: { x: spell.targetX, y: spell.targetY },
-      color: { r: spell.r, g: spell.g, b: spell.b }
-    };
-  });
+  const updatedSpells = object.updatedSpells.map(spell => ({
+    id: spell.id,
+    ownerId: spell.ownerId,
+    type: spell.type,
+    mass: spell.mass,
+    power: spell.power,
+    position: { x: spell.x, y: spell.y },
+    target: { x: spell.targetX, y: spell.targetY },
+    color: { r: spell.r, g: spell.g, b: spell.b },
+  }));
   const destroyedSpells = object.destroyedSpells.map(spell => spell.id);
-  
+
   return {
     updatedSpells,
-    destroyedSpells
+    destroyedSpells,
   };
 });

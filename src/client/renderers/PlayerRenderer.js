@@ -8,7 +8,7 @@ class PlayerRenderer extends IRenderer {
 
     const playerColor = PlayerRenderer._getColorInRGB(model.color);
     const arcLength = 2 * (model.health / model.maxHealth) * Math.PI;
-    const deficit = (2 * Math.PI - arcLength) / 2;
+    const deficit = ((2 * Math.PI) - arcLength) / 2;
     const arcStart = model.rotation + deficit;
     const arcEnd = arcLength + model.rotation + deficit;
 
@@ -16,7 +16,7 @@ class PlayerRenderer extends IRenderer {
       x: posX,
       y: posY,
       radius: model.radius,
-      fillColor: model.health > 0 ? playerColor : 'rgb(69, 69, 69)'
+      fillColor: model.health > 0 ? playerColor : 'rgb(69, 69, 69)',
     });
 
     CanvasHelper.arc(renderer.context, {
@@ -26,7 +26,7 @@ class PlayerRenderer extends IRenderer {
       start: arcStart,
       end: arcEnd,
       strokeWidth: 6,
-      strokeColor: PlayerRenderer._getHealthColor(model.health, model.maxHealth)
+      strokeColor: PlayerRenderer._getHealthColor(model.health, model.maxHealth),
     });
 
     CanvasHelper.text(renderer.context, {
@@ -34,7 +34,7 @@ class PlayerRenderer extends IRenderer {
       x: posX,
       y: posY - 40,
       borderWidth: 3,
-      textAlign: 'center'
+      textAlign: 'center',
     });
   }
 
@@ -45,9 +45,9 @@ class PlayerRenderer extends IRenderer {
 
     return 'rgb(0, 0, 0)';
   }
-  
+
   static _getHealthColor(health, maxHealth) {
-    const hue = Math.floor(120 * health / maxHealth);
+    const hue = Math.floor((120 * health) / maxHealth);
 
     return `hsl(${hue}, 100%, 50%)`;
   }

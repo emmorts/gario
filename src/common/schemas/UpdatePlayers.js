@@ -14,28 +14,26 @@ module.exports = new Schema(OPCode.UPDATE_PLAYERS, {
     targetY: 'int16le',
     r: 'uint8',
     g: 'uint8',
-    b: 'uint8'
+    b: 'uint8',
   }],
   destroyedPlayers: [{
-    id: { type: 'string', length: 32 }
-  }]
+    id: { type: 'string', length: 32 },
+  }],
 }, (object) => {
-  const updatedPlayers = object.updatedPlayers.map(player => {
-    return {
-      id: player.id,
-      ownerId: player.ownerId,
-      name: player.name,
-      health: player.health,
-      maxHealth: player.maxHealth,
-      position: { x: player.x, y: player.y },
-      target: { x: player.targetX, y: player.targetY },
-      color: { r: player.r, g: player.g, b: player.b }
-    };
-  });
+  const updatedPlayers = object.updatedPlayers.map(player => ({
+    id: player.id,
+    ownerId: player.ownerId,
+    name: player.name,
+    health: player.health,
+    maxHealth: player.maxHealth,
+    position: { x: player.x, y: player.y },
+    target: { x: player.targetX, y: player.targetY },
+    color: { r: player.r, g: player.g, b: player.b },
+  }));
   const destroyedPlayers = object.destroyedPlayers.map(player => player.id);
-  
+
   return {
     updatedPlayers,
-    destroyedPlayers
+    destroyedPlayers,
   };
 });

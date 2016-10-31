@@ -15,7 +15,7 @@ class PlayerMove extends Action {
     if (this.actionSchema) {
       return this.actionSchema.encode({
         x: object.target.x,
-        y: object.target.y
+        y: object.target.y,
       });
     }
 

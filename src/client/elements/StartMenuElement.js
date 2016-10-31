@@ -23,7 +23,7 @@ class StartMenuElement extends Element {
     this._playButtonElement = new DomElement('.js-play-button')
       .on('mouseup', this._onPlayClick.bind(this));
     this._errorElement = new DomElement('.js-error');
- 
+
     this._validate();
 
     return this;
