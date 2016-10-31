@@ -8,10 +8,10 @@ class ArenaMap extends Arena {
     this.renderer = ArenaRenderer;
 
     this.tileSize = arena.tileSize;
-    this.cubicWidth = arena.cubicWidth;
-    this.cubicHeight = arena.cubicHeight;
+    this.widht = arena.widht;
+    this.height = arena.height;
 
-    this.tiledMap = arena.tiledMap;
+    this.map = arena.map;
   }
 
 }

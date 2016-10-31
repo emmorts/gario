@@ -1,4 +1,6 @@
-const operations = [
+const Enumeration = require('common/Enumeration');
+
+module.exports = new Enumeration([
   'PING',
   'PONG',
   'SPAWN_PLAYER',
@@ -19,6 +21,9 @@ const operations = [
   // models
   'MODEL_PLAYER',
 
+  // maps
+  'MAP_ARENA',
+
   // direction
   'DIRECTION_WEST',
   'DIRECTION_EAST',
@@ -34,18 +39,4 @@ const operations = [
   'TYPE_MODEL',
   'TYPE_GAMEMODE',
   'TYPE_MAP',
-];
-
-const opCodes = {};
-
-operations.forEach((op, index) => {
-  opCodes[op] = index + 1;
-});
-
-module.exports.getName = (opCode) => {
-  Object.keys(opCodes).find(propertyName => opCodes[propertyName] === opCode);
-
-  return null;
-};
-
-module.exports = opCodes;
+]);

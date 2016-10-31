@@ -4,7 +4,6 @@ const OPCode = require('common/opCode');
 const EventEmitter = require('common/EventEmitter');
 const PacketHandler = require('client/PacketHandler');
 const Factory = require('client/Factory');
-const ArenaMap = require('client/maps/ArenaMap');
 const DebugRenderer = require('client/renderers/DebugRenderer');
 
 let instance = null;
@@ -14,7 +13,7 @@ class Game {
     EventEmitter.attach(this);
 
     this.currentPlayer = null;
-    this.map = null;
+    this.arena = null;
     this.playerList = new SmartMap('id', 'ownerId');
     this.spellList = new SmartMap('id');
     this.ping = 0;
@@ -25,7 +24,7 @@ class Game {
   }
 
   static getInstance() {
-    if (instance) {
+    if (!instance) {
       instance = new Game();
     }
 
@@ -110,11 +109,14 @@ class Game {
   }
 
   _handleInitializeMap(map) {
-    this.map = new ArenaMap(map);
+    const mapModel = Factory.instantiate(
+      OPCode.TYPE_MAP,
+      OPCode.MAP_ARENA,
+      map
+    );
 
     // HACK! Remove once indexed priority queue is implemented
-    this._renderer._gameObjects.splice(0, 0, this.map);
-    // this._renderer.add(this.map);
+    this._renderer._gameObjects.splice(0, 0, mapModel);
   }
 
   _handleUpdatePlayers(players) {

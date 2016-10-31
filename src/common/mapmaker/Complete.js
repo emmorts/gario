@@ -1,7 +1,7 @@
 const Tileset = require('common/Tileset');
 
 module.exports = (width,height) => {
-    const tiledMap = new Array(height);
+    const map = new Array(height);
 
     for (let row = 0; row < height; row++ ) {
       tiledMap[row] = new Array(width);
@@ -10,5 +10,5 @@ module.exports = (width,height) => {
         tiledMap[row][column] = Tileset.FLAT;
       }
     }
-    return tiledMap;
+    return map;
 };

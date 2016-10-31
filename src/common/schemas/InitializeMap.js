@@ -11,12 +11,12 @@ module.exports = new Schema(OPCode.INITIALIZE_MAP, {
     }],
   }],
 }, (arena) => {
-  const tiledMap = arena.mapRows.map(row => row.mapColumns.map(column => column.value));
+  const map = arena.mapRows.map(row => row.mapColumns.map(column => column.value));
 
   return {
     width: arena.width,
     height: arena.height,
     tileSize: arena.tileSize,
-    tiledMap,
+    map,
   };
 });

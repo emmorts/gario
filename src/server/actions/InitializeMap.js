@@ -7,18 +7,18 @@ class InitializeMap extends Action {
     super(OPCode.INITIALIZE_MAP, ...arguments);
   }
 
-  build(arena) {
-  if ('tiledMap' in arena) {
+  build(map) {
+    if ('tiledMap' in map) {
       if (this.actionSchema) {
         const flattenedObject = {
-          width: arena.width,
-          height: arena.height,
-          tileSize: arena.tileSize,
-          mapRows: arena.tiledMap.map(row => ({
+          width: map.width,
+          height: map.height,
+          tileSize: map.tileSize,
+          mapRows: map.tiledMap.map(row => ({
             mapColumns: row.map(column => ({
-              value: column
-            }))
-          })) 
+              value: column,
+            })),
+          })),
         };
 
         return this.actionSchema.encode(flattenedObject);

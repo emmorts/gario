@@ -1,7 +1,8 @@
 const config = require('server/config');
 const Mode = require('server/gamemodes/Mode');
-const MapBuilder = require('server/maps/MapBuilder');
-const MapNames = require('common/MapName');
+// const ArenaBuilder = require('server/arenas/ArenaBuilder');
+// const MapNames = require('common/MapName');
+const ArenaMap = require('server/maps/ArenaMap');
 
 class FFA extends Mode {
   constructor(gameServer) {
@@ -14,11 +15,12 @@ class FFA extends Mode {
   }
 
   onServerInit() {
-    const mapBuilder = new MapBuilder();
-    mapBuilder.setCube(32);
-    mapBuilder.setTileSize(16);
-    mapBuilder.setMapName(MapNames.HOLY);
-    this.map = mapBuilder.constructMap();
+    this.map = new ArenaMap()
+      .setWidth(32)
+      .setHeight(32)
+      .setTileSize(32)
+      .setType('DONUT')
+      .build();
   }
 
   onPlayerSpawn(player) {
@@ -36,9 +38,13 @@ class FFA extends Mode {
 
   static _getRandomPosition() {
     return {
-      x: Math.floor(Math.random() * config.gameWidth),
-      y: Math.floor(Math.random() * config.gameHeight),
+      x: 0,
+      y: 0,
     };
+    // return {
+    //   x: Math.floor(Math.random() * config.gameWidth),
+    //   y: Math.floor(Math.random() * config.gameHeight),
+    // };
   }
 
   static _getRandomColor() {
