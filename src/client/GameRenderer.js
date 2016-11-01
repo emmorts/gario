@@ -1,31 +1,43 @@
-const Camera = require('client/Camera');
-
 class GameRenderer {
-  constructor(canvasContext) {
+  constructor(canvasContext, camera) {
     this.context = canvasContext;
+    this.camera = camera;
     this.scrollDirection = null;
-    this.camera = new Camera(this);
 
     this._gameObjects = [];
   }
 
   get width() {
-    return this.context.canvas.clientWidth;
+    if (this.context) {
+      return this.context.canvas.clientWidth;
+    }
+
+    return null;
   }
 
   get height() {
-    return this.context.canvas.clientHeight;
+    if (this.context) {
+      return this.context.canvas.clientHeight;
+    }
+
+    return null;
   }
 
   draw(deltaT) {
-    this.camera.update(this.scrollDirection, deltaT);
+    if (this.context) {
+      this.camera.update(this.scrollDirection, deltaT);
 
-    // TODO: Current solution is ineffective, should only clear the screen of what was drawn
-    this.context.clearRect(0, 0, this.width, this.height);
+      this.context.clearRect(
+        this.camera.scrollX,
+        this.camera.scrollY,
+        this.width,
+        this.height
+      );
 
-    this._gameObjects.forEach((gameObject) => {
-      gameObject.renderer.draw(gameObject, this, deltaT);
-    });
+      this._gameObjects.forEach((gameObject) => {
+        gameObject.renderer.draw(gameObject, this, deltaT);
+      });
+    }
   }
 
   add(gameObject) {

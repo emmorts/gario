@@ -97,6 +97,18 @@ body {
   font-size: 0;
 }
 
-  .game .game-canvas {
-    position: relative;
+  .game .map-canvas {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+  }
+  
+  .game .gameobject-canvas {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
   }

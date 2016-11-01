@@ -26,8 +26,8 @@ class ArenaRenderer extends IRenderer {
 
         if (tileType !== Tileset.LAVA) {
           CanvasHelper.square(renderer.context, {
-            x: tileStartX,
-            y: tileStartY,
+            x: tileStartX | 0,
+            y: tileStartY | 0,
             width: tileSize + 1,
             height: tileSize + 1,
             fillColor: MapTiles[tileType].color,

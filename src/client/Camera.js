@@ -1,11 +1,12 @@
 const OPCode = require('common/opCode');
 
 class Camera {
-  constructor(renderer) {
-    this.renderer = renderer;
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
 
     this._followee = null;
-    this._scrollSpeed = 4;
+    this._scrollSpeed = 8;
     this._scrollLimit = 200;
     this._offsetX = 0;
     this._offsetY = 0;
@@ -13,7 +14,7 @@ class Camera {
 
   get scrollX() {
     if (this._followee) {
-      return (this._followee.position.x + this.offsetX) - (this.renderer.width / 2);
+      return (this._followee.position.x + this.offsetX) - (this.width / 2);
     }
 
     return 0;
@@ -21,7 +22,7 @@ class Camera {
 
   get scrollY() {
     if (this._followee) {
-      return (this._followee.position.y + this.offsetY) - (this.renderer.height / 2);
+      return (this._followee.position.y + this.offsetY) - (this.height / 2);
     }
 
     return 0;

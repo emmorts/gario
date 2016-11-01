@@ -3,12 +3,14 @@ const DomElement = require('client/util/DomElement');
 const KeyCode = require('client/util/KeyCode');
 const GameRenderer = require('client/GameRenderer');
 const OPCode = require('common/opCode');
+const Camera = require('client/Camera');
 
 class CanvasElement extends Element {
-  constructor() {
+  constructor(name) {
     super();
 
     this._renderer = null;
+    this._camera = null;
     this._canvasElement = null;
     this._canvasContext = null;
     this._scrollOffset = 0.9;
@@ -16,7 +18,7 @@ class CanvasElement extends Element {
     this._targetTick = performance.now();
 
     this
-      .bind()
+      .bind(name)
       .bindEvents();
   }
 
@@ -24,12 +26,18 @@ class CanvasElement extends Element {
     return this._renderer;
   }
 
-  bind() {
-    this._canvasElement = new DomElement('.js-canvas');
+  bind(name) {
+    this._canvasElement = new DomElement(name);
     this._canvasContext = this._canvasElement.htmlElement.getContext('2d');
-    this._renderer = new GameRenderer(this._canvasContext);
 
     this._setDefaultSize();
+
+    this._camera = new Camera(
+      this._canvasElement.htmlElement.width,
+      this._canvasElement.htmlElement.height
+    );
+
+    this._renderer = new GameRenderer(this._canvasContext, this._camera);
 
     return this;
   }
@@ -96,8 +104,16 @@ class CanvasElement extends Element {
   }
 
   _setDefaultSize() {
-    this._canvasElement.htmlElement.width = CanvasElement._getDefaultWidth();
-    this._canvasElement.htmlElement.height = CanvasElement._getDefaultHeight();
+    const defaultWidth = CanvasElement._getDefaultWidth();
+    const defaultHeight = CanvasElement._getDefaultHeight();
+
+    this._canvasElement.htmlElement.width = defaultWidth;
+    this._canvasElement.htmlElement.height = defaultHeight;
+
+    if (this._camera) {
+      this._camera.width = defaultWidth;
+      this._camera.height = defaultHeight;
+    }
   }
 
   static _getDefaultWidth() {

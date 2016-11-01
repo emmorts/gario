@@ -3,8 +3,8 @@ const CanvasHelper = require('client/util/CanvasHelper');
 
 class PlayerRenderer extends IRenderer {
   static draw(model, renderer) {
-    const posX = model.position.x - renderer.camera.scrollX;
-    const posY = model.position.y - renderer.camera.scrollY;
+    const posX = (model.position.x - renderer.camera.scrollX) | 0;
+    const posY = (model.position.y - renderer.camera.scrollY) | 0;
 
     const playerColor = PlayerRenderer._getColorInRGB(model.color);
     const arcLength = 2 * (model.health / model.maxHealth) * Math.PI;

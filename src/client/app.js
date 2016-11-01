@@ -8,8 +8,12 @@ const CanvasElement = require('client/elements/CanvasElement');
 
 const game = Game.getInstance();
 
+// window.addEventListener('mousemove', (event) => {
+
+// });
+
 function startGame(playerName) {
-  const canvas = new CanvasElement()
+  const canvas = new CanvasElement('.js-gameobject-canvas')
     .on('playerMove', (target) => {
       if (game.currentPlayer.health > 0) {
         game.currentPlayer.setTarget({

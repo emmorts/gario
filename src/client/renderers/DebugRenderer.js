@@ -38,7 +38,7 @@ class DebugRenderer extends IRenderer {
     });
 
     CanvasHelper.text(renderer.context, {
-      text: `FPS: ${~~(1000 / deltaT) | 0}`,
+      text: `FPS: ${(1000 / deltaT) | 0}`,
       x: 30,
       y: 130,
     });
