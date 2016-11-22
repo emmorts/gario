@@ -1,3 +1,5 @@
+const Logger = require('client/Logger');
+
 class DomElement {
   constructor(query) {
     this.htmlElement = null;
@@ -65,7 +67,7 @@ class DomElement {
 
   on(name, listener) {
     if (!this.htmlElement) {
-      console.error('Adding an event listener failed due to missing HTML node.');
+       Loggger.getInstance().error('Adding an event listener failed due to missing HTML node.');
     } else {
       if (!(name in this._eventHandlers) || !(this._eventHandlers[name] instanceof Array)) {
         this._eventHandlers[name] = [];

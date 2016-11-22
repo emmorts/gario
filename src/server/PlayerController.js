@@ -1,6 +1,7 @@
 const uuid = require('node-uuid');
 const OPCode = require('common/opCode');
 const Factory = require('server/Factory');
+const Logger = require('server/Logger');
 
 class PlayerController {
   constructor(gameServer, socket) {
@@ -24,7 +25,7 @@ class PlayerController {
       return this.socket.packetHandler;
     }
 
-    console.log(`Player '${this.pId}' does not have an attached socket.`);
+     Loggger.getInstance().log(`Player '${this.pId}' does not have an attached socket.`);
 
     return null;
   }

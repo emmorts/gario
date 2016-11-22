@@ -1,4 +1,5 @@
 const OPCode = require('common/opCode');
+const Logger = require('client/Logger');
 
 class Camera {
   constructor(width, height) {
@@ -49,7 +50,7 @@ class Camera {
       if (gameObject.position) {
         this._followee = gameObject;
       } else {
-        console.error(`Game object ${this._followee.constructor.name} does not have a position to follow.`);
+         Loggger.getInstance().error(`Game object ${this._followee.constructor.name} does not have a position to follow.`);
       }
     }
   }

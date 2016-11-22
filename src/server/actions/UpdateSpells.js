@@ -33,7 +33,7 @@ class UpdateSpells extends Action {
         return this.actionSchema.encode(flattenedObject);
       }
     } else {
-      console.error(`Malformed object supplied in ${this.constructor.name}.build()`);
+       Loggger.getInstance().error(`Malformed object supplied in ${this.constructor.name}.build()`);
     }
 
     return null;

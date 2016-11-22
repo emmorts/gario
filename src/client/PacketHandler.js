@@ -2,6 +2,7 @@ const BufferCodec = require('buffercodec');
 const EventEmitter = require('common/EventEmitter');
 const Action = require('client/actions');
 const OPCode = require('common/opCode');
+const Logger = require('client/Logger');
 
 class PacketHandler {
   constructor() {
@@ -22,7 +23,7 @@ class PacketHandler {
         this._socket.send(buffer);
       }
     } else {
-      console.error(`Operation '${OPCode.getName(opCode)}' does not cover any action.'`);
+       Loggger.getInstance().error(`Operation '${OPCode.getName(opCode)}' does not cover any action.'`);
     }
   }
 
@@ -52,7 +53,7 @@ class PacketHandler {
         this.fire(ActionClass.eventName, actionResult);
       }
     } else {
-      console.error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
+       Loggger.getInstance().error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
     }
   }
 

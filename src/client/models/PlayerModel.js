@@ -1,5 +1,6 @@
 const Player = require('common/gameobjects/models/Player');
 const PlayerRenderer = require('client/renderers/PlayerRenderer');
+const Logger = require('client/Logger');
 
 class PlayerModel extends Player {
   constructor(playerModel) {
@@ -53,7 +54,7 @@ class PlayerModel extends Player {
         y: (playerModel.target ? playerModel.target.y : playerModel.position.y),
       };
     } else {
-      console.error('Unable to construct player object - no model given.');
+       Loggger.getInstance().error('Unable to construct player object - no model given.');
     }
   }
 

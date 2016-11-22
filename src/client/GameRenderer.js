@@ -1,3 +1,5 @@
+const Logger = require('client/Logger');
+
 class GameRenderer {
   constructor(canvasContext, camera) {
     this.context = canvasContext;
@@ -45,7 +47,7 @@ class GameRenderer {
       if (gameObject.renderer) {
         this._gameObjects.push(gameObject);
       } else {
-        console.warn(`Game object ${gameObject.constructor.name} does not have a renderer.`);
+         Loggger.getInstance().warn(`Game object ${gameObject.constructor.name} does not have a renderer.`);
       }
     }
   }

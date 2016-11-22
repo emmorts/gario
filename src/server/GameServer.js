@@ -5,13 +5,13 @@ const PacketHandler = require('server/PacketHandler');
 const PlayerController = require('server/PlayerController');
 const GameMode = require('server/gamemodes');
 const OPCode = require('common/opCode');
+const Logger = require('server/Logger');
 
 const WebSocketServer = WebSocket.Server;
 
 class GameServer {
   constructor(server) {
     this.debug = process.env.DEVELOPMENT;
-
     this.sockets = [];
     this.players = [];
     this.spells = [];
@@ -150,11 +150,11 @@ class GameServer {
       this.players.splice(indexOfPlayer, 1);
     }
 
-    console.log('Connection closed.');
+    Logger.getInstance().log('Connection closed.');
   }
 
   _onConnectionEstablished(socket) {
-    console.log('Client has connected.');
+    Logger.getInstance().log('Client has connected.');
 
     if (this.sockets.length < config.maxConnections) {
       socket.playerController = new PlayerController(this, socket);
@@ -169,14 +169,14 @@ class GameServer {
 
       this.sockets.push(socket);
     } else {
-      console.log('Server is full');
+      Logger.getInstance().log('Server is full');
 
       socket.close();
     }
   }
 
   _onConnectionError(error) {
-    console.log(`[Error] Unhandled error code: ${error.code}`);
+    Logger.getInstance().error('Unhandled error code: ${error.code}');
     process.exit(1);
   }
 }

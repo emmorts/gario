@@ -1,12 +1,12 @@
 const EventEmitter = require('common/EventEmitter');
-
+const Logger = require('client/Logger');
 class Element {
   constructor() {
     EventEmitter.attach(this);
   }
 
   bind() {
-    console.error(`Bind is not implemented in ${this.constructor.name}. `);
+     Loggger.getInstance().error(`Bind is not implemented in ${this.constructor.name}. `);
   }
 }
 

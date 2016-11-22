@@ -1,6 +1,8 @@
+const Logger = require('client/Logger');
+
 class IRenderer {
   static draw() {
-    console.error(`Method draw() was not initialized in ${this.constructor.name}`);
+     Loggger.getInstance().error(`Method draw() was not initialized in ${this.constructor.name}`);
   }
 }
 

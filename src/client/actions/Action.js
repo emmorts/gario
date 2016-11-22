@@ -3,6 +3,7 @@ const Schema = require('common/schemas');
 class Action {
 
   constructor(opCode, socket) {
+    this.isNull = false;
     this.actionSchema = Schema.get(opCode);
     this.socket = socket;
   }

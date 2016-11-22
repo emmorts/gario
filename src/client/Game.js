@@ -5,6 +5,7 @@ const EventEmitter = require('common/EventEmitter');
 const PacketHandler = require('client/PacketHandler');
 const Factory = require('client/Factory');
 const DebugRenderer = require('client/renderers/DebugRenderer');
+const Logger = require('client/Logger');
 
 let instance = null;
 
@@ -175,7 +176,7 @@ class Game {
 
       this.spellList.delete(spell.id, 'id');
     } else {
-      console.warn('Collision object malformed, unable to find actor or collider.');
+       Loggger.getInstance().warn('Collision object malformed, unable to find actor or collider.');
     }
   }
 
