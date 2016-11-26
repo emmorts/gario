@@ -24,16 +24,6 @@ module.exports = new Enumeration([
   // maps
   'MAP_ARENA',
 
-  // direction
-  'DIRECTION_WEST',
-  'DIRECTION_EAST',
-  'DIRECTION_NORTH',
-  'DIRECTION_SOUTH',
-  'DIRECTION_NWEST',
-  'DIRECTION_NEAST',
-  'DIRECTION_SWEST',
-  'DIRECTION_SEAST',
-
   // types
   'TYPE_SPELL',
   'TYPE_MODEL',

@@ -1,5 +1,7 @@
+const InputHandler = require('client/InputHandler');
 const Player = require('common/gameobjects/models/Player');
 const PlayerRenderer = require('client/renderers/PlayerRenderer');
+const OPCode = require('common/opCode');
 const Logger = require('client/Logger');
 
 class PlayerModel extends Player {
@@ -7,8 +9,10 @@ class PlayerModel extends Player {
     super();
 
     this.renderer = PlayerRenderer;
+    this.packetQueue = [];
 
     this._initialize(playerModel);
+    this._handleInput();
   }
 
   update(deltaT) {
@@ -56,6 +60,37 @@ class PlayerModel extends Player {
     } else {
       Logger.error('Unable to construct player object - no model given.');
     }
+  }
+
+  _handleInput() {
+    InputHandler.on(InputHandler.key.MOUSE2, (mousePosition) => {
+      if (this.health > 0) {
+        this.setTarget({
+          x: mousePosition.x,
+          y: mousePosition.y,
+        });
+
+        this.packetQueue.push({
+          code: OPCode.PLAYER_MOVE,
+          options: this,
+        });
+      }
+    });
+
+    InputHandler.on(InputHandler.key.SPACE, (mousePosition) => {
+      if (this.health > 0) {
+        this.packetQueue.push({
+          code: OPCode.CAST_SPELL,
+          options: {
+            type: OPCode.SPELL_PRIMARY,
+            playerX: this.position.x,
+            playerY: this.position.y,
+            x: mousePosition.x,
+            y: mousePosition.y,
+          },
+        });
+      }
+    });
   }
 
   _updateAnimation() {

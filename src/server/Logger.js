@@ -6,7 +6,7 @@ let loggerList = [];
 if (config.logger) {
   loggerList = config.logger
     .split(',')
-    .map(x => Loggers.get(x));
+    .map(x => Loggers.get(x.trim()));
 }
 
 module.exports.debug = message => loggerList.forEach(l => l.debug(message));

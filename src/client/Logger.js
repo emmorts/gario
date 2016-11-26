@@ -1,4 +1,15 @@
 const config = require('client/config');
-const Logger = require('common/loggers').get(config.logger);
+const Loggers = require('common/loggers');
 
-module.exports = Logger;
+let loggerList = [];
+
+if (config.logger) {
+  loggerList = config.logger
+    .split(',')
+    .map(x => Loggers.get(x.trim()));
+}
+
+module.exports.debug = message => loggerList.forEach(l => l.debug(message));
+module.exports.log = message => loggerList.forEach(l => l.log(message));
+module.exports.warn = message => loggerList.forEach(l => l.warn(message));
+module.exports.error = message => loggerList.forEach(l => l.error(message));

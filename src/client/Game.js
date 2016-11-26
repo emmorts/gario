@@ -61,7 +61,13 @@ class Game {
   }
 
   update(deltaT) {
-    this.playerList.forEach(player => player.update(deltaT));
+    this.playerList.forEach((player) => {
+      player.packetQueue.forEach(packet => this.packetHandler.send(packet.code, packet.options));
+      player.packetQueue.splice(0, player.packetQueue.length);
+
+      player.update(deltaT);
+    });
+
     this.spellList.forEach(spell => spell.update(deltaT));
 
     this._renderer.draw(deltaT);
@@ -74,7 +80,7 @@ class Game {
 
     this.update(deltaT);
 
-    // TODO: Remove this from here
+    // TODO: This doesn't belong here
     DebugRenderer.draw(this, this._renderer, deltaT);
 
     this._lastUpdate = timestamp;
@@ -116,7 +122,7 @@ class Game {
       map
     );
 
-    // HACK! Remove once indexed priority queue is implemented
+    // HACK! Remove once separate map canvas is implemented
     this._renderer._gameObjects.splice(0, 0, mapModel);
   }
 

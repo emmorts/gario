@@ -1,5 +1,5 @@
-const OPCode = require('common/opCode');
 const Logger = require('client/Logger');
+const InputHandler = require('client/InputHandler');
 
 class Camera {
   constructor(width, height) {
@@ -7,10 +7,15 @@ class Camera {
     this.height = height;
 
     this._followee = null;
+    this._scrollBreakpoint = 0.1;
     this._scrollSpeed = 8;
     this._scrollLimit = 200;
     this._offsetX = 0;
     this._offsetY = 0;
+    this._directionX = null;
+    this._directionY = null;
+
+    this._handleInput();
   }
 
   get scrollX() {
@@ -45,6 +50,19 @@ class Camera {
     this._offsetY = Math.sign(value) * Math.min(this._scrollLimit, Math.abs(value));
   }
 
+  get northBreakpoint() {
+    return this.height * this._scrollBreakpoint;
+  }
+  get southBreakpoint() {
+    return this.height * (1 - this._scrollBreakpoint);
+  }
+  get westBreakpoint() {
+    return this.width * this._scrollBreakpoint;
+  }
+  get eastBreakpoint() {
+    return this.width * (1 - this._scrollBreakpoint);
+  }
+
   follow(gameObject) {
     if (gameObject) {
       if (gameObject.position) {
@@ -55,48 +73,37 @@ class Camera {
     }
   }
 
-  update(direction) {
-    switch (direction) {
-      case OPCode.DIRECTION_NWEST:
-        this.offsetX -= this._scrollSpeed;
-        this.offsetY -= this._scrollSpeed;
-        break;
-      case OPCode.DIRECTION_NEAST:
-        this.offsetX += this._scrollSpeed;
-        this.offsetY -= this._scrollSpeed;
-        break;
-      case OPCode.DIRECTION_SWEST:
-        this.offsetX -= this._scrollSpeed;
-        this.offsetY += this._scrollSpeed;
-        break;
-      case OPCode.DIRECTION_SEAST:
-        this.offsetX += this._scrollSpeed;
-        this.offsetY += this._scrollSpeed;
-        break;
-      case OPCode.DIRECTION_WEST:
-        this.offsetX -= this._scrollSpeed;
-        break;
-      case OPCode.DIRECTION_EAST:
-        this.offsetX += this._scrollSpeed;
-        break;
-      case OPCode.DIRECTION_NORTH:
-        this.offsetY -= this._scrollSpeed;
-        break;
-      case OPCode.DIRECTION_SOUTH:
-        this.offsetY += this._scrollSpeed;
-        break;
-      default:
-        if (Math.abs(this.offsetX) > this._scrollSpeed) {
-          this.offsetX += Math.sign(this.offsetX) * this._scrollSpeed * -1;
-        } else {
-          this.offsetX = 0;
-        }
-        if (Math.abs(this.offsetY) > this._scrollSpeed) {
-          this.offsetY += Math.sign(this.offsetY) * this._scrollSpeed * -1;
-        } else {
-          this.offsetY = 0;
-        }
+  update() {
+    if (this._directionX) {
+      this.offsetX += this._directionX;
+    } else {
+      this.offsetX = Math.abs(this.offsetX) > this._scrollSpeed
+        ? this.offsetX + (Math.sign(this.offsetX) * this._scrollSpeed * -1)
+        : 0;
     }
+
+    if (this._directionY) {
+      this.offsetY += this._directionY;
+    } else {
+      this.offsetY = Math.abs(this.offsetY) > this._scrollSpeed
+        ? this.offsetY + (Math.sign(this.offsetY) * this._scrollSpeed * -1)
+        : 0;
+    }
+  }
+
+  _handleInput() {
+    InputHandler.on('mousemove', (mousePosition) => {
+      const diffX = 0
+        - (mousePosition.absoluteX <= this.eastBreakpoint) * this._scrollSpeed
+        + (mousePosition.absoluteX >= this.westBreakpoint) * this._scrollSpeed;
+
+      const diffY = 0
+        - (mousePosition.absoluteY <= this.northBreakpoint) * this._scrollSpeed
+        + (mousePosition.absoluteY >= this.southBreakpoint) * this._scrollSpeed;
+
+      this._directionX = diffX;
+      this._directionY = diffY;
+    });
   }
 
   // TODO: Implement this, you nig

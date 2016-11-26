@@ -1,6 +1,7 @@
 const gulp = require('gulp');
 const sourcemaps = require('gulp-sourcemaps');
 const gutil = require('gulp-util');
+const livereload = require('gulp-livereload');
 const source = require('vinyl-source-stream');
 const buffer = require('vinyl-buffer');
 const browserify = require('browserify');
@@ -29,7 +30,8 @@ function compile(shouldWatch) {
       .pipe(buffer())
       .pipe(sourcemaps.init({ loadMaps: true }))
       .pipe(sourcemaps.write('./'))
-      .pipe(gulp.dest(`${dist}js/`));
+      .pipe(gulp.dest(`${dist}js/`))
+      .pipe(livereload());
   }
 
   if (shouldWatch) {
@@ -45,6 +47,8 @@ function compile(shouldWatch) {
 }
 
 function watch() {
+  livereload.listen();
+
   gulp.watch(['./src/assets/*.html'], ['html']);
   gulp.watch(['./src/assets/css/*.css'], ['css']);
 
@@ -59,6 +63,7 @@ gulp.task('css', () => gulp
 gulp.task('html', () => gulp
     .src('./src/assets/*.html')
     .pipe(gulp.dest(dist))
+    .pipe(livereload())
 );
 
 gulp.task('build', ['css', 'html'], compile);

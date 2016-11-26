@@ -16,6 +16,8 @@ class PacketHandler {
   }
 
   send(opCode, object) {
+    Logger.debug(`> ${OPCode.getName(opCode)}`);
+
     if (opCode in Action) {
       const action = new Action[opCode](this.gameServer, this.socket);
       const buffer = action.build(object);
@@ -32,6 +34,11 @@ class PacketHandler {
     if (message && message.length) {
       const codec = BufferCodec(message);
       const code = codec.parse({ code: 'uint8' }, obj => obj.code);
+
+      // Omit PONG packets, think of how to remove the conditional
+      if (code !== OPCode.PONG) {
+        Logger.debug(`< ${OPCode.getName(code)}`);
+      }
 
       if (code in Action) {
         const ActionClass = Action[code];
