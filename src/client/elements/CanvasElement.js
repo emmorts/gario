@@ -1,15 +1,10 @@
 const Element = require('client/elements/Element');
 const DomElement = require('client/util/DomElement');
-const GameRenderer = require('client/GameRenderer');
-const Camera = require('client/Camera');
-const InputHandler = require('client/InputHandler');
 
 class CanvasElement extends Element {
   constructor(name) {
     super();
 
-    this._renderer = null;
-    this._camera = null;
     this._canvasElement = null;
     this._canvasContext = null;
 
@@ -18,8 +13,16 @@ class CanvasElement extends Element {
       .bindEvents();
   }
 
-  get renderer() {
-    return this._renderer;
+  get width() {
+    return this._canvasElement.htmlElement.width;
+  }
+
+  get height() {
+    return this._canvasElement.htmlElement.height;
+  }
+
+  get context() {
+    return this._canvasContext;
   }
 
   bind(name) {
@@ -27,15 +30,6 @@ class CanvasElement extends Element {
     this._canvasContext = this._canvasElement.htmlElement.getContext('2d');
 
     this._setDefaultSize();
-
-    this._camera = new Camera(
-      this._canvasElement.htmlElement.width,
-      this._canvasElement.htmlElement.height
-    );
-
-    this._renderer = new GameRenderer(this._canvasContext, this._camera);
-
-    InputHandler.attachCamera(this._camera);
 
     return this;
   }
@@ -55,10 +49,10 @@ class CanvasElement extends Element {
     this._canvasElement.htmlElement.width = defaultWidth;
     this._canvasElement.htmlElement.height = defaultHeight;
 
-    if (this._camera) {
-      this._camera.width = defaultWidth;
-      this._camera.height = defaultHeight;
-    }
+    this.fire('resize', {
+      width: defaultWidth,
+      height: defaultHeight,
+    });
   }
 
   static _getDefaultWidth() {

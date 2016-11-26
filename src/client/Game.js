@@ -11,6 +11,10 @@ let instance = null;
 
 class Game {
   constructor() {
+    if (instance) {
+      throw new Error(`Game can't be initialized more than once.`);
+    }
+
     EventEmitter.attach(this);
 
     this.currentPlayer = null;
@@ -19,28 +23,36 @@ class Game {
     this.spellList = new SmartMap('id');
     this.ping = 0;
 
-    this._renderer = null;
-    this._lastUpdate = null;
+    this._mapRenderer = null;
+    this._gameObjectRenderer = null;
     this._gameLoopHandle = null;
+    this._camera = null;
+    this._lastUpdate = null;
+
+    instance = this;
   }
 
-  static getInstance() {
-    if (!instance) {
-      instance = new Game();
+  setMapRenderer(renderer) {
+    if (renderer && this._mapRenderer !== renderer) {
+      this._mapRenderer = renderer;
     }
 
-    return instance;
+    return this;
   }
 
-  set renderer(value) {
-    if (value && this._renderer !== value) {
-      this._renderer = value;
+  setGameObjectRenderer(renderer) {
+    if (renderer && this._gameObjectRenderer !== renderer) {
+      this._gameObjectRenderer = renderer;
 
-      this._onRendererChanged();
+      this._onGameObjectRendererChanged();
     }
+
+    return this;
   }
 
-  startGame(playerName, onConnection) {
+  startGame(playerName, camera, onConnection) {
+    this._camera = camera;
+
     this.packetHandler = new PacketHandler();
 
     this.packetHandler.on('open', () => {
@@ -70,7 +82,9 @@ class Game {
 
     this.spellList.forEach(spell => spell.update(deltaT));
 
-    this._renderer.draw(deltaT);
+    this._camera.update(deltaT);
+    this._mapRenderer.draw(deltaT);
+    this._gameObjectRenderer.draw(deltaT);
   }
 
   _gameLoop(timestamp) {
@@ -81,19 +95,19 @@ class Game {
     this.update(deltaT);
 
     // TODO: This doesn't belong here
-    DebugRenderer.draw(this, this._renderer, deltaT);
+    DebugRenderer.draw(this, this._gameObjectRenderer, deltaT);
 
     this._lastUpdate = timestamp;
   }
 
-  _onRendererChanged() {
-    this.playerList.forEach(player => this._renderer.add(player));
-    this.spellList.forEach(spell => this._renderer.add(spell));
+  _onGameObjectRendererChanged() {
+    this.playerList.forEach(player => this._gameObjectRenderer.add(player));
+    this.spellList.forEach(spell => this._gameObjectRenderer.add(spell));
 
-    this.playerList.on('added', player => this._renderer.add(player));
-    this.playerList.on('deleted', player => this._renderer.remove(player));
-    this.spellList.on('added', spell => this._renderer.add(spell));
-    this.spellList.on('deleted', spell => this._renderer.remove(spell));
+    this.playerList.on('added', player => this._gameObjectRenderer.add(player));
+    this.playerList.on('deleted', player => this._gameObjectRenderer.remove(player));
+    this.spellList.on('added', spell => this._gameObjectRenderer.add(spell));
+    this.spellList.on('deleted', spell => this._gameObjectRenderer.remove(spell));
   }
 
   _onStart(callback) {
@@ -112,7 +126,8 @@ class Game {
     );
 
     this.playerList.add(this.currentPlayer);
-    this._renderer.camera.follow(this.currentPlayer);
+
+    this.fire('playerSpawned', this.currentPlayer);
   }
 
   _handleInitializeMap(map) {
@@ -123,7 +138,8 @@ class Game {
     );
 
     // HACK! Remove once separate map canvas is implemented
-    this._renderer._gameObjects.splice(0, 0, mapModel);
+    this._mapRenderer.map = mapModel;
+    // this._gameObjectRenderer._gameObjects.splice(0, 0, mapModel);
   }
 
   _handleUpdatePlayers(players) {
@@ -197,4 +213,4 @@ class Game {
   }
 }
 
-module.exports = Game;
+module.exports = new Game();

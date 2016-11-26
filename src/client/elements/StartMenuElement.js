@@ -45,6 +45,7 @@ class StartMenuElement extends Element {
 
   _startGame() {
     this._startMenuElement.hide();
+
     this.fire('startGame', this._playerNameElement.content);
   }
 

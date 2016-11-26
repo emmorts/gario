@@ -3,8 +3,8 @@ const InputHandler = require('client/InputHandler');
 
 class Camera {
   constructor(width, height) {
-    this.width = width;
-    this.height = height;
+    this.width = width || 0;
+    this.height = height || 0;
 
     this._followee = null;
     this._scrollBreakpoint = 0.1;

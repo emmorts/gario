@@ -1,10 +1,9 @@
 const Logger = require('client/Logger');
 
-class GameRenderer {
+class GameObjectRenderer {
   constructor(canvasContext, camera) {
     this.context = canvasContext;
     this.camera = camera;
-    this.scrollDirection = null;
 
     this._gameObjects = [];
   }
@@ -27,11 +26,9 @@ class GameRenderer {
 
   draw(deltaT) {
     if (this.context) {
-      this.camera.update(this.scrollDirection, deltaT);
-
       this.context.clearRect(
-        this.camera.scrollX,
-        this.camera.scrollY,
+        0,
+        0,
         this.width,
         this.height
       );
@@ -62,4 +59,4 @@ class GameRenderer {
   }
 }
 
-module.exports = GameRenderer;
+module.exports = GameObjectRenderer;
