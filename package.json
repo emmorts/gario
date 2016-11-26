@@ -19,6 +19,8 @@
   "dependencies": {
     "app-module-path": "^2.1.0",
     "buffercodec": "*.*.*",
+    "eslint-config-airbnb": "^13.0.0",
+    "eslint-config-airbnb-base": "^9.0.0",
     "express": "^4.13.3",
     "node-uuid": "^1.4.7",
     "present": "^1.0.0",
@@ -34,6 +36,7 @@
     "eslint-config-airbnb-base": "^9.0.0",
     "eslint-plugin-import": "^2.0.1",
     "gulp": "^3.9.1",
+    "gulp-eslint": "^3.0.1",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-util": "^3.0.7",
     "pathmodify": "^0.5.0",

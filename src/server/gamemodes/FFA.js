@@ -1,7 +1,5 @@
-const config = require('server/config');
+// const config = require('server/config');
 const Mode = require('server/gamemodes/Mode');
-// const ArenaBuilder = require('server/arenas/ArenaBuilder');
-// const MapNames = require('common/MapName');
 const ArenaMap = require('server/maps/ArenaMap');
 
 class FFA extends Mode {
@@ -49,6 +47,7 @@ class FFA extends Mode {
 
   static _getRandomColor() {
     const rand = Math.floor(Math.random() * 3);
+
     if (rand === 0) {
       return {
         r: 150,
@@ -61,13 +60,12 @@ class FFA extends Mode {
         b: 150,
         g: Math.floor(Math.random() * 150),
       };
-    } else {
-      return {
-        r: Math.floor(Math.random() * 150),
-        b: 0,
-        g: 150,
-      };
     }
+    return {
+      r: Math.floor(Math.random() * 150),
+      b: 0,
+      g: 150,
+    };
   }
 }
 

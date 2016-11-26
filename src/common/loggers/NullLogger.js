@@ -1,18 +1,14 @@
 const AbstractLogger = require('common/loggers/AbstractLogger');
 
 class NullLogger extends AbstractLogger {
-  log(message) {
-    
+  static debug() {}
+  static log() {}
+  static warn() {}
+  static error() {}
+
+  static get name() {
+    return 'NullLogger';
   }
-
-  warn(message) {
-
-  }
-
-  error(message) {
-
-  }
-
 }
 
 module.exports = NullLogger;

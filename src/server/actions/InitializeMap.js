@@ -25,7 +25,7 @@ class InitializeMap extends Action {
         return this.actionSchema.encode(flattenedObject);
       }
     } else {
-       Loggger.getInstance().error(`Malformed object supplied in ${this.constructor.name}.build()`);
+      Logger.error(`Malformed object supplied in ${this.constructor.name}.build()`);
     }
 
     return null;

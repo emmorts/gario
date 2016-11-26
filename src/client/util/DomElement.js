@@ -67,7 +67,7 @@ class DomElement {
 
   on(name, listener) {
     if (!this.htmlElement) {
-       Loggger.getInstance().error('Adding an event listener failed due to missing HTML node.');
+       Logger.error('Adding an event listener failed due to missing HTML node.');
     } else {
       if (!(name in this._eventHandlers) || !(this._eventHandlers[name] instanceof Array)) {
         this._eventHandlers[name] = [];

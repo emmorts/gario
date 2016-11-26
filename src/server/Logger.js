@@ -1,20 +1,15 @@
 const config = require('server/config');
-const Logger = require('common/loggers').get(config.logger);
+const Loggers = require('common/loggers');
 
-let instance = null;
+let loggerList = [];
 
-class LoggerSingleton extends Logger {
-  constructor() {
-    super();
-  }
-
-  static getInstance() {
-    if (!instance) {
-      instance = new LoggerSingleton();
-    }
-
-    return instance;
-  }
+if (config.logger) {
+  loggerList = config.logger
+    .split(',')
+    .map(x => Loggers.get(x));
 }
 
-module.exports = LoggerSingleton;
+module.exports.debug = message => loggerList.forEach(l => l.debug(message));
+module.exports.log = message => loggerList.forEach(l => l.log(message));
+module.exports.warn = message => loggerList.forEach(l => l.warn(message));
+module.exports.error = message => loggerList.forEach(l => l.error(message));

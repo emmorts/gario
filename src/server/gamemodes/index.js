@@ -1,8 +1,8 @@
 module.exports = {
-  FFA: require('server/gamemodes/FFA')
+  FFA: require('server/gamemodes/FFA'),
 };
 
-module.exports.get = function (id) {
+module.exports.get = (id) => {
   let mode;
 
   switch (id) {

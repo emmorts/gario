@@ -10,5 +10,6 @@
     "**/typings": true,
     "**/dist": true
   },
-  "explorer.openEditors.visible": 0
+  "explorer.openEditors.visible": 0,
+  "eslint.enable": true
 }

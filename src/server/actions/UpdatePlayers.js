@@ -25,17 +25,17 @@ class UpdatePlayers extends Action {
             targetY: player.target.y,
             r: player.color.r,
             g: player.color.g,
-            b: player.color.b
+            b: player.color.b,
           })),
           destroyedPlayers: object.destroyedPlayers.map(player => ({
-            id: player.id
-          }))
+            id: player.id,
+          })),
         };
 
         return this.actionSchema.encode(flattenedObject);
       }
     } else {
-       Loggger.getInstance().error(`Malformed object supplied in ${this.constructor.name}.build()`);
+      Logger.error(`Malformed object supplied in ${this.constructor.name}.build()`);
     }
 
     return null;

@@ -10,7 +10,7 @@ class Ping extends Action {
   build() {
     if (this.actionSchema) {
       return this.actionSchema.encode({
-        timestamp: '' + Date.now()
+        timestamp: `${Date.now()}`,
       });
     }
 

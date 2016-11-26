@@ -7,14 +7,14 @@ modulePath.addPath(`${__dirname}/../`);
 const GameServer = require('server/GameServer');
 const express = require('express');
 const server = require('http').createServer();
+const config = require('server/config');
+const Logger = require('server/Logger');
 
 const app = express();
-
-const config = require('server/config');
 
 new GameServer(server).start();
 
 app.use(express.static(`${__dirname}/../../dist`));
 
 server.on('request', app);
-server.listen(config.port, () =>  console.log(`Listening on ${server.address().port}`));
+server.listen(config.port, () => Logger.log(`Listening on ${server.address().port}`));

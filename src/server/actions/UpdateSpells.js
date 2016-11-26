@@ -1,5 +1,6 @@
 const Action = require('server/actions/Action');
 const OPCode = require('common/opCode');
+const Logger = require('server/Logger');
 
 class UpdateSpells extends Action {
 
@@ -26,14 +27,14 @@ class UpdateSpells extends Action {
             b: spell.color.b,
           })),
           destroyedSpells: object.destroyedSpells.map(spell => ({
-            id: spell.id
-          }))
+            id: spell.id,
+          })),
         };
 
         return this.actionSchema.encode(flattenedObject);
       }
     } else {
-       Loggger.getInstance().error(`Malformed object supplied in ${this.constructor.name}.build()`);
+      Logger.error(`Malformed object supplied in ${this.constructor.name}.build()`);
     }
 
     return null;

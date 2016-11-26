@@ -54,7 +54,7 @@ class PlayerModel extends Player {
         y: (playerModel.target ? playerModel.target.y : playerModel.position.y),
       };
     } else {
-       Loggger.getInstance().error('Unable to construct player object - no model given.');
+      Logger.error('Unable to construct player object - no model given.');
     }
   }
 

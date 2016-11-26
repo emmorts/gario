@@ -150,11 +150,11 @@ class GameServer {
       this.players.splice(indexOfPlayer, 1);
     }
 
-    Logger.getInstance().log('Connection closed.');
+    Logger.log('Connection closed.');
   }
 
   _onConnectionEstablished(socket) {
-    Logger.getInstance().log('Client has connected.');
+    Logger.log('Client has connected.');
 
     if (this.sockets.length < config.maxConnections) {
       socket.playerController = new PlayerController(this, socket);
@@ -169,14 +169,14 @@ class GameServer {
 
       this.sockets.push(socket);
     } else {
-      Logger.getInstance().log('Server is full');
+      Logger.log('Server is full');
 
       socket.close();
     }
   }
 
   _onConnectionError(error) {
-    Logger.getInstance().error('Unhandled error code: ${error.code}');
+    Logger.error(`Unhandled error code: ${error.code}`);
     process.exit(1);
   }
 }

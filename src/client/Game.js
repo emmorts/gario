@@ -176,7 +176,7 @@ class Game {
 
       this.spellList.delete(spell.id, 'id');
     } else {
-       Loggger.getInstance().warn('Collision object malformed, unable to find actor or collider.');
+      Logger.warn('Collision object malformed, unable to find actor or collider.');
     }
   }
 

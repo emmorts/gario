@@ -1,42 +1,41 @@
-var gulp = require('gulp');
-var sourcemaps = require('gulp-sourcemaps');
-var gutil = require('gulp-util');
-var source = require('vinyl-source-stream');
-var buffer = require('vinyl-buffer');
-var browserify = require('browserify');
-var watchify = require('watchify');
-var babel = require('babelify');
-var path = require('path');
+const gulp = require('gulp');
+const sourcemaps = require('gulp-sourcemaps');
+const gutil = require('gulp-util');
+const source = require('vinyl-source-stream');
+const buffer = require('vinyl-buffer');
+const browserify = require('browserify');
+const watchify = require('watchify');
+const babel = require('babelify');
 
-var dist = './dist/';
+const dist = './dist/';
 
-function compile(watch) {
-  var bundler = watchify(
+function compile(shouldWatch) {
+  const bundler = watchify(
       browserify({
         entries: ['./src/client/app.js'],
         debug: true,
-        paths: [ './node_modules', './src' ],
+        paths: ['./node_modules', './src'],
         builtins: [],
-        extensions: [' ', 'js']
+        extensions: [' ', 'js'],
       }).transform(babel.configure({
-        presets: ["es2015"]
+        presets: ['es2015'],
       })));
 
   function rebundle(done) {
     return bundler.bundle()
-      .on('error', function (err) { console.error(err); this.emit('end'); })
-      .on('end', function () { if (done) done(); })
+      .on('error', (err) => { console.error(err); this.emit('end'); })
+      .on('end', () => { if (done) done(); })
       .pipe(source('game.js'))
       .pipe(buffer())
       .pipe(sourcemaps.init({ loadMaps: true }))
       .pipe(sourcemaps.write('./'))
-      .pipe(gulp.dest(dist + 'js/'));
+      .pipe(gulp.dest(`${dist}js/`));
   }
 
-  if (watch) {
-    bundler.on('update', function () {
+  if (shouldWatch) {
+    bundler.on('update', () => {
       gutil.log('Bundling... ');
-      rebundle(function () {
+      rebundle(() => {
         gutil.log('Done!');
       });
     });
@@ -50,24 +49,20 @@ function watch() {
   gulp.watch(['./src/assets/css/*.css'], ['css']);
 
   return compile(true);
-};
+}
 
-gulp.task('css', function () {
-  return gulp.src('./src/assets/css/*.css')
-    .pipe(gulp.dest(dist + 'css'));
-});
+gulp.task('css', () => gulp
+  .src('./src/assets/css/*.css')
+  .pipe(gulp.dest(`${dist}css`))
+);
 
-gulp.task('html', function () {
-  return gulp.src('./src/assets/*.html')
-    .pipe(gulp.dest(dist));
-});
+gulp.task('html', () => gulp
+    .src('./src/assets/*.html')
+    .pipe(gulp.dest(dist))
+);
 
-gulp.task('build', ['css', 'html'], function () {
-  return compile();
-});
+gulp.task('build', ['css', 'html'], compile);
 
-gulp.task('watch', ['css', 'html'], function () {
-  return watch();
-});
+gulp.task('watch', ['css', 'html'], watch);
 
 gulp.task('default', ['watch']);

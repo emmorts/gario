@@ -25,7 +25,7 @@ class PlayerController {
       return this.socket.packetHandler;
     }
 
-     Loggger.getInstance().log(`Player '${this.pId}' does not have an attached socket.`);
+    Logger.log(`Player '${this.pId}' does not have an attached socket.`);
 
     return null;
   }

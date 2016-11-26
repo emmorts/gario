@@ -23,7 +23,7 @@ class PacketHandler {
         this._socket.send(buffer);
       }
     } else {
-       Loggger.getInstance().error(`Operation '${OPCode.getName(opCode)}' does not cover any action.'`);
+      Logger.error(`Operation '${OPCode.getName(opCode)}' does not cover any action.'`);
     }
   }
 
@@ -53,7 +53,7 @@ class PacketHandler {
         this.fire(ActionClass.eventName, actionResult);
       }
     } else {
-       Loggger.getInstance().error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
+      Logger.error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
     }
   }
 

@@ -1,13 +1,17 @@
 class AbstractLogger {
-  log(message) {
+  static debug() {
+    throw new Error(`debug() must be overriden in ${this.constructor.name}`);
+  }
+
+  static log() {
     throw new Error(`log() must be overriden in ${this.constructor.name}`);
   }
 
-  warn(message) {
+  static warn() {
     throw new Error(`warn() must be overriden in ${this.constructor.name}`);
   }
 
-  error(message) {
+  static error() {
     throw new Error(`error() must be overriden in ${this.constructor.name}`);
   }
 }

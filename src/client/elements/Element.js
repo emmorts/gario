@@ -6,7 +6,7 @@ class Element {
   }
 
   bind() {
-     Loggger.getInstance().error(`Bind is not implemented in ${this.constructor.name}. `);
+     Logger.error(`Bind is not implemented in ${this.constructor.name}. `);
   }
 }
 

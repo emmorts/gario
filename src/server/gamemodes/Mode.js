@@ -9,8 +9,8 @@ class Mode {
     this.gameServer.run = true;
   }
 
-  onPlayerInit(player) {}
-  onPlayerSpawn(player) {}
+  onPlayerInit() {}
+  onPlayerSpawn() {}
 }
 
 module.exports = Mode;

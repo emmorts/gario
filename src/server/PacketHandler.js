@@ -24,7 +24,7 @@ class PacketHandler {
         this._sendBuffer(buffer);
       }
     } else {
-       Loggger.getInstance().error(`Operation '${OPCode.getName(opCode)}' does not cover any action.'`);
+      Logger.error(`Operation '${OPCode.getName(opCode)}' does not cover any action.'`);
     }
   }
 
@@ -44,10 +44,10 @@ class PacketHandler {
           this.fire(ActionClass.eventName, actionResult);
         }
       } else {
-        Loggger.getInstance().error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
+        Logger.error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
       }
     } else {
-       Loggger.getInstance().log('An empty message was received.');
+      Logger.log('An empty message was received.');
     }
   }
 
@@ -62,15 +62,15 @@ class PacketHandler {
 
   _sendBuffer(buffer) {
     if (!buffer) {
-       Loggger.getInstance().log('Empty buffer received, skipping message.');
+      Logger.log('Empty buffer received, skipping message.');
     } else if (this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(buffer, { binary: true }, (error) => {
         if (error) {
-           Loggger.getInstance().log(`Failed to send a message('${error}').`);
+          Logger.log(`Failed to send a message('${error}').`);
         }
       });
     } else {
-       Loggger.getInstance().log('Socket is not open, closing connection.');
+      Logger.log('Socket is not open, closing connection.');
 
       this.socket.readyState = WebSocket.CLOSED;
       this.socket.emit('close');

@@ -7,9 +7,7 @@ class Pong extends Action {
     super(OPCode.PONG, ...arguments);
   }
 
-  execute(buffer) {
-    const target = this.parse(buffer);
-
+  execute() {
     this.socket.packetHandler.ping();
   }
 

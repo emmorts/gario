@@ -50,7 +50,7 @@ class Camera {
       if (gameObject.position) {
         this._followee = gameObject;
       } else {
-         Loggger.getInstance().error(`Game object ${this._followee.constructor.name} does not have a position to follow.`);
+        Logger.error(`Game object ${this._followee.constructor.name} does not have a position to follow.`);
       }
     }
   }
