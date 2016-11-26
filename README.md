@@ -7,13 +7,13 @@ A multiplayer online, binary websocket based game inspired by a custom map _Warl
 Eseential:
  * Damage outside of map
  * Overall game scene boundaries
- * Priority queue for rendering
+ * Spell variety and engine(leveling up, buying)
 
 Important:
- * Spell variety and engine(leveling up, buying)
  * Game mode improvements, *rounds*
 
 In the future:
+ * Priority queue for rendering
  * Categorize opcodes properly(CSMG/SMSG)
  * WebRTC support with a fallback to the current workflow
  * Procedurally generated maps

@@ -66,7 +66,7 @@ class PacketHandler {
     } else if (this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(buffer, { binary: true }, (error) => {
         if (error) {
-          Logger.log(`Failed to send a message('${error}').`);
+          Logger.warn(`Failed to send a message('${error}').`);
         }
       });
     } else {
