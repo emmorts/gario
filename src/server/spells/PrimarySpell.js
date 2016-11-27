@@ -1,8 +1,8 @@
 const uuid = require('node-uuid');
 const OPCode = require('common/opCode');
-const PrimaryBase = require('common/gameobjects/spells/Primary');
+const Primary = require('common/gameobjects/spells/Primary');
 
-class Primary extends PrimaryBase {
+class PrimarySpell extends Primary {
   constructor(gameServer, owner, options) {
     super();
 
@@ -30,4 +30,4 @@ class Primary extends PrimaryBase {
   }
 }
 
-module.exports = Primary;
+module.exports = PrimarySpell;

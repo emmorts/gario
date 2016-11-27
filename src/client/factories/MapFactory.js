@@ -1,4 +1,6 @@
 const maps = require('client/maps');
+const Logger = require('client/Logger');
+const OPCode = require('common/opCode');
 
 class MapFactory {
 
@@ -7,9 +9,11 @@ class MapFactory {
       const args = Array.prototype.slice.call(arguments, 1);
       const Map = maps[type];
 
-      if (Map) {
-        return new Map(...args);
+      if (!Map) {
+        Logger.error(`Map for '${OPCode.getName(type)}' was not found.`);
       }
+
+      return new Map(...args);
     }
 
     return null;

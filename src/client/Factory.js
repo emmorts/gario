@@ -1,4 +1,6 @@
 const factories = require('client/factories');
+const Logger = require('client/Logger');
+const OPCode = require('common/opCode');
 
 class Factory {
 
@@ -7,9 +9,11 @@ class Factory {
       const args = Array.prototype.slice.call(arguments, 1);
       const factory = factories[classType];
 
-      if (factory) {
-        return factory.instantiate.apply(this, args);
+      if (!factory) {
+        Logger.error(`Factory for '${OPCode.getName(classType)}' was not found.`);
       }
+
+      return factory.instantiate.apply(this, args);
     }
 
     return null;

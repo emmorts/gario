@@ -178,9 +178,13 @@ class Game {
       updatedSpells.forEach((updatedSpell) => {
         const spellModel = Factory.instantiate(
           OPCode.TYPE_SPELL,
-          OPCode.SPELL_PRIMARY,
+          updatedSpell.type,
           updatedSpell
         );
+
+        if (updatedSpell.followeeId) {
+          spellModel.followee = this.playerList.get(updatedSpell.followeeId, 'id');
+        }
 
         spellModel.onAdd(this.playerList.get(spellModel.ownerId, 'ownerId'));
 

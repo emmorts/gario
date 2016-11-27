@@ -1,14 +1,20 @@
 const Logger = require('common/loggers').default;
 
 class Enumeration {
-  constructor(array, powerOfTwo) {
-    if (!array) {
-      throw new Error('Unable to construct an enum, no array provided.');
+  constructor(object, powerOfTwo) {
+    if (!object) {
+      throw new Error('Unable to construct an enum, no object provided.');
     }
 
-    array.forEach((name, index) => {
-      this[name] = powerOfTwo ? Math.pow(2, index) : index + 1;
-    });
+    if (object instanceof Array) {
+      object.forEach((name, index) => {
+        this[name] = powerOfTwo ? Math.pow(2, index) : index + 1;
+      });
+    } else if (object instanceof Object) {
+      Object.keys(object).forEach((key) => {
+        this[key] = object[key];
+      });
+    }
   }
 
   get(name) {

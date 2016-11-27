@@ -17,6 +17,7 @@ module.exports = new Enumeration([
 
   // spells
   'SPELL_PRIMARY',
+  'SPELL_HOMING',
 
   // models
   'MODEL_PLAYER',

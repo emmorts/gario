@@ -1,11 +1,11 @@
-const Primary = require('common/gameobjects/spells/Primary');
-const PrimarySpellRenderer = require('client/renderers/PrimarySpellRenderer');
+const Homing = require('common/gameobjects/spells/Homing');
+const HomingSpellRenderer = require('client/renderers/HomingSpellRenderer');
 
-class PrimarySpell extends Primary {
+class HomingSpell extends Homing {
   constructor(spellModel) {
     super();
 
-    this.renderer = PrimarySpellRenderer;
+    this.renderer = HomingSpellRenderer;
 
     this.id = spellModel.id;
     this.ownerId = spellModel.ownerId;
@@ -24,4 +24,4 @@ class PrimarySpell extends Primary {
   }
 }
 
-module.exports = PrimarySpell;
+module.exports = HomingSpell;

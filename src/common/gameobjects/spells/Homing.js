@@ -1,19 +1,27 @@
 const Spell = require('common/gameobjects/spells/Spell');
 
-class Primary extends Spell {
+class Homing extends Spell {
   constructor() {
     super();
 
-    this.owner = null;
+    this.followee = null;
     this.velocity = { x: 0, y: 0 };
     this.position = { x: 0, y: 0 };
     this.target = { x: 0, y: 0 };
-    this.speed = 5;
-    this.radius = 10;
+    this.mass = 10;
+    this.power = 50;
+    this.duration = 5000;
+    this.cooldown = 1000;
+    this.speed = 2;
+    this.radius = 15;
     this.stunDuration = 50;
   }
 
   update(deltaT) {
+    if (this.followee) {
+      this.setTarget(this.followee.position);
+    }
+
     if (typeof this.velocity.x !== 'undefined' && typeof this.velocity.y !== 'undefined') {
       this._calculatePosition(deltaT);
     }
@@ -27,7 +35,7 @@ class Primary extends Spell {
 
     const vX = this.target.x - this.position.x;
     const vY = this.target.y - this.position.y;
-    const distance = Primary._getHypotenuseLength(vX, vY);
+    const distance = Homing._getHypotenuseLength(vX, vY);
 
     this.velocity = {
       x: vX / distance,
@@ -56,4 +64,4 @@ class Primary extends Spell {
   }
 }
 
-module.exports = Primary;
+module.exports = Homing;

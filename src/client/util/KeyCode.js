@@ -1,4 +1,6 @@
-module.exports = {
+const Enumeration = require('common/Enumeration');
+
+module.exports = new Enumeration({
   MOUSE2: 2,
   MAC_ENTER: 3,
   BACKSPACE: 8,
@@ -88,4 +90,4 @@ module.exports = {
   F10: 121,
   F11: 122,
   F12: 123,
-};
+});

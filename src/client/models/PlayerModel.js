@@ -43,6 +43,21 @@ class PlayerModel extends Player {
         });
       }
     });
+
+    InputHandler.on(InputHandler.key.D, (mousePosition) => {
+      if (this.health > 0) {
+        this.packetQueue.push({
+          code: OPCode.CAST_SPELL,
+          options: {
+            type: OPCode.SPELL_HOMING,
+            playerX: this.position.x,
+            playerY: this.position.y,
+            x: mousePosition.x,
+            y: mousePosition.y,
+          },
+        });
+      }
+    });
   }
 
   update(deltaT) {

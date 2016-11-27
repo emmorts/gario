@@ -1,4 +1,6 @@
 const models = require('server/models');
+const Logger = require('server/Logger');
+const OPCode = require('common/opCode');
 
 class ModelFactory {
 
@@ -7,9 +9,11 @@ class ModelFactory {
       const args = Array.prototype.slice.call(arguments, 1);
       const Model = models[type];
 
-      if (Model) {
-        return new Model(...args);
+      if (!Model) {
+        Logger.error(`Model for '${OPCode.getName(type)}' was not found.`);
       }
+
+      return new Model(...args);
     }
 
     return null;

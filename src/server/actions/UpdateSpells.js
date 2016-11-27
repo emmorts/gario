@@ -22,6 +22,7 @@ class UpdateSpells extends Action {
             y: spell.position.y,
             targetX: spell.target.x,
             targetY: spell.target.y,
+            followeeId: spell.followee ? spell.followee.id : '',
             r: spell.color.r,
             g: spell.color.g,
             b: spell.color.b,

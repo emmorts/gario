@@ -16,6 +16,8 @@ class PacketHandler {
   }
 
   send(opCode, object) {
+    Logger.debug(`SCK > ${OPCode.getName(opCode)}`);
+
     if (opCode in Action) {
       const action = new Action[opCode](this._socket);
       const buffer = action.build(object);
@@ -42,6 +44,11 @@ class PacketHandler {
   _handleMessage(message) {
     const codec = BufferCodec(message.data);
     const code = PacketHandler._getOpCode(codec);
+
+    // Omit PING packets from logging, think of how to remove the conditional
+    if (code !== OPCode.PING) {
+      Logger.debug(`SCK < ${OPCode.getName(code)}`);
+    }
 
     if (code in Action) {
       const ActionClass = Action[code];

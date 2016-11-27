@@ -1,7 +1,7 @@
 const IRenderer = require('client/renderers/IRenderer');
 const CanvasHelper = require('client/util/CanvasHelper');
 
-class PrimaryRenderer extends IRenderer {
+class HomingSpellRenderer extends IRenderer {
   static draw(model, renderer) {
     const posX = model.position.x - renderer.camera.scrollX;
     const posY = model.position.y - renderer.camera.scrollY;
@@ -10,7 +10,7 @@ class PrimaryRenderer extends IRenderer {
       x: posX,
       y: posY,
       radius: model.radius,
-      fillColor: PrimaryRenderer._getColorInRGB(model.color),
+      fillColor: HomingSpellRenderer._getColorInRGB(model.color),
     });
   }
 
@@ -23,4 +23,4 @@ class PrimaryRenderer extends IRenderer {
   }
 }
 
-module.exports = PrimaryRenderer;
+module.exports = HomingSpellRenderer;

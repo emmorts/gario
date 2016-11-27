@@ -1,4 +1,6 @@
 const spells = require('server/spells');
+const Logger = require('server/Logger');
+const OPCode = require('common/opCode');
 
 class SpellFactory {
 
@@ -7,9 +9,11 @@ class SpellFactory {
       const args = Array.prototype.slice.call(arguments, 1);
       const Spell = spells[type];
 
-      if (Spell) {
-        return new Spell(...args);
+      if (!Spell) {
+        Logger.error(`Spell for '${OPCode.getName(type)}' was not found.`);
       }
+
+      return new Spell(...args);
     }
 
     return null;
