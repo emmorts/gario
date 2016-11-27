@@ -26,6 +26,7 @@ class GameObjectRenderer {
 
   draw(deltaT) {
     if (this.context) {
+      // TODO: Should only clear the rendered area
       this.context.clearRect(
         0,
         0,

@@ -24,3 +24,5 @@ In the future:
 After cloning repo, install npm packages by running `npm install`.
 
 Once it's done, simply start `npm run dev`, which will run both, client and server with watchers.
+
+In case you want to run them individually, run `npm start` for server, and `gulp watch` for client code watchers.

@@ -28,6 +28,7 @@ class Game {
     this._gameLoopHandle = null;
     this._camera = null;
     this._lastUpdate = null;
+    this._hearbeatInterval = 1000;
 
     instance = this;
   }
@@ -137,9 +138,7 @@ class Game {
       map
     );
 
-    // HACK! Remove once separate map canvas is implemented
     this._mapRenderer.map = mapModel;
-    // this._gameObjectRenderer._gameObjects.splice(0, 0, mapModel);
   }
 
   _handleUpdatePlayers(players) {
@@ -209,7 +208,7 @@ class Game {
       this._lastHeartbeat = Date.now();
 
       this.packetHandler.send(OPCode.PONG);
-    }, 1000);
+    }, this._hearbeatInterval);
   }
 }
 

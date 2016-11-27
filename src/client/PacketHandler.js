@@ -3,12 +3,13 @@ const EventEmitter = require('common/EventEmitter');
 const Action = require('client/actions');
 const OPCode = require('common/opCode');
 const Logger = require('client/Logger');
+const config = require('client/config');
 
 class PacketHandler {
   constructor() {
     EventEmitter.attach(this);
 
-    this._uri = 'ws://127.0.0.1:3000';
+    this._uri = `${config.protocol}://${config.gameServer}`;
     this._socket = null;
 
     this._setupSocket();

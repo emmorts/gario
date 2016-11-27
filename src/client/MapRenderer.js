@@ -36,6 +36,7 @@ class MapRenderer {
 
   draw(deltaT) {
     if (this.context && this._map) {
+      // TODO: Should only clear the rendered area
       this.context.clearRect(
         0,
         0,

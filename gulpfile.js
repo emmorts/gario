@@ -61,9 +61,9 @@ gulp.task('css', () => gulp
 );
 
 gulp.task('html', () => gulp
-    .src('./src/assets/*.html')
-    .pipe(gulp.dest(dist))
-    .pipe(livereload())
+  .src('./src/assets/*.html')
+  .pipe(gulp.dest(dist))
+  .pipe(livereload())
 );
 
 gulp.task('build', ['css', 'html'], compile);
