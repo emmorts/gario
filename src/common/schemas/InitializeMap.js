@@ -17,6 +17,6 @@ module.exports = new Schema(OPCode.INITIALIZE_MAP, {
     width: arena.width,
     height: arena.height,
     tileSize: arena.tileSize,
-    map,
+    tiledMap: map,
   };
 });

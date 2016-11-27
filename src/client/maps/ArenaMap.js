@@ -1,5 +1,5 @@
 const ArenaRenderer = require('client/renderers/ArenaRenderer');
-const Arena = require('common/gameobjects/maps/Arena');
+const Arena = require('common/maps/Arena');
 
 class ArenaMap extends Arena {
   constructor(arena) {
@@ -8,10 +8,10 @@ class ArenaMap extends Arena {
     this.renderer = ArenaRenderer;
 
     this.tileSize = arena.tileSize;
-    this.widht = arena.widht;
+    this.width = arena.width;
     this.height = arena.height;
 
-    this.map = arena.map;
+    this.tiledMap = arena.tiledMap;
   }
 
 }

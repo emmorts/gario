@@ -2,7 +2,6 @@ const uuid = require('node-uuid');
 const PlayerBase = require('common/gameobjects/models/Player');
 
 class Player extends PlayerBase {
-
   constructor(gameServer, owner) {
     super();
 
@@ -13,7 +12,6 @@ class Player extends PlayerBase {
     this.position = null;
     this.color = null;
   }
-
 }
 
 module.exports = Player;

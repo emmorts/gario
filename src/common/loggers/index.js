@@ -5,6 +5,8 @@ const loggers = [
 
 module.exports = loggers;
 
+module.exports.default = loggers[0];
+
 module.exports.get = (loggerName) => {
   const logger = loggers.find(x => x.name.toLowerCase() === loggerName.toLowerCase());
   if (!logger) {

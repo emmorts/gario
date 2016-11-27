@@ -12,15 +12,15 @@ const dist = './dist/';
 
 function compile(shouldWatch) {
   const bundler = watchify(
-      browserify({
-        entries: ['./src/client/app.js'],
-        debug: true,
-        paths: ['./node_modules', './src'],
-        builtins: [],
-        extensions: [' ', 'js'],
-      }).transform(babel.configure({
-        presets: ['es2015'],
-      })));
+    browserify({
+      entries: ['./src/client/app.js'],
+      debug: true,
+      paths: ['./node_modules', './src'],
+      builtins: [],
+      extensions: [' ', 'js'],
+    }).transform(babel.configure({
+      presets: ['es2015'],
+    })));
 
   function rebundle(done) {
     return bundler.bundle()

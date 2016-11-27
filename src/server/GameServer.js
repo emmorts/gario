@@ -38,22 +38,29 @@ class GameServer {
 
   gameLoop() {
     const current = present();
+    const deltaT = current - this.time;
 
-    this.tick += (current - this.time);
+    this.tick += deltaT;
     this.time = current;
 
-    this.movementTick();
-    this.updateClients();
+    this.movementTick(deltaT);
     this.checkForCollisions();
+    this.updateClients();
 
     if (this.tick > 30) {
       this.tick = 0;
     }
   }
 
-  movementTick() {
-    this.players.forEach(player => player.model.update());
-    this.spells.forEach(spell => spell.update());
+  movementTick(deltaT) {
+    this.players.forEach((player) => {
+      if (this.gameMode.map) {
+        this.gameMode.map.applyEffects(player.model, deltaT);
+      }
+
+      player.model.update(deltaT);
+    });
+    this.spells.forEach(spell => spell.update(deltaT));
   }
 
   updateClients() {

@@ -35,7 +35,7 @@ class PacketHandler {
       const codec = BufferCodec(message);
       const code = codec.parse({ code: 'uint8' }, obj => obj.code);
 
-      // Omit PONG packets, think of how to remove the conditional
+      // Omit PONG packets from logging, think of how to remove the conditional
       if (code !== OPCode.PONG) {
         Logger.debug(`< ${OPCode.getName(code)}`);
       }

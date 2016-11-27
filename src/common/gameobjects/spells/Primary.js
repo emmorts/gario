@@ -4,11 +4,13 @@ class Primary extends GameObject {
   constructor() {
     super();
 
+    this.owner = null;
     this.velocity = { x: 0, y: 0 };
     this.position = { x: 0, y: 0 };
     this.target = { x: 0, y: 0 };
     this.speed = 5;
     this.radius = 10;
+    this.stunDuration = 50;
   }
 
   update(deltaT) {
@@ -39,7 +41,7 @@ class Primary extends GameObject {
     model.velocity.x += (this.power * this.mass) * (this.velocity.x / model.mass);
     model.velocity.y += (this.power * this.mass) * (this.velocity.y / model.mass);
 
-    model.stunned = 50;
+    model.stunned = this.stunDuration;
   }
 
   _calculatePosition() {

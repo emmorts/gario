@@ -1,4 +1,4 @@
-const Logger = require('common/loggers').get('consoleLogger');
+const Logger = require('common/loggers').default;
 
 class Enumeration {
   constructor(array, powerOfTwo) {

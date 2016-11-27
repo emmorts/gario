@@ -18,9 +18,9 @@ class Game {
     EventEmitter.attach(this);
 
     this.currentPlayer = null;
-    this.arena = null;
     this.playerList = new SmartMap('id', 'ownerId');
     this.spellList = new SmartMap('id');
+    this.map = null;
     this.ping = 0;
 
     this._mapRenderer = null;
@@ -77,6 +77,10 @@ class Game {
     this.playerList.forEach((player) => {
       player.packetQueue.forEach(packet => this.packetHandler.send(packet.code, packet.options));
       player.packetQueue.splice(0, player.packetQueue.length);
+
+      if (this.map) {
+        this.map.applyEffects(player, deltaT);
+      }
 
       player.update(deltaT);
     });
@@ -138,7 +142,7 @@ class Game {
       map
     );
 
-    this._mapRenderer.map = mapModel;
+    this._mapRenderer.map = this.map = mapModel;
   }
 
   _handleUpdatePlayers(players) {

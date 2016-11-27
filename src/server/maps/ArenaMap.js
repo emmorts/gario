@@ -1,5 +1,5 @@
 const ArenaType = require('server/maps/arena/ArenaType');
-const Arena = require('common/gameobjects/maps/Arena');
+const Arena = require('common/maps/Arena');
 const Type = require('server/maps/arena/types');
 
 class ArenaMap extends Arena {

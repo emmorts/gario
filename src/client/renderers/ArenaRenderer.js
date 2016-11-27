@@ -12,7 +12,7 @@ class ArenaRenderer extends IRenderer {
     const startX = 0 - scrollX;
     const startY = 0 - scrollY;
 
-    const map = model.map;
+    const map = model.tiledMap;
     const tileSize = model.tileSize;
 
     renderer.context.fillStyle = MapTiles[Tileset.LAVA].color;
