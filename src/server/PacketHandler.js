@@ -16,7 +16,7 @@ class PacketHandler {
   }
 
   send(opCode, object) {
-    Logger.debug(`> ${OPCode.getName(opCode)}`);
+    Logger.debug(`SCK > ${OPCode.getName(opCode)}`);
 
     if (opCode in Action) {
       const action = new Action[opCode](this.gameServer, this.socket);
@@ -37,7 +37,7 @@ class PacketHandler {
 
       // Omit PONG packets from logging, think of how to remove the conditional
       if (code !== OPCode.PONG) {
-        Logger.debug(`< ${OPCode.getName(code)}`);
+        Logger.debug(`SCK < ${OPCode.getName(code)}`);
       }
 
       if (code in Action) {

@@ -17,8 +17,6 @@ class GameServer {
     this.spells = [];
 
     this.time = present();
-    this.startTime = this.time;
-    this.tick = 0;
     this.updateRate = 1000 / 60;
 
     this.gameMode = GameMode.get.call(this, config.defaultGameMode);
@@ -40,16 +38,11 @@ class GameServer {
     const current = present();
     const deltaT = current - this.time;
 
-    this.tick += deltaT;
     this.time = current;
 
     this.movementTick(deltaT);
     this.checkForCollisions();
     this.updateClients();
-
-    if (this.tick > 30) {
-      this.tick = 0;
-    }
   }
 
   movementTick(deltaT) {
@@ -183,7 +176,7 @@ class GameServer {
   }
 
   _onConnectionError(error) {
-    Logger.error(`Unhandled error code: ${error.code}`);
+    Logger.error(`Unhandled error code: ${error.code}.`);
     process.exit(1);
   }
 }

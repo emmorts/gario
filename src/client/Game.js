@@ -130,6 +130,8 @@ class Game {
       player
     );
 
+    this.currentPlayer.handleInput();
+
     this.playerList.add(this.currentPlayer);
 
     this.fire('playerSpawned', this.currentPlayer);

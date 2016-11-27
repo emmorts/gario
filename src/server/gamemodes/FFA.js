@@ -1,6 +1,7 @@
-// const config = require('server/config');
 const Mode = require('server/gamemodes/Mode');
 const ArenaMap = require('server/maps/ArenaMap');
+const Logger = require('server/Logger');
+const Player = require('common/gameobjects/models/Player');
 
 class FFA extends Mode {
   constructor(gameServer) {
@@ -19,30 +20,29 @@ class FFA extends Mode {
       .setTileSize(32)
       .setType('DONUT')
       .build();
+
+    Logger.log(`Map '${this.map.constructor.name}' has been initialized.`);
   }
 
   onPlayerSpawn(player) {
-    if (player && player.model) {
-      player.model.position = FFA._getRandomPosition();
-      player.model.color = FFA._getRandomColor();
-      player.model.maxHealth = this.baseHealth;
-      player.model.health = player.model.maxHealth;
-      player.model.target = {
-        x: player.model.position.x,
-        y: player.model.position.y,
-      };
+    if (!player || !player.model || !(player.model instanceof Player)) {
+      throw new Error(`Invalid player provided`);
     }
-  }
 
-  static _getRandomPosition() {
-    return {
-      x: 0,
-      y: 0,
+    if (!this.map) {
+      throw new Error(`Map was not initialized`);
+    }
+
+    player.model.position = this.map.getSpawnPoint();
+    player.model.color = FFA._getRandomColor();
+    player.model.maxHealth = this.baseHealth;
+    player.model.health = player.model.maxHealth;
+    player.model.target = {
+      x: player.model.position.x,
+      y: player.model.position.y,
     };
-    // return {
-    //   x: Math.floor(Math.random() * config.gameWidth),
-    //   y: Math.floor(Math.random() * config.gameHeight),
-    // };
+
+    Logger.log(`Player '${player.model.name}' has been spawned on (${player.model.position.x}, ${player.model.position.y}).`);
   }
 
   static _getRandomColor() {

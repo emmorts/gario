@@ -32,6 +32,8 @@ class PlayerController {
 
   setTarget(target) {
     if (this.model && target) {
+      Logger.debug(`Player '${this.model.name}' moved to (${target.x}, ${target.y}).`);
+
       this.model.setTarget(target);
 
       this.gameServer.onTargetUpdated(this);

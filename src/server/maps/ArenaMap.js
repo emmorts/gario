@@ -1,6 +1,7 @@
 const ArenaType = require('server/maps/arena/ArenaType');
 const Arena = require('common/maps/Arena');
 const Type = require('server/maps/arena/types');
+const Tileset = require('common/Tileset');
 
 class ArenaMap extends Arena {
   constructor(options) {
@@ -48,6 +49,23 @@ class ArenaMap extends Arena {
     this.tiledMap = this.type.build(this.width, this.height);
 
     return this;
+  }
+
+  getSpawnPoint() {
+    let randX = 0;
+    let randY = 0;
+    let isSafe = false;
+
+    while (!isSafe) {
+      randX = ~~(Math.random() * this.width);
+      randY = ~~(Math.random() * this.height);
+
+      if (this.tiledMap && this.tiledMap[randX][randY] !== Tileset.LAVA) {
+        isSafe = true;
+      }
+    }
+
+    return { x: randX * this.tileSize, y: randY * this.tileSize };
   }
 }
 
