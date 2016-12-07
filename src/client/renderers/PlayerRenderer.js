@@ -25,7 +25,7 @@ class PlayerRenderer extends IRenderer {
       radius: model.radius - 3,
       start: arcStart,
       end: arcEnd,
-      strokeWidth: 6,
+      strokeWidth: 7,
       strokeColor: PlayerRenderer._getHealthColor(model.health, model.maxHealth),
     });
 

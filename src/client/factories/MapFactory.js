@@ -11,9 +11,9 @@ class MapFactory {
 
       if (!Map) {
         Logger.error(`Map for '${OPCode.getName(type)}' was not found.`);
+      } else {
+        return new Map(...args);
       }
-
-      return new Map(...args);
     }
 
     return null;

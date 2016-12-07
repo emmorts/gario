@@ -66,8 +66,12 @@ gulp.task('html', () => gulp
   .pipe(livereload())
 );
 
-gulp.task('build', ['css', 'html'], compile);
+gulp.task('sprites', () => gulp
+  .src('./src/assets/sprites/*.png')
+  .pipe(gulp.dest(`${dist}/sprites`))
+  .pipe(livereload())
+);
 
-gulp.task('watch', ['css', 'html'], watch);
-
+gulp.task('build', ['css', 'html', 'sprites'], compile);
+gulp.task('watch', ['css', 'html', 'sprites'], watch);
 gulp.task('default', ['watch']);

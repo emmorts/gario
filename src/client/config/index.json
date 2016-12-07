@@ -1,5 +1,5 @@
 {
   "protocol": "ws",
-  "gameServer": "127.0.0.1:3000",
+  "gameServer": "127.0.0.1:3001",
   "logger": "ConsoleLogger"
 }

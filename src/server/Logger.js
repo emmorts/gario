@@ -1,5 +1,5 @@
 const config = require('server/config');
-const Loggers = require('common/loggers');
+const Loggers = require('server/loggers');
 
 let loggerList = [];
 

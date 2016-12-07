@@ -11,9 +11,9 @@ class Factory {
 
       if (!factory) {
         Logger.error(`Factory for '${OPCode.getName(classType)}' was not found.`);
+      } else {
+        return factory.instantiate.apply(this, args);
       }
-
-      return factory.instantiate.apply(this, args);
     }
 
     return null;

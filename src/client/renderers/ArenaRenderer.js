@@ -4,6 +4,15 @@ const CanvasHelper = require('client/util/CanvasHelper');
 const MapTiles = require('client/mapTiles');
 const Tileset = require('common/Tileset');
 
+let spritesLoaded = false;
+
+const LavaSprite = new Image();
+LavaSprite.src = `sprites/lava.png`;
+
+LavaSprite.addEventListener('load', () => {
+  spritesLoaded = true;
+}, false);
+
 class ArenaRenderer extends IRenderer {
   static draw(model, renderer) {
     const scrollX = renderer.camera.scrollX;
@@ -15,8 +24,16 @@ class ArenaRenderer extends IRenderer {
     const map = model.tiledMap;
     const tileSize = model.tileSize;
 
-    renderer.context.fillStyle = MapTiles[Tileset.LAVA].color;
-    renderer.context.fillRect(0, 0, renderer.width, renderer.height);
+    if (spritesLoaded) {
+      for (let i = 0; i <= 4; i++) {
+        for (let j = 0; j <= 4; j++) {
+          renderer.context.drawImage(LavaSprite, startX + (i * 512) - 512, startY + (j * 512) - 512);
+        }
+      }
+    }
+
+    // renderer.context.fillStyle = MapTiles[Tileset.LAVA].color;
+    // renderer.context.fillRect(0, 0, renderer.width, renderer.height);
 
     map.forEach((row, rowIndex) => {
       row.forEach((column, columnIndex) => {

@@ -11,9 +11,9 @@ class SpellFactory {
 
       if (!Spell) {
         Logger.error(`Spell for '${OPCode.getName(type)}' was not found.`);
+      } else {
+        return new Spell(...args);
       }
-
-      return new Spell(...args);
     }
 
     return null;

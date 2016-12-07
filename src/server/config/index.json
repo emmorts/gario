@@ -1,8 +1,10 @@
 {
     "port": 3000,
+    "wsPort": 3001,
+    "separateSocketServer": true,
     "gameWidth": 1000,
     "gameHeight": 1000,
     "maxConnections": 255,
     "defaultGameMode": 0,
-    "logger": "ConsoleLogger"
+    "logger": "ConsoleLogger,DatabaseLogger"
 }

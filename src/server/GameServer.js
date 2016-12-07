@@ -21,9 +21,9 @@ class GameServer {
 
     this.gameMode = GameMode.get.call(this, config.defaultGameMode);
 
-    this._socketServerOptions = server
+    this._socketServerOptions = server && !config.separateSocketServer
       ? { server }
-      : { port: config.port, perMessageDeflate: false };
+      : { port: config.wsPort, perMessageDeflate: false };
   }
 
   start() {

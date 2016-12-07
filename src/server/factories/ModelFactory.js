@@ -11,9 +11,9 @@ class ModelFactory {
 
       if (!Model) {
         Logger.error(`Model for '${OPCode.getName(type)}' was not found.`);
+      } else {
+        return new Model(...args);
       }
-
-      return new Model(...args);
     }
 
     return null;
