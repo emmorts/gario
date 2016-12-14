@@ -25,14 +25,14 @@ class PlayerController {
       return this.socket.packetHandler;
     }
 
-    Logger.log(`Player '${this.pId}' does not have an attached socket.`);
+    Logger.info(`Player '${this.pId}' does not have an attached socket.`);
 
     return null;
   }
 
   setTarget(target) {
     if (this.model && target) {
-      Logger.debug(`Player '${this.model.name}' moved to (${target.x}, ${target.y}).`);
+      Logger.trace(`Player '${this.model.name}' moved to (${target.x}, ${target.y}).`);
 
       this.model.setTarget(target);
 

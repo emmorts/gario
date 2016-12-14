@@ -150,11 +150,11 @@ class GameServer {
       this.players.splice(indexOfPlayer, 1);
     }
 
-    Logger.log('Connection closed.');
+    Logger.info('Connection closed.');
   }
 
   _onConnectionEstablished(socket) {
-    Logger.log('Client has connected.');
+    Logger.info('Client has connected.');
 
     if (this.sockets.length < config.maxConnections) {
       socket.playerController = new PlayerController(this, socket);
@@ -169,7 +169,7 @@ class GameServer {
 
       this.sockets.push(socket);
     } else {
-      Logger.log('Server is full');
+      Logger.info('Server is full');
 
       socket.close();
     }

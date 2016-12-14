@@ -1,4 +1,5 @@
 const AbstractLogger = require('common/loggers/AbstractLogger');
+const LogLevel = require('common/loggers/LogLevel');
 const MongoClient = require('mongodb').MongoClient;
 
 const uri = `mongodb://localhost:27017/gario`;
@@ -23,9 +24,31 @@ MongoClient.connect(uri, (err, database) => {
 
 
 class DatabaseLogger extends AbstractLogger {
-  static debug(message) {
+  get name() {
+    return 'DatabaseLogger';
+  }
+
+  _log(message, severity) {
+    switch (severity) {
+      case LogLevel.TRACE:
+        this._trace(message);
+        break;
+      case LogLevel.INFO:
+        this._info(message);
+        break;
+      case LogLevel.WARN:
+        this._warn(message);
+        break;
+      case LogLevel.ERROR:
+        this._error(message);
+        break;
+      default:
+    }
+  }
+
+  _trace(message) {
     const entry = {
-      type: 'debug',
+      type: 'trace',
       createdOn: Date.now(),
       message,
     };
@@ -37,9 +60,9 @@ class DatabaseLogger extends AbstractLogger {
     }
   }
 
-  static log(message) {
+  _info(message) {
     const entry = {
-      type: 'log',
+      type: 'info',
       createdOn: Date.now(),
       message,
     };
@@ -51,7 +74,7 @@ class DatabaseLogger extends AbstractLogger {
     }
   }
 
-  static warn(message) {
+  _warn(message) {
     const entry = {
       type: 'warn',
       createdOn: Date.now(),
@@ -65,7 +88,7 @@ class DatabaseLogger extends AbstractLogger {
     }
   }
 
-  static error(message) {
+  _error(message) {
     const entry = {
       type: 'error',
       createdOn: Date.now(),
@@ -77,10 +100,6 @@ class DatabaseLogger extends AbstractLogger {
     } else if (!queueLocked) {
       queue.push(entry);
     }
-  }
-
-  static get name() {
-    return 'DatabaseLogger';
   }
 }
 

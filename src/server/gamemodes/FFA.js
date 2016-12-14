@@ -21,7 +21,7 @@ class FFA extends Mode {
       .setType('DONUT')
       .build();
 
-    Logger.log(`Map '${this.map.constructor.name}' has been initialized.`);
+    Logger.info(`Map '${this.map.constructor.name}' has been initialized.`);
   }
 
   onPlayerSpawn(player) {
@@ -42,7 +42,7 @@ class FFA extends Mode {
       y: player.model.position.y,
     };
 
-    Logger.log(`Player '${player.model.name}' has been spawned on (${player.model.position.x}, ${player.model.position.y}).`);
+    Logger.info(`Player '${player.model.name}' has been spawned on (${player.model.position.x}, ${player.model.position.y}).`);
   }
 
   static _getRandomColor() {

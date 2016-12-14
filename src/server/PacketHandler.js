@@ -16,7 +16,7 @@ class PacketHandler {
   }
 
   send(opCode, object) {
-    Logger.debug(`SCK > ${OPCode.getName(opCode)}`);
+    Logger.trace(`SCK > ${OPCode.getName(opCode)}`);
 
     if (opCode in Action) {
       const action = new Action[opCode](this.gameServer, this.socket);
@@ -37,7 +37,7 @@ class PacketHandler {
 
       // Omit PONG packets from logging, think of how to remove the conditional
       if (code !== OPCode.PONG) {
-        Logger.debug(`SCK < ${OPCode.getName(code)}`);
+        Logger.trace(`SCK < ${OPCode.getName(code)}`);
       }
 
       if (code in Action) {
@@ -54,7 +54,7 @@ class PacketHandler {
         Logger.error(`Operation '${OPCode.getName(code)}' does not cover any action.'`);
       }
     } else {
-      Logger.log('An empty message was received.');
+      Logger.info('An empty message was received.');
     }
   }
 
@@ -69,7 +69,7 @@ class PacketHandler {
 
   _sendBuffer(buffer) {
     if (!buffer) {
-      Logger.log('Empty buffer received, skipping message.');
+      Logger.info('Empty buffer received, skipping message.');
     } else if (this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(buffer, { binary: true }, (error) => {
         if (error) {
@@ -77,7 +77,7 @@ class PacketHandler {
         }
       });
     } else {
-      Logger.log('Socket is not open, closing connection.');
+      Logger.info('Socket is not open, closing connection.');
 
       this.socket.readyState = WebSocket.CLOSED;
       this.socket.emit('close');

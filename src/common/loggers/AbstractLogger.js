@@ -1,18 +1,26 @@
 class AbstractLogger {
-  static debug() {
-    throw new Error(`debug() must be overriden in ${this.constructor.name}`);
+  constructor(mask) {
+    this._mask = mask;
+    this._next = null;
   }
 
-  static log() {
-    throw new Error(`log() must be overriden in ${this.constructor.name}`);
+  setNext(logger) {
+    this._next = logger;
+    return logger;
   }
 
-  static warn() {
-    throw new Error(`warn() must be overriden in ${this.constructor.name}`);
+  log(message, severity) {
+    if ((severity & this._mask) !== 0) {
+      this._log(message, severity);
+    }
+
+    if (this._next && 'log' in this._next) {
+      this._next.log(message, severity);
+    }
   }
 
-  static error() {
-    throw new Error(`error() must be overriden in ${this.constructor.name}`);
+  _log() {
+    throw new Error(`_log() must be overriden in ${this.constructor.name}`);
   }
 }
 

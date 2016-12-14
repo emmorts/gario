@@ -1,5 +1,3 @@
-const Logger = require('common/loggers').default;
-
 class Enumeration {
   constructor(object, powerOfTwo) {
     if (!object) {
@@ -22,7 +20,7 @@ class Enumeration {
       return this[name];
     }
 
-    Logger.log(`${name} was not found in enum.`);
+    console.log(`${name} was not found in enum.`);
 
     return null;
   }
