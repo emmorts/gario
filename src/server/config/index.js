@@ -8,6 +8,10 @@ module.exports = {
   gameHeight: 1000,
   maxConnections: 255,
   defaultGameMode: 0,
+  database: {
+    type: 'MONGODB',
+    host: 'mongodb://localhost:27017/gario',
+  },
   loggers: [{
     name: 'ConsoleLogger',
     severity: LogLevel.ALL,

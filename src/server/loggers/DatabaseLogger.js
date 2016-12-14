@@ -1,15 +1,15 @@
+const config = require('server/config');
 const AbstractLogger = require('common/loggers/AbstractLogger');
 const LogLevel = require('common/loggers/LogLevel');
 const MongoClient = require('mongodb').MongoClient;
 
-const uri = `mongodb://localhost:27017/gario`;
 const queue = [];
 
 let connectionInitialized = false;
 let logCollection = null;
 let queueLocked = false;
 
-MongoClient.connect(uri, (err, database) => {
+MongoClient.connect(config.database, (err, database) => {
   if (!err) {
     logCollection = database.collection('log');
 
