@@ -1,9 +1,9 @@
 const MongoRepository = require('server/database/repositories/MongoRepository');
 
-class LogRepository extends MongoRepository {
+class UserRepository extends MongoRepository {
   constructor() {
-    super('logs');
+    super('users');
   }
 }
 
-module.exports = new LogRepository();
+module.exports = new UserRepository();

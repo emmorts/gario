@@ -1,27 +1,6 @@
-const config = require('server/config');
 const AbstractLogger = require('common/loggers/AbstractLogger');
 const LogLevel = require('common/loggers/LogLevel');
-const MongoClient = require('mongodb').MongoClient;
-
-const queue = [];
-
-let connectionInitialized = false;
-let logCollection = null;
-let queueLocked = false;
-
-MongoClient.connect(config.database, (err, database) => {
-  if (!err) {
-    logCollection = database.collection('log');
-
-    queue.forEach(entry => logCollection.insert(entry));
-    queue.splice(0, queue.length);
-
-    connectionInitialized = true;
-  }
-
-  queueLocked = true;
-});
-
+const LogRepository = require('server/database/repositories/LogRepository');
 
 class DatabaseLogger extends AbstractLogger {
   get name() {
@@ -53,11 +32,7 @@ class DatabaseLogger extends AbstractLogger {
       message,
     };
 
-    if (connectionInitialized) {
-      logCollection.insert(entry);
-    } else if (!queueLocked) {
-      queue.push(entry);
-    }
+    LogRepository.insert(entry);
   }
 
   _info(message) {
@@ -67,11 +42,7 @@ class DatabaseLogger extends AbstractLogger {
       message,
     };
 
-    if (connectionInitialized) {
-      logCollection.insert(entry);
-    } else if (!queueLocked) {
-      queue.push(entry);
-    }
+    LogRepository.insert(entry);
   }
 
   _warn(message) {
@@ -81,11 +52,7 @@ class DatabaseLogger extends AbstractLogger {
       message,
     };
 
-    if (connectionInitialized) {
-      logCollection.insert(entry);
-    } else if (!queueLocked) {
-      queue.push(entry);
-    }
+    LogRepository.insert(entry);
   }
 
   _error(message) {
@@ -95,11 +62,7 @@ class DatabaseLogger extends AbstractLogger {
       message,
     };
 
-    if (connectionInitialized) {
-      logCollection.insert(entry);
-    } else if (!queueLocked) {
-      queue.push(entry);
-    }
+    LogRepository.insert(entry);
   }
 }
 

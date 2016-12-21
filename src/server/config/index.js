@@ -17,6 +17,6 @@ module.exports = {
     severity: LogLevel.ALL,
   }, {
     name: 'DatabaseLogger',
-    severity: LogLevel.WARN | LogLevel.ERROR,
+    severity: LogLevel.WARN | LogLevel.ERROR | LogLevel.INFO,
   }],
 };
