@@ -14,9 +14,9 @@ module.exports = {
   },
   loggers: [{
     name: 'ConsoleLogger',
-    severity: LogLevel.ALL,
+    severity: LogLevel.ALL ^ LogLevel.TRACE,
   }, {
     name: 'DatabaseLogger',
-    severity: LogLevel.WARN | LogLevel.ERROR | LogLevel.INFO,
+    severity: LogLevel.WARN | LogLevel.ERROR,
   }],
 };

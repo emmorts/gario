@@ -17,7 +17,5 @@ controllers.register(app);
 
 new GameServer(server).start();
 
-app.use(express.static(`${__dirname}/../../dist`));
-
 server.on('request', app);
 server.listen(config.port, () => Logger.info(`Listening on ${server.address().port}`));

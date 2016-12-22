@@ -9,6 +9,7 @@
   <!-- CSS -->
   <!--<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>-->
   <link rel="stylesheet" href="css/main.css" />
+  <script src="https://use.fontawesome.com/f1a68b30ab.js"></script>
 </head>
 
 <body>
@@ -17,6 +18,8 @@
       <input type="text" autofocus placeholder="Nickname" class="player-name js-player-name" maxlength="25" />
       <span class="validation-error js-error">[a-zA-Z0-9 ]</span>
       <button class="play-button js-play-button">Play</button>
+      <a href="/api/auth/google" class="google-button js-google-button"><i class="fa fa-google"></i></a>
+      <a href="/api/auth/facebook" class="facebook-button js-facebook-button"><i class="fa fa-facebook"></i></a>
     </div>
   </div>
   <div class="game">

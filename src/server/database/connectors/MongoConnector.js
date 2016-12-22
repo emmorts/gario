@@ -23,6 +23,8 @@ class MongoConnector {
         this.database = database;
 
         this.fire('connected');
+      } else {
+        throw new Error(`Database could not be initialized: ${err}.`);
       }
     });
   }

@@ -58,6 +58,7 @@ function watch() {
 gulp.task('css', () => gulp
   .src('./src/assets/css/*.css')
   .pipe(gulp.dest(`${dist}css`))
+  .pipe(livereload())
 );
 
 gulp.task('html', () => gulp

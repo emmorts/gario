@@ -29,6 +29,10 @@ class StartMenuElement extends Element {
     return this;
   }
 
+  hide() {
+    this._startMenuElement.hide();
+  }
+
   _onPlayClick() {
     if (this._valid && !this._playButtonElement.isDisabled) {
       this._startGame();

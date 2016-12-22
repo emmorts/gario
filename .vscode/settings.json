@@ -11,5 +11,7 @@
     "**/dist": true
   },
   "explorer.openEditors.visible": 0,
-  "eslint.enable": true
+  "eslint.enable": true,
+  "editor.fontFamily": "'Consolas', 'Courier New', monospace",
+  "editor.fontSize": 14
 }

@@ -8,7 +8,7 @@ const MapRenderer = require('client/MapRenderer');
 const GameObjectRenderer = require('client/GameObjectRenderer');
 const InputHandler = require('client/InputHandler');
 
-new StartMenuElement().on('startGame', (playerName) => {
+function startGame(playerName) {
   const mapCanvas = new CanvasElement('.js-map-canvas');
   const goCanvas = new CanvasElement('.js-gameobject-canvas');
   const camera = new Camera(goCanvas.width, goCanvas.height);
@@ -27,4 +27,24 @@ new StartMenuElement().on('startGame', (playerName) => {
     .setGameObjectRenderer(goRenderer)
     .on('playerSpawned', player => camera.follow(player))
     .startGame(playerName, camera);
+}
+
+const startMenuElement = new StartMenuElement().on('startGame', startGame);
+
+const request = new Request('/api/auth', {
+  method: 'head',
+  credentials: 'include',
 });
+
+fetch(request)
+  .then((response) => {
+    const playerNameHeader = 'X-Player-Name';
+    if (response.status === 200 && response.headers.has(playerNameHeader)) {
+      const playerName = response.headers.get(playerNameHeader);
+
+      startGame(playerName);
+
+      startMenuElement.hide();
+    }
+  });
+

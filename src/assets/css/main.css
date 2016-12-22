@@ -20,7 +20,7 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     margin: auto;
-    width: 25rem;
+    width: 30rem;
     height: 3rem;
     padding: 2rem;
     border: 3px solid rgb(230, 230, 230);
@@ -33,7 +33,7 @@ body {
       display: inline-block;
       box-sizing: border-box;
       vertical-align: middle;
-      width: 70%;
+      width: 60%;
       height: 3rem;
       font-size: 1rem;
       line-height: 3rem;
@@ -68,16 +68,18 @@ body {
       vertical-align: middle;
       box-sizing: border-box;
       background-color: rgb(26, 188, 156);
-      width: 30%;
+      width: 20%;
       height: 3rem;
       line-height: 2.8rem;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       text-align: center;
       text-transform: uppercase;
-      color: rgb(0, 0, 0);
-      border: 2px solid rgb(1, 163, 131);
-      border-left-width: 0;
-      border-radius: 0 3px 3px 0;
+      color: rgb(69, 69, 69);
+      border: 0;
+      border-radius: 0;
+      border-width: 2px 0 2px 0;
+      border-color: rgb(1, 163, 131);
+      border-style: solid;
       transition: background-color 0.1s ease-in-out, border-color 0.1s ease-in-out;
     }
 
@@ -91,6 +93,56 @@ body {
       background-color: rgb(192, 192, 192);
       border-color: rgb(200, 200, 200);
       cursor: default;
+    }
+
+    .start-menu-content .google-button {
+      display: inline-block;
+      vertical-align: middle;
+      box-sizing: border-box;
+      background-color: rgb(211, 72, 54);
+      width: 10%;
+      height: 3rem;
+      line-height: 2.8rem;
+      font-size: 1.5rem;
+      text-align: center;
+      text-transform: uppercase;
+      color: rgb(255, 255, 255);
+      border-radius: 0;
+      border-width: 2px 0 2px 0;
+      border-color: rgb(186, 47, 29);
+      border-style: solid;
+      transition: background-color 0.1s ease-in-out, border-color 0.1s ease-in-out;
+    }
+
+    .start-menu-content .google-button:hover {
+      background-color: rgb(237, 98, 80);
+      border-color: rgb(211, 72, 54);
+      cursor: pointer;
+    }
+
+    .start-menu-content .facebook-button {
+      display: inline-block;
+      vertical-align: middle;
+      box-sizing: border-box;
+      background-color: rgb(59, 89, 152);
+      width: 10%;
+      height: 3rem;
+      line-height: 2.8rem;
+      font-size: 1.5rem;
+      text-align: center;
+      text-transform: uppercase;
+      color: rgb(255, 255, 255);
+      border-radius: 0 3px 3px 0;
+      border-width: 2px 2px 2px 0;
+      border-color: rgb(34, 64, 127);
+      border-style: solid;
+      transition: background-color 0.1s ease-in-out, border-color 0.1s ease-in-out;
+    }
+
+    .start-menu-content .facebook-button:hover {
+      background-color: rgb(85, 115, 178);
+      border-color: rgb(59, 89, 152);
+      cursor: pointer;
     }
 
 .game {
