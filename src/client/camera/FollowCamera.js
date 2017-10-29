@@ -1,21 +1,13 @@
 const Logger = require('client/Logger');
-const InputHandler = require('client/InputHandler');
+const Camera = require('client/camera/Camera');
 
-class Camera {
-  constructor(width, height) {
-    this.width = width || 0;
-    this.height = height || 0;
+class FollowCamera extends Camera {
+  constructor(width = 0, height = 0) {
+    super(width, height);
 
     this._followee = null;
     this._scrollBreakpoint = 0.1;
-    this._scrollSpeed = 8;
     this._scrollLimit = 200;
-    this._offsetX = 0;
-    this._offsetY = 0;
-    this._directionX = null;
-    this._directionY = null;
-
-    this._handleInput();
   }
 
   get scrollX() {
@@ -23,7 +15,7 @@ class Camera {
       return (this._followee.position.x + this.offsetX) - (this.width / 2);
     }
 
-    return 0;
+    return this.offsetX - this.width / 2;
   }
 
   get scrollY() {
@@ -31,15 +23,7 @@ class Camera {
       return (this._followee.position.y + this.offsetY) - (this.height / 2);
     }
 
-    return 0;
-  }
-
-  get offsetX() {
-    return this._offsetX;
-  }
-
-  get offsetY() {
-    return this._offsetY;
+    return this.offsetY - this.height / 2;
   }
 
   set offsetX(value) {
@@ -48,19 +32,6 @@ class Camera {
 
   set offsetY(value) {
     this._offsetY = Math.sign(value) * Math.min(this._scrollLimit, Math.abs(value));
-  }
-
-  get northBreakpoint() {
-    return this.height * this._scrollBreakpoint;
-  }
-  get southBreakpoint() {
-    return this.height * (1 - this._scrollBreakpoint);
-  }
-  get westBreakpoint() {
-    return this.width * this._scrollBreakpoint;
-  }
-  get eastBreakpoint() {
-    return this.width * (1 - this._scrollBreakpoint);
   }
 
   follow(gameObject) {
@@ -91,25 +62,10 @@ class Camera {
     }
   }
 
-  _handleInput() {
-    InputHandler.on('mousemove', (mousePosition) => {
-      const diffX = 0
-        - (mousePosition.absoluteX <= this.eastBreakpoint) * this._scrollSpeed
-        + (mousePosition.absoluteX >= this.westBreakpoint) * this._scrollSpeed;
-
-      const diffY = 0
-        - (mousePosition.absoluteY <= this.northBreakpoint) * this._scrollSpeed
-        + (mousePosition.absoluteY >= this.southBreakpoint) * this._scrollSpeed;
-
-      this._directionX = diffX;
-      this._directionY = diffY;
-    });
-  }
-
   // TODO: Implement this, you nig
   // easeInQuad(elapsed, start, end, total) {
   //   return end * (elapsed /= total) * elapsed + start;
   // }
 }
 
-module.exports = Camera;
+module.exports = FollowCamera;

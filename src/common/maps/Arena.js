@@ -8,9 +8,10 @@ class Arena extends Map {
 
     this.type = null;
 
-    this.lavaDPS = 1;
+    this.lavaDPS = 4;
     this.lavaTick = 1000;
     this.tiledMap = null;
+    this.damageFrequencyPerSecond = 10;
 
     this._tickCooldown = {};
   }
@@ -34,10 +35,12 @@ class Arena extends Map {
       this._tickCooldown[gameObject.id] = 0;
     }
 
-    if (this._tickCooldown[gameObject.id] >= this.lavaTick) {
-      gameObject.health -= this.lavaDPS * (this.lavaTick / 1000);
+    const lavaTick = this.lavaTick / this.damageFrequencyPerSecond;
+    if (this._tickCooldown[gameObject.id] >= lavaTick) {
+      console.log(`Applying ${this.lavaDPS * (lavaTick / 1000)} damage after ${this._tickCooldown[gameObject.id]} ms`);
+      gameObject.health -= this.lavaDPS * (lavaTick / 1000);
 
-      this._tickCooldown[gameObject.id] -= this.lavaTick;
+      this._tickCooldown[gameObject.id] -= lavaTick;
     } else {
       this._tickCooldown[gameObject.id] += deltaT;
     }

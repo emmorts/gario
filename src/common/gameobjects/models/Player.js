@@ -11,7 +11,7 @@ class Player extends GameObject {
     this.rotation = 0;
     this.targetRotation = 0;
     this.radius = 20;
-    this.mass = 20;
+    this.mass = 10;
     this.stunned = 0;
     this.damageMod = 1;
     this.knockbackMod = 1;

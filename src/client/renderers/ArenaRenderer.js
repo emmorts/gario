@@ -47,15 +47,23 @@ class ArenaRenderer extends IRenderer {
         row.forEach((column, columnIndex) => {
           const sprite = SpriteLoader.get(column);
 
-          const dX = startX + (rowIndex * tileSize) - tileSize;
-          const dY = startY + (columnIndex * tileSize) - tileSize;
+          const dX = startX + (rowIndex * tileSize);
+          const dY = startY + (columnIndex * tileSize);
 
           renderer.context.drawImage(sprite.image,
-            (rowIndex - 1) * tileSize % sprite.frameWidth, (columnIndex - 1) * tileSize % sprite.frameHeight,
+            rowIndex * tileSize % sprite.frameWidth, columnIndex * tileSize % sprite.frameHeight,
             tileSize, tileSize,
             dX, dY,
             tileSize, tileSize
           );
+
+          // CanvasHelper.text(renderer.context, {
+          //   text: `${rowIndex}:${columnIndex}`,
+          //   fontSize: 9,
+          //   textAlign: 'center',
+          //   x: dX + (tileSize / 2),
+          //   y: dY + (tileSize / 2),
+          // });
         });
       });
     }

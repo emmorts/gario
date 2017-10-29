@@ -17,6 +17,14 @@ class InputHandler {
     return KeyCode;
   }
 
+  keyDown(key, callback) {
+    this.on(key, callback);
+  }
+
+  keyUp(key, callback) {
+    this.on(`${key}UP`, callback);
+  }
+
   attachCamera(camera) {
     if (!camera) {
       Logger.warn(`Failed to attach camera, null provided.`);
@@ -38,6 +46,7 @@ class InputHandler {
     });
 
     window.document.addEventListener('mousedown', e => this.fire(e.button, this._getPosition()));
+    window.document.addEventListener('keyup', e => this.fire(`${e.keyCode}UP`, this._getPosition()));
     window.document.addEventListener('keydown', e => this.fire(e.keyCode, this._getPosition()));
 
     return this;

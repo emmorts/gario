@@ -5,6 +5,7 @@ class DebugRenderer extends IRenderer {
   static draw(game, renderer, deltaT) {
     DebugRenderer._drawDebugInformation(game, renderer, deltaT);
     DebugRenderer._drawPlayerTargetTracer(game, renderer);
+    DebugRenderer._drawPlayerInformation(game, renderer);
   }
 
   static _drawDebugInformation(game, renderer, deltaT) {
@@ -49,6 +50,14 @@ class DebugRenderer extends IRenderer {
     });
   }
 
+  static _drawPlayerInformation(game, renderer) {
+    CanvasHelper.text(renderer.context, {
+      text: `Health: ${game.currentPlayer ? Math.round(game.currentPlayer.health) : 'N/A'}`,
+      x: 30,
+      y: renderer.camera.height - 30,
+    });
+  }
+
   static _drawPlayerTargetTracer(game, renderer) {
     const currentPlayer = game.currentPlayer;
 
@@ -61,7 +70,7 @@ class DebugRenderer extends IRenderer {
       const positionX = startX + currentPlayer.position.x;
       const positionY = startY + currentPlayer.position.y;
 
-      if (currentPlayer.target.distanceTo(currentPlayer.position) > 5) {
+      if (currentPlayer.target.distanceTo(currentPlayer.position) > 10) {
         renderer.context.setLineDash([10, 15]);
         renderer.context.strokeStyle = 'rgb(207, 69, 69)';
 

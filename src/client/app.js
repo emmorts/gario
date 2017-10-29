@@ -3,7 +3,7 @@ require('client/util/polyfills');
 const Game = require('client/Game');
 const StartMenuElement = require('client/elements/StartMenuElement');
 const CanvasElement = require('client/elements/CanvasElement');
-const Camera = require('client/Camera');
+const Camera = require('client/camera/Camera');
 const MapRenderer = require('client/MapRenderer');
 const GameObjectRenderer = require('client/GameObjectRenderer');
 const InputHandler = require('client/InputHandler');
@@ -25,7 +25,7 @@ function startGame(playerName) {
   Game
     .setMapRenderer(mapRenderer)
     .setGameObjectRenderer(goRenderer)
-    .on('playerSpawned', player => camera.follow(player))
+    .on('playerSpawned', player => camera.target(player).centerTarget())
     .startGame(playerName, camera);
 }
 

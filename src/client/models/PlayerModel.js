@@ -27,7 +27,7 @@ class PlayerModel extends Player {
       }
     });
 
-    InputHandler.on(InputHandler.key.SPACE, (mousePosition) => {
+    InputHandler.on(InputHandler.key.F, (mousePosition) => {
       if (this.health > 0) {
         this.packetQueue.push({
           code: OPCode.CAST_SPELL,
