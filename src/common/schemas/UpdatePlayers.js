@@ -1,5 +1,6 @@
 const Schema = require('common/Schema');
 const OPCode = require('common/opCode');
+const Point = require('common/structures/Point');
 
 module.exports = new Schema(OPCode.UPDATE_PLAYERS, {
   updatedPlayers: [{
@@ -26,8 +27,8 @@ module.exports = new Schema(OPCode.UPDATE_PLAYERS, {
     name: player.name,
     health: player.health,
     maxHealth: player.maxHealth,
-    position: { x: player.x, y: player.y },
-    target: { x: player.targetX, y: player.targetY },
+    position: new Point(player),
+    target: new Point(player.targetX, player.targetY),
     color: { r: player.r, g: player.g, b: player.b },
   }));
   const destroyedPlayers = object.destroyedPlayers.map(player => player.id);

@@ -3,6 +3,7 @@ const Player = require('common/gameobjects/models/Player');
 const PlayerRenderer = require('client/renderers/PlayerRenderer');
 const OPCode = require('common/opCode');
 const Logger = require('client/Logger');
+const Point = require('common/structures/Point');
 
 class PlayerModel extends Player {
   constructor(playerModel) {
@@ -17,10 +18,7 @@ class PlayerModel extends Player {
   handleInput() {
     InputHandler.on(InputHandler.key.MOUSE2, (mousePosition) => {
       if (this.health > 0) {
-        this.setTarget({
-          x: mousePosition.x,
-          y: mousePosition.y,
-        });
+        this.setTarget(new Point(mousePosition));
 
         this.packetQueue.push({
           code: OPCode.PLAYER_MOVE,
@@ -93,15 +91,12 @@ class PlayerModel extends Player {
         b: playerModel.color.b,
       };
 
-      this.position = {
-        x: playerModel.position.x,
-        y: playerModel.position.y,
-      };
+      this.position = new Point(playerModel.position);
 
-      this.target = {
+      this.target = new Point({
         x: (playerModel.target ? playerModel.target.x : playerModel.position.x),
         y: (playerModel.target ? playerModel.target.y : playerModel.position.y),
-      };
+      });
     } else {
       Logger.error('Unable to construct player object - no model given.');
     }

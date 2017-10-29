@@ -1,22 +1,29 @@
 const IRenderer = require('client/renderers/IRenderer');
 const CanvasHelper = require('client/util/CanvasHelper');
 
-const MapTiles = require('client/mapTiles');
-const Tileset = require('common/Tileset');
+const SpriteLoader = require('client/SpriteLoader');
+const Sprites = require('client/sprites');
+const Sprite = require('common/Sprite');
+
+const spritesToLoad = [
+  new Sprites[Sprite.FLAT](),
+  new Sprites[Sprite.LAVA](),
+];
 
 let spritesLoaded = false;
 
-const LavaSprite = new Image();
-LavaSprite.src = `sprites/lava.png`;
-
-LavaSprite.addEventListener('load', () => {
-  spritesLoaded = true;
-}, false);
+SpriteLoader
+  .load(spritesToLoad)
+  .then(() => {
+    spritesLoaded = true;
+  });
 
 class ArenaRenderer extends IRenderer {
   static draw(model, renderer) {
     const scrollX = renderer.camera.scrollX;
     const scrollY = renderer.camera.scrollY;
+    const cameraWidth = renderer.camera.width;
+    const cameraHeight = renderer.camera.height;
 
     const startX = 0 - scrollX;
     const startY = 0 - scrollY;
@@ -24,42 +31,34 @@ class ArenaRenderer extends IRenderer {
     const map = model.tiledMap;
     const tileSize = model.tileSize;
 
-    if (spritesLoaded) {
-      for (let i = 0; i <= 4; i++) {
-        for (let j = 0; j <= 4; j++) {
-          renderer.context.drawImage(LavaSprite, startX + (i * 512) - 512, startY + (j * 512) - 512);
-        }
+    const lavaSprite = SpriteLoader.get(Sprite.LAVA);
+
+    for (let i = startX - cameraWidth; i <= cameraWidth; i += lavaSprite.frameWidth) {
+      for (let j = startY - cameraHeight; j <= cameraHeight; j += lavaSprite.frameHeight) {
+        renderer.context.drawImage(lavaSprite.image,
+          i, j,
+          lavaSprite.frameWidth, lavaSprite.frameHeight
+        );
       }
     }
 
-    // renderer.context.fillStyle = MapTiles[Tileset.LAVA].color;
-    // renderer.context.fillRect(0, 0, renderer.width, renderer.height);
+    if (spritesLoaded) {
+      map.forEach((row, rowIndex) => {
+        row.forEach((column, columnIndex) => {
+          const sprite = SpriteLoader.get(column);
 
-    map.forEach((row, rowIndex) => {
-      row.forEach((column, columnIndex) => {
-        const tileStartX = startX + (tileSize * columnIndex);
-        const tileStartY = startY + (tileSize * rowIndex);
-        const tileType = map[rowIndex][columnIndex];
+          const dX = startX + (rowIndex * tileSize) - tileSize;
+          const dY = startY + (columnIndex * tileSize) - tileSize;
 
-        if (tileType !== Tileset.LAVA) {
-          CanvasHelper.square(renderer.context, {
-            x: tileStartX | 0,
-            y: tileStartY | 0,
-            width: tileSize + 1,
-            height: tileSize + 1,
-            fillColor: MapTiles[tileType].color,
-          });
-        }
-
-        // CanvasHelper.text(renderer.context, {
-        //   text: `${rowIndex}:${columnIndex}`,
-        //   fontSize: 9,
-        //   textAlign: 'center',
-        //   x: tileStartX + (tileSize / 2),
-        //   y: tileStartY + (tileSize / 2),
-        // });
+          renderer.context.drawImage(sprite.image,
+            (rowIndex - 1) * tileSize % sprite.frameWidth, (columnIndex - 1) * tileSize % sprite.frameHeight,
+            tileSize, tileSize,
+            dX, dY,
+            tileSize, tileSize
+          );
+        });
       });
-    });
+    }
   }
 }
 

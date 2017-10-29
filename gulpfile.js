@@ -68,7 +68,7 @@ gulp.task('html', () => gulp
 );
 
 gulp.task('sprites', () => gulp
-  .src('./src/assets/sprites/*.png')
+  .src('./src/assets/sprites/*.{png,gif,jpg}')
   .pipe(gulp.dest(`${dist}/sprites`))
   .pipe(livereload())
 );

@@ -3,6 +3,11 @@ const CanvasHelper = require('client/util/CanvasHelper');
 
 class DebugRenderer extends IRenderer {
   static draw(game, renderer, deltaT) {
+    DebugRenderer._drawDebugInformation(game, renderer, deltaT);
+    DebugRenderer._drawPlayerTargetTracer(game, renderer);
+  }
+
+  static _drawDebugInformation(game, renderer, deltaT) {
     const currentPlayerPosition = game.currentPlayer
       ? game.currentPlayer.position
       : { x: 'N/A', y: 'N/A' };
@@ -42,6 +47,39 @@ class DebugRenderer extends IRenderer {
       x: 30,
       y: 130,
     });
+  }
+
+  static _drawPlayerTargetTracer(game, renderer) {
+    const currentPlayer = game.currentPlayer;
+
+    const startX = 0 - renderer.camera.scrollX;
+    const startY = 0 - renderer.camera.scrollY;
+
+    if (currentPlayer && currentPlayer.target && currentPlayer.position) {
+      const targetX = startX + currentPlayer.target.x;
+      const targetY = startY + currentPlayer.target.y;
+      const positionX = startX + currentPlayer.position.x;
+      const positionY = startY + currentPlayer.position.y;
+
+      if (currentPlayer.target.distanceTo(currentPlayer.position) > 5) {
+        renderer.context.setLineDash([10, 15]);
+        renderer.context.strokeStyle = 'rgb(207, 69, 69)';
+
+        renderer.context.beginPath();
+        renderer.context.moveTo(targetX, targetY);
+        renderer.context.lineTo(positionX, positionY);
+        renderer.context.stroke();
+
+        CanvasHelper.arc(renderer.context, {
+          x: targetX,
+          y: targetY,
+          radius: 5,
+          fillColor: 'rgb(207, 69, 69)',
+        });
+
+        renderer.context.setLineDash([]);
+      }
+    }
   }
 }
 

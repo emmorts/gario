@@ -1,5 +1,6 @@
 const Schema = require('common/Schema');
 const OPCode = require('common/opCode');
+const Point = require('common/structures/Point');
 
 module.exports = new Schema(OPCode.ADD_PLAYER, {
   id: 'string',
@@ -18,6 +19,6 @@ module.exports = new Schema(OPCode.ADD_PLAYER, {
   name: player.name,
   health: player.health,
   maxHealth: player.maxHealth,
-  position: { x: player.x, y: player.y },
+  position: new Point(player),
   color: { r: player.r, g: player.g, b: player.b },
 }));

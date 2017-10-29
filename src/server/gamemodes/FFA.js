@@ -17,7 +17,7 @@ class FFA extends Mode {
     this.map = new ArenaMap()
       .setWidth(32)
       .setHeight(32)
-      .setTileSize(32)
+      .setTileSize(64)
       .setType('DONUT')
       .build();
 

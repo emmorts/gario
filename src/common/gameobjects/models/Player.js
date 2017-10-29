@@ -1,4 +1,5 @@
 const GameObject = require('common/GameObject');
+const Point = require('common/structures/Point');
 
 class Player extends GameObject {
   constructor() {
@@ -15,8 +16,8 @@ class Player extends GameObject {
     this.damageMod = 1;
     this.knockbackMod = 1;
     this.velocity = { x: 0, y: 0 };
-    this.position = { x: 0, y: 0 };
-    this.target = { x: 0, y: 0 };
+    this.position = new Point();
+    this.target = new Point();
     this._health = 0;
     this._baseFriction = 0.2;
     this._baseRotationTicks = 10;
@@ -46,10 +47,7 @@ class Player extends GameObject {
   }
 
   setTarget(target) {
-    this.target = {
-      x: target.x,
-      y: target.y,
-    };
+    this.target = new Point(target);
 
     this.targetRotation = Math.atan2(target.y - this.position.y, target.x - this.position.x);
 
